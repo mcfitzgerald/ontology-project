@@ -1,0 +1,168 @@
+{
+  "ontology": {
+    "iri": "http://mes-ontology.org/factory.owl",
+    "name": "MES Factory Ontology",
+    "version": "1.0.0",
+    "description": "Manufacturing Execution System ontology for bottling plant operations"
+  },
+  
+  "equipment_configuration": {
+    "lines": {
+      "LINE1": {
+        "name": "Production Line 1",
+        "equipment_sequence": [
+          {"id": "LINE1-FIL", "type": "Filler", "position": 1},
+          {"id": "LINE1-PCK", "type": "Packer", "position": 2},
+          {"id": "LINE1-PAL", "type": "Palletizer", "position": 3}
+        ],
+        "process_flow": {
+          "LINE1-FIL": {"upstream": null, "downstream": "LINE1-PCK"},
+          "LINE1-PCK": {"upstream": "LINE1-FIL", "downstream": "LINE1-PAL"},
+          "LINE1-PAL": {"upstream": "LINE1-PCK", "downstream": null}
+        }
+      },
+      "LINE2": {
+        "name": "Production Line 2",
+        "equipment_sequence": [
+          {"id": "LINE2-FIL", "type": "Filler", "position": 1},
+          {"id": "LINE2-PCK", "type": "Packer", "position": 2},
+          {"id": "LINE2-PAL", "type": "Palletizer", "position": 3}
+        ],
+        "process_flow": {
+          "LINE2-FIL": {"upstream": null, "downstream": "LINE2-PCK"},
+          "LINE2-PCK": {"upstream": "LINE2-FIL", "downstream": "LINE2-PAL"},
+          "LINE2-PAL": {"upstream": "LINE2-PCK", "downstream": null}
+        }
+      },
+      "LINE3": {
+        "name": "Production Line 3",
+        "equipment_sequence": [
+          {"id": "LINE3-FIL", "type": "Filler", "position": 1},
+          {"id": "LINE3-PCK", "type": "Packer", "position": 2},
+          {"id": "LINE3-PAL", "type": "Palletizer", "position": 3}
+        ],
+        "process_flow": {
+          "LINE3-FIL": {"upstream": null, "downstream": "LINE3-PCK"},
+          "LINE3-PCK": {"upstream": "LINE3-FIL", "downstream": "LINE3-PAL"},
+          "LINE3-PAL": {"upstream": "LINE3-PCK", "downstream": null}
+        }
+      }
+    }
+  },
+  
+  "product_master": {
+    "SKU-1001": {
+      "name": "12oz Sparkling Water",
+      "target_rate_units_per_min": 100,
+      "standard_cost_per_unit": 0.15,
+      "sale_price_per_unit": 0.50,
+      "normal_scrap_rate": 0.01
+    },
+    "SKU-1002": {
+      "name": "32oz Premium Juice",
+      "target_rate_units_per_min": 70,
+      "standard_cost_per_unit": 0.45,
+      "sale_price_per_unit": 1.50,
+      "normal_scrap_rate": 0.01,
+      "quality_issue_scrap_rate": 0.04
+    },
+    "SKU-2001": {
+      "name": "12oz Soda",
+      "target_rate_units_per_min": 95,
+      "standard_cost_per_unit": 0.20,
+      "sale_price_per_unit": 0.65,
+      "normal_scrap_rate": 0.01
+    },
+    "SKU-2002": {
+      "name": "16oz Energy Drink",
+      "target_rate_units_per_min": 90,
+      "standard_cost_per_unit": 0.55,
+      "sale_price_per_unit": 1.75,
+      "normal_scrap_rate": 0.01,
+      "performance_issue_lines": ["LINE1"],
+      "performance_degradation": {"min": 0.75, "max": 0.85}
+    },
+    "SKU-3001": {
+      "name": "8oz Kids Drink",
+      "target_rate_units_per_min": 110,
+      "standard_cost_per_unit": 0.25,
+      "sale_price_per_unit": 0.75,
+      "normal_scrap_rate": 0.01
+    }
+  },
+  
+  "downtime_reason_mapping": {
+    "PLN-CO": {
+      "class": "Changeover",
+      "category": "PlannedDowntime",
+      "description": "Planned changeover between products"
+    },
+    "PLN-CLN": {
+      "class": "Cleaning",
+      "category": "PlannedDowntime",
+      "description": "Planned cleaning cycle"
+    },
+    "UNP-MECH": {
+      "class": "MechanicalFailure",
+      "category": "UnplannedDowntime",
+      "description": "Unplanned mechanical failure"
+    },
+    "UNP-JAM": {
+      "class": "MaterialJam",
+      "category": "UnplannedDowntime",
+      "description": "Material jam in equipment"
+    },
+    "UNP-MAT": {
+      "class": "MaterialStarvation",
+      "category": "UnplannedDowntime",
+      "description": "Lack of input material"
+    }
+  },
+  
+  "anomaly_injection": {
+    "major_mechanical_failure": {
+      "enabled": true,
+      "equipment_id": "LINE3-FIL",
+      "start_datetime": "2025-06-08 02:00:00",
+      "end_datetime": "2025-06-08 07:30:00",
+      "downtime_reason": "UNP-MECH",
+      "description": "Major mechanical failure on Line 3 Filler"
+    },
+    "frequent_micro_stops": {
+      "enabled": true,
+      "equipment_id": "LINE2-PCK",
+      "probability_per_minute": 0.05,
+      "downtime_reason": "UNP-JAM",
+      "duration_range_minutes": {"min": 1, "max": 5},
+      "description": "Frequent micro-stops on Line 2 Packer"
+    },
+    "performance_bottleneck": {
+      "enabled": true,
+      "description": "Performance bottleneck for energy drinks on Line 1"
+    },
+    "quality_issues": {
+      "enabled": true,
+      "description": "Quality issues for 32oz Premium Juice"
+    },
+    "changeover_scrap_spike": {
+      "enabled": true,
+      "duration_minutes": 60,
+      "scrap_multiplier": 2.0,
+      "description": "Increased scrap during first hour of changeovers"
+    }
+  },
+  
+  "production_schedule": {
+    "run_duration_hours": {"min": 6, "max": 18},
+    "changeover_gap_minutes": {"min": 20, "max": 45}
+  },
+  
+  "product_specifications": {
+    "normal_scrap_rate": 0.01,
+    "equipment_efficiency": {
+      "Filler": {"min": 0.95, "max": 1.05},
+      "Packer": {"min": 0.95, "max": 1.05},
+      "Palletizer": {"min": 0.95, "max": 1.05}
+    }
+  }
+}
