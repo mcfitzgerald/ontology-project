@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  mes-sparql-api:
+    build: .
+    container_name: mes-sparql-api
+    ports:
+      - "8000:8000"
+    volumes:
+      # Mount the ontology directory
+      - ../Ontology:/ontology:ro
+    environment:
+      - ONTOLOGY_PATH=/ontology/mes_ontology_populated.owl
+      - API_HOST=0.0.0.0
+      - API_PORT=8000
+      - THREAD_POOL_SIZE=4
+      - QUERY_TIMEOUT=30
+      - LOG_LEVEL=INFO
+      - CORS_ENABLED=true
+      - CORS_ORIGINS=["*"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
