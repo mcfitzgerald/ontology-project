@@ -53,14 +53,14 @@
   "product_master": {
     "SKU-1001": {
       "name": "12oz Sparkling Water",
-      "target_rate_units_per_min": 100,
+      "target_rate_units_per_5min": 500,
       "standard_cost_per_unit": 0.15,
       "sale_price_per_unit": 0.50,
       "normal_scrap_rate": 0.01
     },
     "SKU-1002": {
       "name": "32oz Premium Juice",
-      "target_rate_units_per_min": 70,
+      "target_rate_units_per_5min": 350,
       "standard_cost_per_unit": 0.45,
       "sale_price_per_unit": 1.50,
       "normal_scrap_rate": 0.01,
@@ -68,14 +68,14 @@
     },
     "SKU-2001": {
       "name": "12oz Soda",
-      "target_rate_units_per_min": 95,
+      "target_rate_units_per_5min": 475,
       "standard_cost_per_unit": 0.20,
       "sale_price_per_unit": 0.65,
       "normal_scrap_rate": 0.01
     },
     "SKU-2002": {
       "name": "16oz Energy Drink",
-      "target_rate_units_per_min": 90,
+      "target_rate_units_per_5min": 450,
       "standard_cost_per_unit": 0.55,
       "sale_price_per_unit": 1.75,
       "normal_scrap_rate": 0.01,
@@ -84,7 +84,7 @@
     },
     "SKU-3001": {
       "name": "8oz Kids Drink",
-      "target_rate_units_per_min": 110,
+      "target_rate_units_per_5min": 550,
       "standard_cost_per_unit": 0.25,
       "sale_price_per_unit": 0.75,
       "normal_scrap_rate": 0.01
@@ -131,7 +131,7 @@
     "frequent_micro_stops": {
       "enabled": true,
       "equipment_id": "LINE2-PCK",
-      "probability_per_minute": 0.05,
+      "probability_per_5min": 0.25,
       "downtime_reason": "UNP-JAM",
       "duration_range_minutes": {"min": 1, "max": 5},
       "description": "Frequent micro-stops on Line 2 Packer"

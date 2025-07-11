@@ -11,9 +11,12 @@ from datetime import datetime, timedelta
 from collections import defaultdict
 import json
 
+import os
+
 def load_config(config_file='mes_data_config.json'):
     """Load configuration from JSON file."""
-    with open(config_file, 'r') as f:
+    config_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "Data_Generation", config_file)
+    with open(config_path, 'r') as f:
         return json.load(f)
 
 class OntologyValidator:
@@ -396,8 +399,8 @@ class OntologyValidator:
         if anomaly_count > 0:
             print(f"  ⚠ Statistical Anomalies: {anomaly_count} potential issues")
         
-        # Save detailed report
-        report_file = "validation_report.json"
+        # Save detailed report to project root
+        report_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), "validation_report.json")
         with open(report_file, 'w') as f:
             json.dump(self.validation_results, f, indent=2, default=str)
         
@@ -414,8 +417,9 @@ def main():
     print(f"Configuration: {config['ontology']['name']} v{config['ontology']['version']}")
     print("-" * 60)
     
-    # Run validation
-    validator = OntologyValidator("mes_ontology_populated.owl", config)
+    # Run validation on ontology file
+    ontology_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), "Ontology", "mes_ontology_populated.owl")
+    validator = OntologyValidator(ontology_file, config)
     validator.validate_all()
     health_score = validator.generate_validation_report()
     
