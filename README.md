@@ -24,34 +24,36 @@ We simulate a three-line bottling plant with:
 ```
 ontology-project/
 ├── Data_Generation/
-│   └── mes_data_generation.py      # Generates synthetic MES data with inline KPIs
-├── Ontology_Specification/
-│   └── Tbox_Rbox.md               # Ontology schema (classes and properties)
-├── mes_data_config.json           # Configuration for data generation and ontology
-├── mes_ontology_population.py     # Populates ontology from CSV data
-├── mes_llm_validation.py          # Validation tool for LLM analysis
-├── llm_query_interface.py         # Natural language to SPARQL interface
-└── project_idea.md               # Original project concept
+│   ├── mes_data_generation.py      # Generates synthetic MES data with inline KPIs
+│   └── mes_data_config.json        # Configuration for data generation and ontology
+├── Data/
+│   └── mes_data_with_kpis.csv      # Generated manufacturing data (created by script)
+├── Ontology_Generation/
+│   ├── mes_ontology_population.py  # Populates ontology from CSV data
+│   └── Tbox_Rbox.md                # Ontology schema (classes and properties)
+├── Ontology/
+│   └── mes_ontology_populated.owl  # Populated ontology (created by script)
+├── Utils/
+│   └── mes_llm_validation.py       # Validation tool for LLM analysis
+└── project_idea.md                # Original project concept
 ```
 
 ## 🚀 Quick Start
 
 ### 1. Generate Manufacturing Data
 ```bash
-cd Data_Generation
-python mes_data_generation.py
+python Data_Generation/mes_data_generation.py
 ```
-This creates `mes_data_with_kpis.csv` with 2 weeks of minute-by-minute factory data including:
+This creates `Data/mes_data_with_kpis.csv` with 2 weeks of 5-minute interval factory data including:
 - Production events with good/scrap units
 - Equipment downtime with reasons
 - Pre-calculated KPIs (OEE, Availability, Performance, Quality)
 
 ### 2. Populate the Ontology
 ```bash
-cd ..
-python mes_ontology_population.py
+python Ontology_Generation/mes_ontology_population.py
 ```
-This creates `mes_ontology_populated.owl` containing:
+This creates `Ontology/mes_ontology_populated.owl` containing:
 - Equipment hierarchy and relationships
 - Production orders and products
 - Events with embedded KPIs
@@ -59,7 +61,7 @@ This creates `mes_ontology_populated.owl` containing:
 
 ### 3. Validate the Data
 ```bash
-python mes_llm_validation.py
+python Utils/mes_llm_validation.py
 ```
 This generates `validation_report.json` with:
 - Data integrity checks
@@ -69,16 +71,16 @@ This generates `validation_report.json` with:
 
 ### 4. Query with Natural Language (Optional)
 ```bash
-python llm_query_interface.py
+# Note: llm_query_interface.py not yet implemented
 ```
-Demonstrates natural language to SPARQL translation for queries like:
+Will demonstrate natural language to SPARQL translation for queries like:
 - "What is the current OEE for each line?"
 - "Which equipment has the most downtime?"
 - "Show quality trends for premium juice"
 
 ## 🔧 Configuration
 
-The `mes_data_config.json` file controls:
+The `Data_Generation/mes_data_config.json` file controls:
 
 ### Equipment Configuration
 - 3 production lines with equipment sequences
@@ -102,6 +104,23 @@ The `mes_data_config.json` file controls:
 Timestamp, EquipmentID, MachineStatus, GoodUnitsProduced, ScrapUnitsProduced,
 Availability_Score, Performance_Score, Quality_Score, OEE_Score
 ```
+
+### Sample Data (First 10 rows)
+
+| Timestamp | ProductionOrderID | LineID | EquipmentID | EquipmentType | ProductID | ProductName | MachineStatus | DowntimeReason | GoodUnitsProduced | ScrapUnitsProduced | TargetRate_units_per_5min | StandardCost_per_unit | SalePrice_per_unit | Availability_Score | Performance_Score | Quality_Score | OEE_Score |
+|-----------|-------------------|--------|-------------|---------------|-----------|-------------|---------------|----------------|-------------------|-------------------|---------------------------|----------------------|--------------------|--------------------|-------------------|----------------|-----------|
+| 2025-06-01 00:00:00 | ORD-1000 | 1 | LINE1-FIL | Filler | SKU-2001 | 12oz Soda | Running | | 482 | 4 | 475 | 0.2 | 0.65 | 100.0 | 100.0 | 99.2 | 99.2 |
+| 2025-06-01 00:00:00 | ORD-1000 | 1 | LINE1-PCK | Packer | SKU-2001 | 12oz Soda | Running | | 481 | 4 | 475 | 0.2 | 0.65 | 100.0 | 100.0 | 99.2 | 99.2 |
+| 2025-06-01 00:00:00 | ORD-1000 | 1 | LINE1-PAL | Palletizer | SKU-2001 | 12oz Soda | Running | | 492 | 4 | 475 | 0.2 | 0.65 | 100.0 | 100.0 | 99.2 | 99.2 |
+| 2025-06-01 00:00:00 | ORD-1028 | 2 | LINE2-FIL | Filler | SKU-3001 | 8oz Kids Drink | Running | | 535 | 5 | 550 | 0.25 | 0.75 | 100.0 | 98.2 | 99.1 | 97.3 |
+| 2025-06-01 00:00:00 | ORD-1028 | 2 | LINE2-PCK | Packer | SKU-3001 | 8oz Kids Drink | Running | | 577 | 5 | 550 | 0.25 | 0.75 | 100.0 | 100.0 | 99.1 | 99.1 |
+| 2025-06-01 00:00:00 | ORD-1028 | 2 | LINE2-PAL | Palletizer | SKU-3001 | 8oz Kids Drink | Running | | 556 | 5 | 550 | 0.25 | 0.75 | 100.0 | 100.0 | 99.1 | 99.1 |
+| 2025-06-01 00:00:00 | ORD-1056 | 3 | LINE3-FIL | Filler | SKU-2001 | 12oz Soda | Running | | 452 | 4 | 475 | 0.2 | 0.65 | 100.0 | 96.0 | 99.1 | 95.2 |
+| 2025-06-01 00:00:00 | ORD-1056 | 3 | LINE3-PCK | Packer | SKU-2001 | 12oz Soda | Running | | 474 | 4 | 475 | 0.2 | 0.65 | 100.0 | 100.0 | 99.2 | 99.2 |
+| 2025-06-01 00:00:00 | ORD-1056 | 3 | LINE3-PAL | Palletizer | SKU-2001 | 12oz Soda | Running | | 480 | 4 | 475 | 0.2 | 0.65 | 100.0 | 100.0 | 99.2 | 99.2 |
+| 2025-06-01 00:05:00 | ORD-1000 | 1 | LINE1-FIL | Filler | SKU-2001 | 12oz Soda | Running | | 452 | 4 | 475 | 0.2 | 0.65 | 100.0 | 96.0 | 99.1 | 95.2 |
+
+*Note: Data is generated at 5-minute intervals with pre-calculated KPIs for each equipment*
 
 ### Ontology Structure
 - **Classes**: Equipment, Product, ProductionOrder, Event (ProductionLog/DowntimeLog)

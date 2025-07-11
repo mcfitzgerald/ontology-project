@@ -10,15 +10,11 @@ import random
 from datetime import datetime, timedelta
 import json
 import os
-import sys
 from collections import defaultdict
-
-# Add parent directory to path to import config
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 def load_config(config_file='mes_data_config.json'):
     """Load configuration from JSON file."""
-    config_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), config_file)
+    config_path = os.path.join(os.path.dirname(__file__), config_file)
     with open(config_path, 'r') as f:
         return json.load(f)
 
@@ -29,7 +25,7 @@ def get_product_master(config):
         products.append({
             "ProductID": product_id,
             "ProductName": product_info['name'],
-            "TargetRate_units_per_min": product_info['target_rate_units_per_min'],
+            "TargetRate_units_per_5min": product_info['target_rate_units_per_5min'],
             "StandardCost_per_unit": product_info['standard_cost_per_unit'],
             "SalePrice_per_unit": product_info['sale_price_per_unit'],
             "NormalScrapRate": product_info.get('normal_scrap_rate', 
@@ -115,7 +111,7 @@ def apply_anomalies(equip_id, current_time, order_info, config, changeover_start
     if anomaly_config['frequent_micro_stops']['enabled']:
         micro_stops = anomaly_config['frequent_micro_stops']
         if equip_id == micro_stops['equipment_id']:
-            if random.random() < micro_stops['probability_per_minute']:
+            if random.random() < micro_stops['probability_per_5min']:
                 duration = random.randint(
                     micro_stops['duration_range_minutes']['min'],
                     micro_stops['duration_range_minutes']['max']
@@ -124,7 +120,7 @@ def apply_anomalies(equip_id, current_time, order_info, config, changeover_start
                 return "Stopped", micro_stops['downtime_reason'], 0, 0, downtime_end
     
     # If running, calculate production
-    target_rate = order_info['TargetRate_units_per_min']
+    target_rate = order_info['TargetRate_units_per_5min']
     actual_rate = target_rate
     
     # Check performance bottleneck
@@ -169,7 +165,7 @@ def apply_anomalies(equip_id, current_time, order_info, config, changeover_start
     return "Running", None, good_units, scrap_units, None
 
 def calculate_kpis(status, good_units, scrap_units, target_rate):
-    """Calculate instantaneous KPIs."""
+    """Calculate instantaneous KPIs for 5-minute intervals."""
     # Availability: 1 if running, 0 if stopped
     availability = 1.0 if status == "Running" else 0.0
     
@@ -229,14 +225,14 @@ def generate_mes_data(start_date, end_date, config):
     downtime_tracker = {}  # Tracks ongoing downtimes
     
     print("Starting data generation loop...")
-    total_minutes = int((end_date - start_date).total_seconds() / 60)
-    minutes_processed = 0
+    total_intervals = int((end_date - start_date).total_seconds() / 60 / 5)
+    intervals_processed = 0
     
     while current_time <= end_date:
-        minutes_processed += 1
-        if minutes_processed % 1000 == 0:
-            progress = (minutes_processed / total_minutes) * 100
-            print(f"  Progress: {progress:.1f}% ({minutes_processed}/{total_minutes} minutes)")
+        intervals_processed += 1
+        if intervals_processed % 200 == 0:
+            progress = (intervals_processed / total_intervals) * 100
+            print(f"  Progress: {progress:.1f}% ({intervals_processed}/{total_intervals} 5-min intervals)")
         
         # Process each piece of equipment
         for _, equip in equipment_df.iterrows():
@@ -272,7 +268,7 @@ def generate_mes_data(start_date, end_date, config):
                     downtime_tracker[equip_id] = {"end": downtime_end, "reason": reason}
             
             # Calculate instantaneous KPIs
-            kpis = calculate_kpis(status, good_units, scrap_units, order_info["TargetRate_units_per_min"])
+            kpis = calculate_kpis(status, good_units, scrap_units, order_info["TargetRate_units_per_5min"])
             
             # Create log entry
             log_entry = {
@@ -287,7 +283,7 @@ def generate_mes_data(start_date, end_date, config):
                 "DowntimeReason": reason,
                 "GoodUnitsProduced": good_units,
                 "ScrapUnitsProduced": scrap_units,
-                "TargetRate_units_per_min": order_info["TargetRate_units_per_min"],
+                "TargetRate_units_per_5min": order_info["TargetRate_units_per_5min"],
                 "StandardCost_per_unit": order_info["StandardCost_per_unit"],
                 "SalePrice_per_unit": order_info["SalePrice_per_unit"],
                 # Instantaneous KPIs
@@ -298,7 +294,7 @@ def generate_mes_data(start_date, end_date, config):
             }
             all_logs.append(log_entry)
         
-        current_time += timedelta(minutes=1)
+        current_time += timedelta(minutes=5)
     
     print(f"Generated {len(all_logs)} log entries")
     return pd.DataFrame(all_logs)
@@ -319,8 +315,10 @@ def main():
     # Generate data
     mes_data = generate_mes_data(start_date, end_date, config)
     
-    # Save to CSV
-    output_file = "mes_data_with_kpis.csv"
+    # Save to CSV in the Data directory
+    output_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "Data")
+    os.makedirs(output_dir, exist_ok=True)
+    output_file = os.path.join(output_dir, "mes_data_with_kpis.csv")
     mes_data.to_csv(output_file, index=False)
     print(f"\nData saved to {output_file}")
     
