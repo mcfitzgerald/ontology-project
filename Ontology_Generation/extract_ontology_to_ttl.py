@@ -95,26 +95,6 @@ def extract_ontology_to_ttl(owl_file_path, output_ttl_path):
 # 2. All properties with domains, ranges, and operational context  
 # 3. Key individuals as real-world examples
 
-# IMPORTANT: OWLREADY2 SPARQL COMPATIBILITY NOTES
-# ================================================
-# 1. PREFIX declarations are IGNORED by Owlready2's native SPARQL engine
-# 2. The automatic prefix is 'mes_ontology_populated' (based on the .owl filename)
-# 3. DO NOT use angle brackets <> in queries - they cause lexing errors
-# 4. Use FILTER(ISIRI()) to check for IRIs instead of angle brackets
-# 5. Functions like regex() and str() are NOT supported
-# 6. Use 'a' instead of 'rdf:type' for better compatibility
-
-# WORKING QUERY PATTERNS:
-# ----------------------
-# ✅ CORRECT: ?equipment a ?type . FILTER(ISIRI(?equipment))
-# ❌ WRONG: ?equipment rdf:type <http://mes-ontology.org/factory.owl#Equipment>
-# 
-# ✅ CORRECT: ?x mes_ontology_populated:hasOEEScore ?score
-# ❌ WRONG: ?x mes:hasOEEScore ?score
-#
-# ✅ CORRECT: FILTER(?value > 90.0)
-# ❌ WRONG: FILTER(regex(str(?name), "pattern"))
-
 #############################################################################
 # NAMESPACE INFORMATION
 #############################################################################
@@ -123,13 +103,13 @@ def extract_ontology_to_ttl(owl_file_path, output_ttl_path):
 # Ontology filename: mes_ontology_populated.owl
 # Automatic Owlready2 prefix: mes_ontology_populated
 
-# Standard prefixes that work automatically:
+# Standard prefixes (automatically available):
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
-# Custom prefix (for documentation only - not used in queries):
+# Ontology prefix:
 @prefix mes: <{onto.base_iri}> .
 
 # Business context annotation property
@@ -388,60 +368,6 @@ mes:calculationMethod a owl:AnnotationProperty ;
         f.write(
             """
 
-#############################################################################
-# EXAMPLE SPARQL QUERIES - Owlready2 Compatible
-#############################################################################
-
-# Query 1: List all equipment with their types
-# SELECT ?equipment ?type WHERE {
-#     ?equipment a ?type .
-#     ?type rdfs:subClassOf* owl:Thing .
-#     FILTER(ISIRI(?equipment))
-# } LIMIT 20
-
-# Query 2: Get OEE scores for specific equipment  
-# SELECT ?timestamp ?oee WHERE {
-#     ?? mes_ontology_populated:logsEvent ?event .
-#     ?event mes_ontology_populated:hasTimestamp ?timestamp .
-#     ?event mes_ontology_populated:hasOEEScore ?oee .
-# } ORDER BY DESC(?timestamp) LIMIT 10
-# Parameters: ["http://mes-ontology.org/factory.owl#LINE1-FIL"]
-
-# Query 3: Find equipment with low OEE
-# SELECT ?equipment ?oee ?timestamp WHERE {
-#     ?equipment a ?type .
-#     ?equipment mes_ontology_populated:logsEvent ?event .
-#     ?event mes_ontology_populated:hasOEEScore ?oee .
-#     ?event mes_ontology_populated:hasTimestamp ?timestamp .
-#     FILTER(?oee < 85.0)
-#     FILTER(ISIRI(?equipment))
-# } ORDER BY ?oee LIMIT 20
-
-# Query 4: Count entities by type
-# SELECT ?type (COUNT(?x) AS ?count) WHERE {
-#     ?x a ?type .
-#     FILTER(ISIRI(?type))
-# } GROUP BY ?type
-# ORDER BY DESC(?count)
-
-# Query 5: Find relationships between equipment
-# SELECT ?upstream ?downstream WHERE {
-#     ?upstream mes_ontology_populated:isUpstreamOf ?downstream .
-#     FILTER(ISIRI(?upstream) && ISIRI(?downstream))
-# }
-
-# Query 6: Get product performance metrics
-# SELECT ?product ?goodUnits ?scrapUnits ?qualityScore WHERE {
-#     ?equipment mes_ontology_populated:executesOrder ?order .
-#     ?order mes_ontology_populated:producesProduct ?product .
-#     ?equipment mes_ontology_populated:logsEvent ?event .
-#     ?event a mes_ontology_populated:ProductionLog .
-#     ?event mes_ontology_populated:hasGoodUnits ?goodUnits .
-#     ?event mes_ontology_populated:hasScrapUnits ?scrapUnits .
-#     ?event mes_ontology_populated:hasQualityScore ?qualityScore .
-#     FILTER(ISIRI(?product))
-# } LIMIT 50
-
 """
         )
 
@@ -472,14 +398,14 @@ def main():
     extract_ontology_to_ttl(owl_file, output_ttl)
 
     print("\nNext steps:")
-    print("1. Review the generated TTL file for Owlready2 compatibility notes")
-    print("2. Use this file as context when prompting LLMs to generate SPARQL queries")
-    print("3. IMPORTANT: Tell the LLM to:")
-    print("   - Use 'mes_ontology_populated' as the prefix (NOT 'mes')")
-    print("   - Avoid angle brackets - use FILTER(ISIRI()) instead")
-    print("   - Use 'a' instead of 'rdf:type'")
-    print("   - Avoid regex() and str() functions")
-    print("4. Test generated queries with the API at http://localhost:8000/sparql/query")
+    print("1. Review the generated TTL file for ontology structure")
+    print(
+        "2. See SPARQL_Examples/owlready2_sparql_master_reference.md for query guidelines"
+    )
+    print("3. Use both files as context when prompting LLMs to generate SPARQL queries")
+    print(
+        "4. Test generated queries with the API at http://localhost:8000/sparql/query"
+    )
 
 
 if __name__ == "__main__":

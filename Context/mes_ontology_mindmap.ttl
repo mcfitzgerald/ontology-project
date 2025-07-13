@@ -1,31 +1,11 @@
 # MES Ontology Mind Map for LLM SPARQL Query Generation
-# Generated: 2025-07-12T21:54:11.028903
+# Generated: 2025-07-13T13:49:03.814866
 # Purpose: Provide ontology structure with business context for accurate SPARQL query construction
 
 # This file contains:
 # 1. Complete class hierarchy with business meanings
 # 2. All properties with domains, ranges, and operational context  
 # 3. Key individuals as real-world examples
-
-# IMPORTANT: OWLREADY2 SPARQL COMPATIBILITY NOTES
-# ================================================
-# 1. PREFIX declarations are IGNORED by Owlready2's native SPARQL engine
-# 2. The automatic prefix is 'mes_ontology_populated' (based on the .owl filename)
-# 3. DO NOT use angle brackets <> in queries - they cause lexing errors
-# 4. Use FILTER(ISIRI()) to check for IRIs instead of angle brackets
-# 5. Functions like regex() and str() are NOT supported
-# 6. Use 'a' instead of 'rdf:type' for better compatibility
-
-# WORKING QUERY PATTERNS:
-# ----------------------
-# ✅ CORRECT: ?equipment a ?type . FILTER(ISIRI(?equipment))
-# ❌ WRONG: ?equipment rdf:type <http://mes-ontology.org/factory.owl#Equipment>
-# 
-# ✅ CORRECT: ?x mes_ontology_populated:hasOEEScore ?score
-# ❌ WRONG: ?x mes:hasOEEScore ?score
-#
-# ✅ CORRECT: FILTER(?value > 90.0)
-# ❌ WRONG: FILTER(regex(str(?name), "pattern"))
 
 #############################################################################
 # NAMESPACE INFORMATION
@@ -35,13 +15,13 @@
 # Ontology filename: mes_ontology_populated.owl
 # Automatic Owlready2 prefix: mes_ontology_populated
 
-# Standard prefixes that work automatically:
+# Standard prefixes (automatically available):
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
-# Custom prefix (for documentation only - not used in queries):
+# Ontology prefix:
 @prefix mes: <http://mes-ontology.org/factory.owl#> .
 
 # Business context annotation property
@@ -309,35 +289,35 @@ mes:LINE1-FIL a mes:Filler ;
     mes:executesOrder mes:ORD-1000 ;
     mes:executesOrder mes:ORD-1001 ;
     mes:executesOrder mes:ORD-1002 ;
-    mes:belongsToLine mes:LINE1 ;
-    mes:isUpstreamOf mes:LINE1-PCK ;
     mes:logsEvent mes:EVENT-LINE1-FIL-2025-06-01T00-00-00 ;
     mes:logsEvent mes:EVENT-LINE1-FIL-2025-06-01T00-05-00 ;
-    mes:logsEvent mes:EVENT-LINE1-FIL-2025-06-01T00-10-00 .
+    mes:logsEvent mes:EVENT-LINE1-FIL-2025-06-01T00-10-00 ;
+    mes:isUpstreamOf mes:LINE1-PCK ;
+    mes:belongsToLine mes:LINE1 .
 
 mes:LINE1-PCK a mes:Packer ;
     rdfs:label "LINE1-PCK" ;
     mes:executesOrder mes:ORD-1000 ;
     mes:executesOrder mes:ORD-1001 ;
     mes:executesOrder mes:ORD-1002 ;
-    mes:isDownstreamOf mes:LINE1-FIL ;
-    mes:belongsToLine mes:LINE1 ;
-    mes:isUpstreamOf mes:LINE1-PAL ;
     mes:logsEvent mes:EVENT-LINE1-PCK-2025-06-01T00-00-00 ;
     mes:logsEvent mes:EVENT-LINE1-PCK-2025-06-01T00-05-00 ;
-    mes:logsEvent mes:EVENT-LINE1-PCK-2025-06-01T00-10-00 .
+    mes:logsEvent mes:EVENT-LINE1-PCK-2025-06-01T00-10-00 ;
+    mes:isDownstreamOf mes:LINE1-FIL ;
+    mes:isUpstreamOf mes:LINE1-PAL ;
+    mes:belongsToLine mes:LINE1 .
 
 mes:LINE2-PCK a mes:Packer ;
     rdfs:label "LINE2-PCK" ;
     mes:executesOrder mes:ORD-1028 ;
     mes:executesOrder mes:ORD-1029 ;
     mes:executesOrder mes:ORD-1030 ;
-    mes:isDownstreamOf mes:LINE2-FIL ;
-    mes:belongsToLine mes:LINE2 ;
-    mes:isUpstreamOf mes:LINE2-PAL ;
     mes:logsEvent mes:EVENT-LINE2-PCK-2025-06-01T00-00-00 ;
     mes:logsEvent mes:EVENT-LINE2-PCK-2025-06-01T00-05-00 ;
     mes:logsEvent mes:EVENT-LINE2-PCK-2025-06-01T00-10-00 ;
+    mes:isDownstreamOf mes:LINE2-FIL ;
+    mes:isUpstreamOf mes:LINE2-PAL ;
+    mes:belongsToLine mes:LINE2 ;
     mes:businessContext "Packer with chronic micro-stops. 25% chance of 1-5 minute stops each period. Needs preventive maintenance. Micro-stops: 25% probability per period." .
 
 mes:LINE3-FIL a mes:Filler ;
@@ -345,11 +325,11 @@ mes:LINE3-FIL a mes:Filler ;
     mes:executesOrder mes:ORD-1056 ;
     mes:executesOrder mes:ORD-1057 ;
     mes:executesOrder mes:ORD-1058 ;
-    mes:belongsToLine mes:LINE3 ;
-    mes:isUpstreamOf mes:LINE3-PCK ;
     mes:logsEvent mes:EVENT-LINE3-FIL-2025-06-01T00-00-00 ;
     mes:logsEvent mes:EVENT-LINE3-FIL-2025-06-01T00-05-00 ;
     mes:logsEvent mes:EVENT-LINE3-FIL-2025-06-01T00-10-00 ;
+    mes:isUpstreamOf mes:LINE3-PCK ;
+    mes:belongsToLine mes:LINE3 ;
     mes:businessContext "Older filler prone to failures. Major breakdown on June 8 caused 5.5 hour downtime. Scheduled for replacement Q3 2025. Major failure: 2025-06-08 02:00:00 to 2025-06-08 07:30:00." .
 
 mes:SKU-1001 a mes:Product ;
@@ -391,60 +371,3 @@ mes:SKU-3001 a mes:Product ;
     mes:salePrice 0.75 ;
     mes:profitMargin "66.7%" ;
     mes:businessContext "8oz Kids Drink - Small format, high speed production. Popular in school channels." .
-
-
-
-#############################################################################
-# EXAMPLE SPARQL QUERIES - Owlready2 Compatible
-#############################################################################
-
-# Query 1: List all equipment with their types
-# SELECT ?equipment ?type WHERE {
-#     ?equipment a ?type .
-#     ?type rdfs:subClassOf* owl:Thing .
-#     FILTER(ISIRI(?equipment))
-# } LIMIT 20
-
-# Query 2: Get OEE scores for specific equipment  
-# SELECT ?timestamp ?oee WHERE {
-#     ?? mes_ontology_populated:logsEvent ?event .
-#     ?event mes_ontology_populated:hasTimestamp ?timestamp .
-#     ?event mes_ontology_populated:hasOEEScore ?oee .
-# } ORDER BY DESC(?timestamp) LIMIT 10
-# Parameters: ["http://mes-ontology.org/factory.owl#LINE1-FIL"]
-
-# Query 3: Find equipment with low OEE
-# SELECT ?equipment ?oee ?timestamp WHERE {
-#     ?equipment a ?type .
-#     ?equipment mes_ontology_populated:logsEvent ?event .
-#     ?event mes_ontology_populated:hasOEEScore ?oee .
-#     ?event mes_ontology_populated:hasTimestamp ?timestamp .
-#     FILTER(?oee < 85.0)
-#     FILTER(ISIRI(?equipment))
-# } ORDER BY ?oee LIMIT 20
-
-# Query 4: Count entities by type
-# SELECT ?type (COUNT(?x) AS ?count) WHERE {
-#     ?x a ?type .
-#     FILTER(ISIRI(?type))
-# } GROUP BY ?type
-# ORDER BY DESC(?count)
-
-# Query 5: Find relationships between equipment
-# SELECT ?upstream ?downstream WHERE {
-#     ?upstream mes_ontology_populated:isUpstreamOf ?downstream .
-#     FILTER(ISIRI(?upstream) && ISIRI(?downstream))
-# }
-
-# Query 6: Get product performance metrics
-# SELECT ?product ?goodUnits ?scrapUnits ?qualityScore WHERE {
-#     ?equipment mes_ontology_populated:executesOrder ?order .
-#     ?order mes_ontology_populated:producesProduct ?product .
-#     ?equipment mes_ontology_populated:logsEvent ?event .
-#     ?event a mes_ontology_populated:ProductionLog .
-#     ?event mes_ontology_populated:hasGoodUnits ?goodUnits .
-#     ?event mes_ontology_populated:hasScrapUnits ?scrapUnits .
-#     ?event mes_ontology_populated:hasQualityScore ?qualityScore .
-#     FILTER(ISIRI(?product))
-# } LIMIT 50
-
