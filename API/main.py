@@ -66,7 +66,10 @@ app = FastAPI(
     title=settings.api_title,
     version=settings.api_version,
     description=settings.api_description,
-    lifespan=lifespan
+    lifespan=lifespan,
+    docs_url="/docs",
+    redoc_url="/redoc",
+    openapi_url="/openapi.json"
 )
 
 # Configure CORS if enabled
@@ -162,13 +165,7 @@ async def execute_sparql_query(request: SPARQLQueryRequest):
             # This is an error, not just a warning
             raise HTTPException(
                 status_code=400,
-                detail=ErrorResponse(
-                    error=ErrorDetail(
-                        type="unsupported_query",
-                        message=warning,
-                        hint="Check Owlready2 documentation for supported SPARQL features"
-                    )
-                ).model_dump()
+                detail=warning
             )
         
         # Detect query type
@@ -179,18 +176,13 @@ async def execute_sparql_query(request: SPARQLQueryRequest):
             results, columns, metadata = await sparql_service.execute_query(
                 query=query,
                 parameters=request.parameters,
-                timeout=request.timeout
+                timeout=request.timeout,
+                use_names=request.use_names
             )
         except TimeoutError as e:
             raise HTTPException(
                 status_code=408,
-                detail=ErrorResponse(
-                    error=ErrorDetail(
-                        type="timeout",
-                        message=str(e),
-                        hint="Try simplifying your query or increasing the timeout"
-                    )
-                ).model_dump()
+                detail=f"Query timeout: {str(e)}. Try simplifying your query or increasing the timeout"
             )
         except Exception as e:
             error_msg = str(e)
@@ -198,13 +190,7 @@ async def execute_sparql_query(request: SPARQLQueryRequest):
             
             raise HTTPException(
                 status_code=400,
-                detail=ErrorResponse(
-                    error=ErrorDetail(
-                        type="invalid_sparql",
-                        message=error_msg,
-                        hint=hint
-                    )
-                ).model_dump()
+                detail=f"SPARQL query error: {error_msg}" + (f". Hint: {hint}" if hint else "")
             )
         
         # Get ontology info
@@ -246,13 +232,7 @@ async def get_ontology_info():
     except RuntimeError as e:
         raise HTTPException(
             status_code=503,
-            detail=ErrorResponse(
-                error=ErrorDetail(
-                    type="service_unavailable",
-                    message=str(e),
-                    hint="The ontology may still be loading"
-                )
-            ).model_dump()
+            detail=f"Service unavailable: {str(e)}. The ontology may still be loading"
         )
 
 
@@ -261,94 +241,65 @@ async def get_example_queries():
     """Get example SPARQL queries for the MES ontology"""
     examples = [
         ExampleQuery(
-            name="Current OEE by Equipment",
-            description="Get the most recent OEE score for each equipment",
-            query="""
-                SELECT ?equipment ?oee ?timestamp WHERE {
-                    ?equipment a :Equipment .
-                    ?equipment :logsEvent ?event .
-                    ?event :hasOEEScore ?oee .
-                    ?event :hasTimestamp ?timestamp .
-                } ORDER BY DESC(?timestamp) LIMIT 100
-            """
+            name="List All Equipment",
+            description="Get all equipment instances in the factory",
+            query="""SELECT ?equipment ?type WHERE {
+    ?equipment a ?type .
+    ?type rdfs:subClassOf* owl:Thing .
+    FILTER(ISIRI(?equipment))
+} LIMIT 20"""
         ),
         ExampleQuery(
-            name="Equipment Downtime Summary",
-            description="Find equipment with downtime events and their reasons",
-            query="""
-                SELECT ?equipment ?reason ?timestamp WHERE {
-                    ?equipment a :Equipment .
-                    ?equipment :logsEvent ?event .
-                    ?event a :DowntimeLog .
-                    ?event :hasDowntimeReasonCode ?reason .
-                    ?event :hasTimestamp ?timestamp .
-                } ORDER BY DESC(?timestamp) LIMIT 50
-            """
+            name="Count Entity Types",
+            description="Count different types of entities in the ontology",
+            query="""SELECT ?type (COUNT(?x) AS ?count) WHERE {
+    ?x a ?type .
+    FILTER(ISIRI(?type))
+} GROUP BY ?type
+ORDER BY DESC(?count)
+LIMIT 10"""
         ),
         ExampleQuery(
-            name="Production by Product",
-            description="Sum good units produced by product",
-            query="""
-                SELECT ?product (SUM(?units) as ?total_units) WHERE {
-                    ?order :producesProduct ?product .
-                    ?equipment :executesOrder ?order .
-                    ?equipment :logsEvent ?event .
-                    ?event a :ProductionLog .
-                    ?event :hasGoodUnits ?units .
-                } GROUP BY ?product
-            """
+            name="Get Entity Properties",
+            description="Get all properties for a specific entity",
+            query="""SELECT ?prop ?value WHERE {
+    ?? ?prop ?value .
+    FILTER(ISIRI(?prop))
+} LIMIT 30""",
+            parameters=["http://mes-ontology.org/factory.owl#LINE1-FIL"]
         ),
         ExampleQuery(
-            name="Low Performance Equipment",
-            description="Find equipment with performance score below 90%",
-            query="""
-                SELECT DISTINCT ?equipment ?performance WHERE {
-                    ?equipment a :Equipment .
-                    ?equipment :logsEvent ?event .
-                    ?event :hasPerformanceScore ?performance .
-                    FILTER(?performance < 90.0)
-                } LIMIT 20
-            """
+            name="Get All Classes",
+            description="List all classes defined in the ontology",
+            query="""SELECT DISTINCT ?class WHERE {
+    ?x a ?class .
+    ?class a owl:Class .
+} LIMIT 20"""
         ),
         ExampleQuery(
-            name="Equipment Hierarchy",
-            description="Show equipment and their production line relationships",
-            query="""
-                SELECT ?equipment ?line ?upstream WHERE {
-                    ?equipment a :Equipment .
-                    ?equipment :belongsToLine ?line .
-                    OPTIONAL { ?equipment :isUpstreamOf ?upstream }
-                }
-            """
+            name="Get Relationships",
+            description="Find all relationships between entities",
+            query="""SELECT ?s ?p ?o WHERE {
+    ?s ?p ?o .
+    FILTER(ISIRI(?s) && ISIRI(?p) && ISIRI(?o))
+} LIMIT 50"""
         ),
         ExampleQuery(
-            name="Quality Issues",
-            description="Find events with high scrap rates",
-            query="""
-                SELECT ?equipment ?product ?scrap ?good ?quality WHERE {
-                    ?equipment :logsEvent ?event .
-                    ?event a :ProductionLog .
-                    ?event :hasScrapUnits ?scrap .
-                    ?event :hasGoodUnits ?good .
-                    ?event :hasQualityScore ?quality .
-                    ?equipment :executesOrder ?order .
-                    ?order :producesProduct ?product .
-                    FILTER(?quality < 98.0)
-                } ORDER BY ?quality LIMIT 50
-            """
+            name="Get Datatype Properties",
+            description="Find all datatype property values",
+            query="""SELECT ?s ?p ?o WHERE {
+    ?s ?p ?o .
+    FILTER(ISIRI(?s))
+    FILTER(ISIRI(?p))
+    FILTER(!ISIRI(?o))
+} LIMIT 50"""
         ),
         ExampleQuery(
-            name="Parametrized Query Example",
-            description="Find events for specific equipment (using parameters)",
-            query="""
-                SELECT ?timestamp ?status ?oee WHERE {
-                    ?? :logsEvent ?event .
-                    ?event :hasTimestamp ?timestamp .
-                    ?event :hasMachineStatus ?status .
-                    ?event :hasOEEScore ?oee .
-                } ORDER BY DESC(?timestamp) LIMIT 20
-            """,
-            parameters=["LINE1-FIL"]
+            name="Simple Test Query",
+            description="Basic query to test SPARQL endpoint",
+            query="""SELECT ?x WHERE {
+    ?x a owl:Thing .
+} LIMIT 5"""
         )
     ]
     
@@ -366,7 +317,10 @@ async def root():
             "health": "/health",
             "execute_query": "/sparql/query",
             "ontology_info": "/ontology/info",
-            "examples": "/sparql/examples"
+            "examples": "/sparql/examples",
+            "swagger_ui": "/docs",
+            "redoc": "/redoc",
+            "openapi_schema": "/openapi.json"
         }
     }
 

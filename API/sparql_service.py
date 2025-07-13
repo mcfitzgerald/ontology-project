@@ -9,6 +9,9 @@ from typing import Any, Dict, List, Optional, Tuple
 from datetime import datetime
 from functools import lru_cache
 import json
+import tempfile
+from pathlib import Path
+import time
 
 from owlready2 import get_ontology, default_world, World
 import owlready2.sparql
@@ -39,6 +42,8 @@ class SPARQLService:
         self.loaded_at: Optional[datetime] = None
         self._ontology_metadata: Dict[str, Any] = {}
         self._lock = asyncio.Lock()
+        self._quadstore_path: Optional[Path] = None
+        self._enable_parallelism = True  # Enable thread parallelism by default
         
     async def initialize(self):
         """Initialize the service and load the ontology"""
@@ -67,21 +72,45 @@ class SPARQLService:
                 raise
     
     async def _load_ontology(self):
-        """Load the ontology in a thread"""
+        """Load the ontology in a thread with optional parallelism support"""
         loop = asyncio.get_event_loop()
         
         def _load():
-            # Create a new world for thread safety
+            start_time = time.time()
+            
+            # Create a new world
             self.world = World()
             
+            # Configure for thread parallelism if enabled
+            if self._enable_parallelism:
+                # Create a temporary file for the quadstore
+                self._quadstore_path = Path(tempfile.gettempdir()) / f"mes_quadstore_{datetime.now().timestamp()}.sqlite3"
+                logger.info(f"Enabling thread parallelism with quadstore at: {self._quadstore_path}")
+                
+                # Set backend with thread parallelism
+                self.world.set_backend(
+                    filename=str(self._quadstore_path),
+                    exclusive=False,
+                    enable_thread_parallelism=True
+                )
+            
             # Load the ontology
-            self.ontology = get_ontology(
+            logger.info(f"Loading ontology from: {self.ontology_path}")
+            self.ontology = self.world.get_ontology(
                 f"file://{self.ontology_path}"
-            ).load(world=self.world)
+            ).load()
+            
+            # Save the world to enable parallelism
+            if self._enable_parallelism:
+                logger.info("Saving world to enable thread parallelism...")
+                self.world.save()
             
             # Extract metadata
             self._extract_metadata()
             self.loaded_at = datetime.utcnow()
+            
+            load_time = time.time() - start_time
+            logger.info(f"Ontology loaded successfully in {load_time:.2f}s")
             
             return True
         
@@ -139,7 +168,8 @@ class SPARQLService:
         self,
         query: str,
         parameters: Optional[List[Any]] = None,
-        timeout: Optional[int] = None
+        timeout: Optional[int] = None,
+        use_names: bool = True
     ) -> Tuple[List[List[Any]], List[str], Dict[str, Any]]:
         """
         Execute a SPARQL query asynchronously.
@@ -148,6 +178,7 @@ class SPARQLService:
             query: SPARQL query string
             parameters: Optional query parameters
             timeout: Query timeout in seconds
+            use_names: If True, use entity names instead of full IRIs
             
         Returns:
             Tuple of (results, column_names, execution_metadata)
@@ -158,9 +189,15 @@ class SPARQLService:
         timeout = timeout or settings.query_timeout_seconds
         loop = asyncio.get_event_loop()
         
+        # Log query details
+        logger.debug(f"Executing query (timeout={timeout}s): {query[:100]}...")
+        if parameters:
+            logger.debug(f"With parameters: {parameters}")
+        
         # Execute query in thread pool
         try:
             with Timer() as timer:
+                # Create the future
                 future = loop.run_in_executor(
                     self.executor,
                     self._execute_query_sync,
@@ -169,13 +206,20 @@ class SPARQLService:
                 )
                 
                 # Wait with timeout
+                start_wait = time.time()
                 results, columns = await asyncio.wait_for(
                     future,
                     timeout=timeout
                 )
+                wait_time = time.time() - start_wait
+                
+                if wait_time > 1.0:
+                    logger.warning(f"Query took {wait_time:.2f}s to execute (approaching timeout of {timeout}s)")
             
             # Format results
-            formatted_results, formatted_columns = format_query_results(results, columns)
+            format_start = time.time()
+            formatted_results, formatted_columns = format_query_results(results, columns, self.world, use_names)
+            format_time = time.time() - format_start
             
             # Truncate if needed
             truncated_results, was_truncated = truncate_results(
@@ -186,12 +230,17 @@ class SPARQLService:
             metadata = {
                 "query_time_ms": timer.elapsed_ms,
                 "prepared_query": parameters is not None,
-                "truncated": was_truncated
+                "truncated": was_truncated,
+                "result_count": len(results),
+                "format_time_ms": format_time * 1000
             }
+            
+            logger.debug(f"Query completed in {timer.elapsed_ms:.0f}ms, returned {len(results)} results")
             
             return truncated_results, formatted_columns, metadata
             
         except asyncio.TimeoutError:
+            logger.error(f"Query timeout after {timeout}s: {query[:100]}...")
             raise TimeoutError(f"Query exceeded timeout of {timeout} seconds")
         except Exception as e:
             logger.error(f"Query execution failed: {e}")
@@ -212,17 +261,30 @@ class SPARQLService:
         Returns:
             Tuple of (results, column_names)
         """
+        # Time each stage
+        prep_start = time.time()
+        
         # Prepare the query
         prepared_query = self.world.prepare_sparql(query)
+        prep_time = time.time() - prep_start
         
         # Get column names
         column_names = getattr(prepared_query, 'column_names', [])
         
+        # Log SQL translation if available (for debugging)
+        if hasattr(prepared_query, 'sql') and logger.isEnabledFor(logging.DEBUG):
+            logger.debug(f"SQL translation: {prepared_query.sql[:200]}...")
+        
         # Execute query
+        exec_start = time.time()
         if parameters:
             results = list(prepared_query.execute(parameters))
         else:
             results = list(prepared_query.execute())
+        exec_time = time.time() - exec_start
+        
+        if prep_time > 0.1 or exec_time > 1.0:
+            logger.warning(f"Slow query - Preparation: {prep_time:.3f}s, Execution: {exec_time:.3f}s")
         
         return results, column_names
     
@@ -288,6 +350,14 @@ class SPARQLService:
         if self.executor:
             self.executor.shutdown(wait=True)
             self.executor = None
+        
+        # Clean up quadstore file if it exists
+        if self._quadstore_path and self._quadstore_path.exists():
+            try:
+                self._quadstore_path.unlink()
+                logger.info(f"Cleaned up quadstore file: {self._quadstore_path}")
+            except Exception as e:
+                logger.warning(f"Failed to clean up quadstore file: {e}")
         
         self.world = None
         self.ontology = None

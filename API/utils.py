@@ -8,6 +8,7 @@ import logging
 from typing import Optional, Tuple, List, Any
 from datetime import datetime
 from functools import lru_cache
+from owlready2 import World
 
 from .models import QueryType
 
@@ -152,13 +153,37 @@ def get_error_hint(error_message: str) -> Optional[str]:
     return None
 
 
-def format_query_results(results: List[List[Any]], columns: List[str]) -> Tuple[List[List[Any]], List[str]]:
+# Common RDF/OWL predicate mappings for Owlready2 internal IDs
+PREDICATE_IRI_MAPPING = {
+    6: "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+    7: "http://www.w3.org/2000/01/rdf-schema#domain",
+    8: "http://www.w3.org/2000/01/rdf-schema#range",
+    9: "http://www.w3.org/2000/01/rdf-schema#subClassOf",
+    10: "http://www.w3.org/2002/07/owl#equivalentClass",
+    11: "http://www.w3.org/2002/07/owl#NamedIndividual",
+    12: "http://www.w3.org/2000/01/rdf-schema#subPropertyOf",
+    13: "http://www.w3.org/2002/07/owl#ObjectProperty",
+    14: "http://www.w3.org/2002/07/owl#DatatypeProperty",
+    15: "http://www.w3.org/2002/07/owl#AnnotationProperty",
+    16: "http://www.w3.org/2002/07/owl#inverseOf",
+    17: "http://www.w3.org/2002/07/owl#TransitiveProperty",
+    18: "http://www.w3.org/2002/07/owl#SymmetricProperty",
+    19: "http://www.w3.org/2002/07/owl#AsymmetricProperty",
+    20: "http://www.w3.org/2002/07/owl#ReflexiveProperty",
+    21: "http://www.w3.org/2002/07/owl#IrreflexiveProperty",
+    22: "http://www.w3.org/1999/02/22-rdf-syntax-ns#Property",
+}
+
+
+def format_query_results(results: List[List[Any]], columns: List[str], world: Optional[World] = None, use_names: bool = True) -> Tuple[List[List[Any]], List[str]]:
     """
     Format query results for JSON serialization.
     
     Args:
         results: Raw query results from Owlready2
         columns: Column names from the query
+        world: Owlready2 World object for resolving IRIs
+        use_names: If True, use entity names instead of full IRIs (default: True)
         
     Returns:
         Tuple of (formatted_results, formatted_columns)
@@ -168,19 +193,58 @@ def format_query_results(results: List[List[Any]], columns: List[str]) -> Tuple[
     for row in results:
         formatted_row = []
         for value in row:
-            # Convert Owlready2 objects to strings
-            if hasattr(value, 'iri'):
-                # It's an Owlready2 entity
-                formatted_row.append(value.iri)
-            elif hasattr(value, 'name'):
-                # It might have a name attribute
-                formatted_row.append(str(value.name))
+            formatted_value = None
+            
+            # Handle integer predicates (Owlready2 internal IDs)
+            if isinstance(value, int) and world is not None:
+                # Try to unabbreviate the integer to get IRI
+                try:
+                    iri = world._unabbreviate(value)
+                    formatted_value = iri
+                except:
+                    # Fall back to predicate mapping
+                    if value in PREDICATE_IRI_MAPPING:
+                        formatted_value = PREDICATE_IRI_MAPPING[value]
+                    else:
+                        # If all else fails, keep the integer
+                        formatted_value = value
+            
+            # Handle type objects (Python classes)
+            elif isinstance(value, type):
+                # It's a Python type/class object
+                if hasattr(value, 'name') and use_names:
+                    # Use the entity name if available
+                    formatted_value = value.name
+                elif hasattr(value, 'iri'):
+                    formatted_value = value.iri
+                elif hasattr(value, '__module__') and hasattr(value, '__name__'):
+                    # Create a string representation
+                    formatted_value = f"{value.__module__}.{value.__name__}"
+                else:
+                    formatted_value = str(value)
+            
+            # Handle Owlready2 entities
+            elif hasattr(value, 'iri'):
+                if hasattr(value, 'name') and use_names:
+                    # Use entity name for cleaner output
+                    formatted_value = value.name
+                else:
+                    # Use full IRI
+                    formatted_value = value.iri
+            
+            # Handle objects with name attribute
+            elif hasattr(value, 'name') and not isinstance(value, (str, int, float, bool)):
+                formatted_value = str(value.name)
+            
+            # Handle datetime objects
             elif isinstance(value, (datetime,)):
-                # Convert datetime to ISO format
-                formatted_row.append(value.isoformat())
+                formatted_value = value.isoformat()
+            
+            # Keep primitives as is
             else:
-                # Keep as is (primitives, None, etc.)
-                formatted_row.append(value)
+                formatted_value = value
+            
+            formatted_row.append(formatted_value)
         formatted_results.append(formatted_row)
     
     # Clean up column names (remove ? prefix if present)

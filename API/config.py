@@ -24,7 +24,7 @@ class Settings(BaseSettings):
     
     # Thread Pool Configuration
     thread_pool_size: int = Field(default=4, env="THREAD_POOL_SIZE")
-    query_timeout_seconds: int = Field(default=30, env="QUERY_TIMEOUT")
+    query_timeout_seconds: int = Field(default=60, env="QUERY_TIMEOUT")  # Increased from 30s
     
     # Query Limits
     max_query_length: int = Field(default=10240, env="MAX_QUERY_LENGTH")  # 10KB
