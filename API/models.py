@@ -38,6 +38,11 @@ class SPARQLQueryRequest(BaseModel):
         le=300
     )
     
+    use_names: bool = Field(
+        default=True,
+        description="Return entity names instead of full IRIs (e.g., 'LINE1' instead of 'http://mes-ontology.org/factory.owl#LINE1')"
+    )
+    
     @field_validator('query')
     @classmethod
     def validate_query_not_empty(cls, v: str) -> str:
