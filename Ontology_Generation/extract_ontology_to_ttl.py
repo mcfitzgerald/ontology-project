@@ -95,6 +95,13 @@ def extract_ontology_to_ttl(owl_file_path, output_ttl_path):
 # 2. All properties with domains, ranges, and operational context  
 # 3. Key individuals as real-world examples
 
+# IMPORTANT PREFIX NOTE FOR SPARQL QUERIES:
+# This Turtle file uses 'mes:' prefix which is correct for Turtle format.
+# However, when writing SPARQL queries for Owlready2, you MUST use ':' prefix instead:
+#   Turtle format (this file): mes:hasOEEScore
+#   SPARQL queries: :hasOEEScore
+# The 'mes:' prefix causes parsing errors in Owlready2, especially with comparison operators.
+
 #############################################################################
 # NAMESPACE INFORMATION
 #############################################################################

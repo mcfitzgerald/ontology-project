@@ -240,26 +240,7 @@ async def get_business_context(entity: str) -> Dict[str, Any]:
 
 
 # Create ADK tools
-ontology_explorer_tool = FunctionTool(
-    func=explore_ontology_structure,
-    name="explore_ontology",
-    description="""Discover ontology structure, relationships, and business context.
-    
-    Use this to understand:
-    - What entities are available (Equipment, Product, Event types)
-    - What relationships exist between entities
-    - Business context and annotations
-    - Overall ontology structure
-    
-    Returns discovered entities, relationships, and their business significance.""",
-    input_schema=OntologyExplorationParams
-)
+# FunctionTool automatically extracts metadata from the function's docstring
+ontology_explorer_tool = FunctionTool(explore_ontology_structure)
 
-get_context_tool = FunctionTool(
-    func=get_business_context,
-    name="get_business_context",
-    description="""Extract business context annotations for a specific entity.
-    
-    Use this to understand the business significance of an entity,
-    including any special rules, constraints, or domain knowledge."""
-)
+get_context_tool = FunctionTool(get_business_context)

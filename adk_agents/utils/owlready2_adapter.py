@@ -33,15 +33,11 @@ class Owlready2Adapter:
         # Remove angle brackets from URIs
         query = re.sub(r'<([^>]+)>', r'\1', query)
         
-        # Convert standard property paths to Owlready2 format
-        # mes:hasEquipmentID -> :hasEquipmentID
-        query = re.sub(r'\bmes:(\w+)', r':\1', query)
-        
         # Convert rdf:type to 'a'
         query = re.sub(r'\brdf:type\b', 'a', query)
         
-        # Add automatic prefix
-        query = f"{self.auto_prefix}\n{query.strip()}"
+        # Don't add PREFIX - Owlready2 doesn't support it and uses : automatically
+        # query = f"{self.auto_prefix}\n{query.strip()}"
         
         # Add FILTER(ISIRI()) for entity variables if not present
         query = self._add_iri_filters(query)

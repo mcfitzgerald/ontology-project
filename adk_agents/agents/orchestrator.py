@@ -4,7 +4,7 @@ Orchestrator Agent - Main coordinator for manufacturing analytics conversations.
 from typing import List, Optional
 import pandas as pd
 from google.adk.agents import LlmAgent
-from google.adk.tools import AgentTool
+from google.adk.tools import BaseTool
 
 from ..config.settings import DEFAULT_MODEL, DEFAULT_TEMPERATURE
 from ..config.prompts.system_prompts import ORCHESTRATOR_PROMPT

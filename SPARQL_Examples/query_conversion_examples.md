@@ -2,6 +2,14 @@
 
 This document shows how to convert standard SPARQL queries to Owlready2-compatible versions.
 
+## Critical Note on Prefixes
+
+**IMPORTANT**: The `mes:` prefix causes parsing errors in Owlready2, especially with comparison operators. Always use the `:` prefix instead:
+- ❌ `mes:hasOEEScore` - Causes "Error at COMPARATOR:'<'" 
+- ✅ `:hasOEEScore` - Works correctly
+
+The ADK agents automatically convert `mes:` to `:` using the owlready2_adapter.
+
 ## Example 1: Basic Type Query
 
 ### Standard SPARQL:
@@ -47,15 +55,15 @@ WHERE {
 ```sparql
 SELECT ?equipment ?oee
 WHERE {
-    ?equipment ?prop ?oee .
+    ?equipment :hasOEEScore ?oee .
     FILTER(ISIRI(?equipment))
-    FILTER(regex(str(?prop), "hasOEEScore"))
 }
 ```
 
 **Changes Made:**
-- Used variable for property
-- Added regex filter for property name
+- Removed PREFIX declaration
+- Changed `mes:hasOEEScore` to `:hasOEEScore`
+- Added FILTER(ISIRI()) for entity variable
 - No PREFIX needed
 
 ---
@@ -77,9 +85,8 @@ WHERE {
 ```sparql
 SELECT ?product ?price
 WHERE {
-    ?product ?priceProp ?price .
+    ?product :hasSalePrice ?price .
     FILTER(ISIRI(?product))
-    FILTER(regex(str(?priceProp), "hasSalePrice"))
     FILTER(?price > 1.0)
 }
 ```
@@ -108,9 +115,8 @@ WHERE {
 ```sparql
 SELECT ?event ?timestamp
 WHERE {
-    ?event ?timeProp ?timestamp .
+    ?event :hasTimestamp ?timestamp .
     FILTER(ISIRI(?event))
-    FILTER(regex(str(?timeProp), "hasTimestamp"))
 }
 # Filter timestamps in Python post-processing
 ```
@@ -141,9 +147,8 @@ HAVING (AVG(?oee) > 85.0)
 SELECT ?type (AVG(?oee) AS ?avgOEE) (COUNT(?equipment) AS ?count)
 WHERE {
     ?equipment a ?type .
-    ?equipment ?oeeProp ?oee .
+    ?equipment :hasOEEScore ?oee .
     FILTER(ISIRI(?equipment))
-    FILTER(regex(str(?oeeProp), "hasOEEScore"))
 }
 GROUP BY ?type
 ORDER BY ?avgOEE
@@ -172,11 +177,9 @@ WHERE {
 ```sparql
 SELECT ?start ?middle ?end
 WHERE {
-    ?start ?rel1 ?middle .
-    ?middle ?rel2 ?end .
+    ?start :isUpstreamOf ?middle .
+    ?middle :isUpstreamOf ?end .
     FILTER(ISIRI(?start) && ISIRI(?middle) && ISIRI(?end))
-    FILTER(regex(str(?rel1), "isUpstreamOf"))
-    FILTER(regex(str(?rel2), "isUpstreamOf"))
 }
 ```
 
