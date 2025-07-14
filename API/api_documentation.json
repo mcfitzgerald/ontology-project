@@ -1,0 +1,513 @@
+{
+    "openapi": "3.1.0",
+    "info": {
+        "title": "MES Ontology SPARQL API",
+        "description": "Execute SPARQL queries against MES manufacturing ontology",
+        "version": "1.0.0"
+    },
+    "paths": {
+        "/health": {
+            "get": {
+                "summary": "Health Check",
+                "description": "Check API and ontology health status",
+                "operationId": "health_check_health_get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HealthCheckResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/sparql/query": {
+            "post": {
+                "summary": "Execute Sparql Query",
+                "description": "Execute a SPARQL query against the ontology",
+                "operationId": "execute_sparql_query_sparql_query_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SPARQLQueryRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SPARQLQueryResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/ontology/info": {
+            "get": {
+                "summary": "Get Ontology Info",
+                "description": "Get information about the loaded ontology",
+                "operationId": "get_ontology_info_ontology_info_get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/OntologyInfo"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/sparql/examples": {
+            "get": {
+                "summary": "Get Example Queries",
+                "description": "Get example SPARQL queries for the MES ontology",
+                "operationId": "get_example_queries_sparql_examples_get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ExampleQueriesResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/": {
+            "get": {
+                "summary": "Root",
+                "description": "Root endpoint with API information",
+                "operationId": "root__get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "ExampleQueriesResponse": {
+                "properties": {
+                    "examples": {
+                        "items": {
+                            "$ref": "#/components/schemas/ExampleQuery"
+                        },
+                        "type": "array",
+                        "title": "Examples",
+                        "description": "List of example SPARQL queries"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "examples"
+                ],
+                "title": "ExampleQueriesResponse",
+                "description": "Response containing example queries"
+            },
+            "ExampleQuery": {
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "title": "Name",
+                        "description": "Query name"
+                    },
+                    "description": {
+                        "type": "string",
+                        "title": "Description",
+                        "description": "What the query does"
+                    },
+                    "query": {
+                        "type": "string",
+                        "title": "Query",
+                        "description": "SPARQL query text"
+                    },
+                    "parameters": {
+                        "anyOf": [
+                            {
+                                "items": {},
+                                "type": "array"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Parameters",
+                        "description": "Example parameters if applicable"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "name",
+                    "description",
+                    "query"
+                ],
+                "title": "ExampleQuery",
+                "description": "Example SPARQL query"
+            },
+            "HTTPValidationError": {
+                "properties": {
+                    "detail": {
+                        "items": {
+                            "$ref": "#/components/schemas/ValidationError"
+                        },
+                        "type": "array",
+                        "title": "Detail"
+                    }
+                },
+                "type": "object",
+                "title": "HTTPValidationError"
+            },
+            "HealthCheckResponse": {
+                "properties": {
+                    "status": {
+                        "$ref": "#/components/schemas/HealthStatus",
+                        "description": "Overall health status"
+                    },
+                    "ontology_loaded": {
+                        "type": "boolean",
+                        "title": "Ontology Loaded",
+                        "description": "Whether ontology is successfully loaded"
+                    },
+                    "thread_pool_active": {
+                        "type": "boolean",
+                        "title": "Thread Pool Active",
+                        "description": "Whether thread pool is active"
+                    },
+                    "ontology_stats": {
+                        "anyOf": [
+                            {
+                                "additionalProperties": {
+                                    "type": "integer"
+                                },
+                                "type": "object"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Ontology Stats",
+                        "description": "Basic ontology statistics"
+                    },
+                    "message": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Message",
+                        "description": "Additional status message"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "status",
+                    "ontology_loaded",
+                    "thread_pool_active"
+                ],
+                "title": "HealthCheckResponse",
+                "description": "Health check response"
+            },
+            "HealthStatus": {
+                "type": "string",
+                "enum": [
+                    "healthy",
+                    "degraded",
+                    "unhealthy"
+                ],
+                "title": "HealthStatus",
+                "description": "Health check status values"
+            },
+            "OntologyInfo": {
+                "properties": {
+                    "iri": {
+                        "type": "string",
+                        "title": "Iri",
+                        "description": "Ontology IRI"
+                    },
+                    "name": {
+                        "type": "string",
+                        "title": "Name",
+                        "description": "Ontology name"
+                    },
+                    "version": {
+                        "type": "string",
+                        "title": "Version",
+                        "description": "Ontology version"
+                    },
+                    "statistics": {
+                        "additionalProperties": {
+                            "type": "integer"
+                        },
+                        "type": "object",
+                        "title": "Statistics",
+                        "description": "Entity counts (equipment, products, events, etc.)"
+                    },
+                    "loaded_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Loaded At",
+                        "description": "When ontology was loaded"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "iri",
+                    "name",
+                    "version",
+                    "statistics",
+                    "loaded_at"
+                ],
+                "title": "OntologyInfo",
+                "description": "Ontology information response"
+            },
+            "QueryMetadata": {
+                "properties": {
+                    "query_time_ms": {
+                        "type": "integer",
+                        "title": "Query Time Ms",
+                        "description": "Query execution time in milliseconds"
+                    },
+                    "query_type": {
+                        "$ref": "#/components/schemas/QueryType",
+                        "description": "Type of SPARQL query executed"
+                    },
+                    "ontology_version": {
+                        "type": "string",
+                        "title": "Ontology Version",
+                        "description": "Version of the ontology"
+                    },
+                    "timestamp": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Timestamp",
+                        "description": "Timestamp of query execution"
+                    },
+                    "prepared_query": {
+                        "type": "boolean",
+                        "title": "Prepared Query",
+                        "description": "Whether query was executed as prepared statement",
+                        "default": false
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "query_time_ms",
+                    "query_type",
+                    "ontology_version"
+                ],
+                "title": "QueryMetadata",
+                "description": "Metadata about query execution"
+            },
+            "QueryResultData": {
+                "properties": {
+                    "columns": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "title": "Columns",
+                        "description": "Column names from the query (e.g., ['?equipment', '?oee'])"
+                    },
+                    "results": {
+                        "items": {
+                            "items": {},
+                            "type": "array"
+                        },
+                        "type": "array",
+                        "title": "Results",
+                        "description": "Query results as list of rows"
+                    },
+                    "row_count": {
+                        "type": "integer",
+                        "title": "Row Count",
+                        "description": "Number of rows returned"
+                    },
+                    "truncated": {
+                        "type": "boolean",
+                        "title": "Truncated",
+                        "description": "Whether results were truncated due to limits",
+                        "default": false
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "columns",
+                    "results",
+                    "row_count"
+                ],
+                "title": "QueryResultData",
+                "description": "Query result data with metadata for DataFrame construction"
+            },
+            "QueryType": {
+                "type": "string",
+                "enum": [
+                    "select",
+                    "insert",
+                    "delete",
+                    "unknown"
+                ],
+                "title": "QueryType",
+                "description": "Supported SPARQL query types"
+            },
+            "SPARQLQueryRequest": {
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "minLength": 1,
+                        "title": "Query",
+                        "description": "SPARQL query to execute",
+                        "example": "SELECT ?equipment ?oee WHERE { ?equipment :hasOEEScore ?oee } LIMIT 10"
+                    },
+                    "parameters": {
+                        "anyOf": [
+                            {
+                                "items": {},
+                                "type": "array"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Parameters",
+                        "description": "Query parameters for prepared statements (using ?? placeholders)"
+                    },
+                    "timeout": {
+                        "anyOf": [
+                            {
+                                "type": "integer",
+                                "maximum": 300.0,
+                                "minimum": 1.0
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Timeout",
+                        "description": "Query timeout in seconds (overrides default)"
+                    },
+                    "use_names": {
+                        "type": "boolean",
+                        "title": "Use Names",
+                        "description": "Return entity names instead of full IRIs (e.g., 'LINE1' instead of 'http://mes-ontology.org/factory.owl#LINE1')",
+                        "default": true
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "query"
+                ],
+                "title": "SPARQLQueryRequest",
+                "description": "Request model for SPARQL query execution"
+            },
+            "SPARQLQueryResponse": {
+                "properties": {
+                    "status": {
+                        "type": "string",
+                        "title": "Status",
+                        "description": "Response status",
+                        "default": "success"
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/QueryResultData",
+                        "description": "Query results and column information"
+                    },
+                    "metadata": {
+                        "$ref": "#/components/schemas/QueryMetadata",
+                        "description": "Query execution metadata"
+                    },
+                    "warning": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Warning",
+                        "description": "Optional warning message"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "data",
+                    "metadata"
+                ],
+                "title": "SPARQLQueryResponse",
+                "description": "Successful query response"
+            },
+            "ValidationError": {
+                "properties": {
+                    "loc": {
+                        "items": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "integer"
+                                }
+                            ]
+                        },
+                        "type": "array",
+                        "title": "Location"
+                    },
+                    "msg": {
+                        "type": "string",
+                        "title": "Message"
+                    },
+                    "type": {
+                        "type": "string",
+                        "title": "Error Type"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "loc",
+                    "msg",
+                    "type"
+                ],
+                "title": "ValidationError"
+            }
+        }
+    }
+}

@@ -9,8 +9,8 @@ from pathlib import Path
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent))
 
-from adk_agents.tools.sparql_tool import execute_sparql_query
-from adk_agents.utils.financial_calc import FinancialCalculator
+from tools.sparql_tool import execute_sparql_query
+from utils.financial_calc import FinancialCalculator
 
 
 async def test_sparql_connectivity():

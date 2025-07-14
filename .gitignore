@@ -2,3 +2,4 @@ Data/
 Ontology/
 .env
 .example_env
+__pycache__

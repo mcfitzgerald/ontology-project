@@ -4,14 +4,17 @@ Based on patterns from owlready2_sparql_master_reference.md
 """
 import re
 from typing import Dict, List, Optional
+import os
 
 
 class Owlready2Adapter:
     """Adapts standard SPARQL queries for Owlready2 compatibility."""
     
-    def __init__(self, namespace: str = "http://example.com/mes#"):
-        self.namespace = namespace
-        self.auto_prefix = f"PREFIX : <{namespace}>"
+    def __init__(self, namespace: Optional[str] = None):
+        # Use namespace from env or default to the ontology namespace
+        self.namespace = namespace or os.getenv('ONTOLOGY_NAMESPACE', 'http://mes-ontology.org/factory.owl#')
+        # Note: Owlready2 ignores PREFIX declarations, it uses : to map to default namespace
+        self.auto_prefix = f"PREFIX : <{self.namespace}>"
     
     def adapt_query(self, query: str) -> str:
         """
