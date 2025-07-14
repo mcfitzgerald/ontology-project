@@ -1,0 +1,23 @@
+# Google ADK and AI
+google-adk>=0.1.0
+google-generativeai>=0.8.0
+google-cloud-aiplatform>=1.38.0
+
+# Data Processing and Analysis
+pandas>=2.0.0
+numpy>=1.24.0
+matplotlib>=3.7.0
+seaborn>=0.12.0
+
+# HTTP and API
+requests>=2.31.0
+
+# Configuration and Environment
+python-dotenv>=1.0.0
+pydantic>=2.0.0
+
+# Async support
+aiohttp>=3.9.0
+
+# Date/time handling
+python-dateutil>=2.8.2
