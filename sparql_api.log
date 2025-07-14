@@ -1,0 +1,435 @@
+INFO:     Will watch for changes in these directories: ['/Users/michael/github/ontology-project']
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+INFO:     Started reloader process [39100] using WatchFiles
+INFO:     Started server process [39103]
+INFO:     Waiting for application startup.
+2025-07-14 14:38:57,710 - API.main - INFO - Starting MES Ontology SPARQL API
+2025-07-14 14:38:57,710 - API.sparql_service - INFO - Initializing SPARQL service with ontology: /Users/michael/github/ontology-project/Ontology/mes_ontology_populated.owl
+2025-07-14 14:38:57,711 - API.sparql_service - INFO - Enabling thread parallelism with quadstore at: /var/folders/l2/z_qwg8756fgc432r7nwvww480000gn/T/mes_quadstore_1752518337.7117.sqlite3
+2025-07-14 14:38:57,713 - API.sparql_service - INFO - Loading ontology from: /Users/michael/github/ontology-project/Ontology/mes_ontology_populated.owl
+2025-07-14 14:38:59,089 - API.sparql_service - INFO - Saving world to enable thread parallelism...
+2025-07-14 14:38:59,504 - API.sparql_service - INFO - Ontology loaded successfully in 1.79s
+2025-07-14 14:38:59,504 - API.sparql_service - INFO - SPARQL service initialized successfully
+2025-07-14 14:38:59,504 - API.main - INFO - SPARQL service initialized successfully
+INFO:     Application startup complete.
+INFO:     127.0.0.1:65065 - "GET /health HTTP/1.1" 200 OK
+WARNING:  WatchFiles detected changes in 'adk_agents/__init__.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+2025-07-14 14:48:20,163 - API.main - INFO - Shutting down MES Ontology SPARQL API
+2025-07-14 14:48:20,163 - API.sparql_service - INFO - Shutting down SPARQL service
+2025-07-14 14:48:20,165 - API.sparql_service - INFO - Cleaned up quadstore file: /var/folders/l2/z_qwg8756fgc432r7nwvww480000gn/T/mes_quadstore_1752518337.7117.sqlite3
+INFO:     Application shutdown complete.
+INFO:     Finished server process [39103]
+INFO:     Started server process [39336]
+INFO:     Waiting for application startup.
+2025-07-14 14:48:20,516 - API.main - INFO - Starting MES Ontology SPARQL API
+2025-07-14 14:48:20,516 - API.sparql_service - INFO - Initializing SPARQL service with ontology: /Users/michael/github/ontology-project/Ontology/mes_ontology_populated.owl
+2025-07-14 14:48:20,518 - API.sparql_service - INFO - Enabling thread parallelism with quadstore at: /var/folders/l2/z_qwg8756fgc432r7nwvww480000gn/T/mes_quadstore_1752518900.518091.sqlite3
+2025-07-14 14:48:20,519 - API.sparql_service - INFO - Loading ontology from: /Users/michael/github/ontology-project/Ontology/mes_ontology_populated.owl
+2025-07-14 14:48:21,850 - API.sparql_service - INFO - Saving world to enable thread parallelism...
+2025-07-14 14:48:22,260 - API.sparql_service - INFO - Ontology loaded successfully in 1.74s
+2025-07-14 14:48:22,260 - API.sparql_service - INFO - SPARQL service initialized successfully
+2025-07-14 14:48:22,260 - API.main - INFO - SPARQL service initialized successfully
+INFO:     Application startup complete.
+2025-07-14 14:57:07,617 - API.sparql_service - ERROR - Query execution failed: Undefined prefix ':'!
+INFO:     127.0.0.1:65509 - "POST /sparql/query HTTP/1.1" 400 Bad Request
+WARNING:  WatchFiles detected changes in 'adk_agents/utils/owlready2_adapter.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+2025-07-14 15:21:58,542 - API.main - INFO - Shutting down MES Ontology SPARQL API
+2025-07-14 15:21:58,543 - API.sparql_service - INFO - Shutting down SPARQL service
+2025-07-14 15:21:58,544 - API.sparql_service - INFO - Cleaned up quadstore file: /var/folders/l2/z_qwg8756fgc432r7nwvww480000gn/T/mes_quadstore_1752518900.518091.sqlite3
+INFO:     Application shutdown complete.
+INFO:     Finished server process [39336]
+INFO:     Started server process [40124]
+INFO:     Waiting for application startup.
+2025-07-14 15:21:58,906 - API.main - INFO - Starting MES Ontology SPARQL API
+2025-07-14 15:21:58,906 - API.sparql_service - INFO - Initializing SPARQL service with ontology: /Users/michael/github/ontology-project/Ontology/mes_ontology_populated.owl
+2025-07-14 15:21:58,907 - API.sparql_service - INFO - Enabling thread parallelism with quadstore at: /var/folders/l2/z_qwg8756fgc432r7nwvww480000gn/T/mes_quadstore_1752520918.907448.sqlite3
+2025-07-14 15:21:58,909 - API.sparql_service - INFO - Loading ontology from: /Users/michael/github/ontology-project/Ontology/mes_ontology_populated.owl
+2025-07-14 15:22:00,240 - API.sparql_service - INFO - Saving world to enable thread parallelism...
+2025-07-14 15:22:00,660 - API.sparql_service - INFO - Ontology loaded successfully in 1.75s
+2025-07-14 15:22:00,661 - API.sparql_service - INFO - SPARQL service initialized successfully
+2025-07-14 15:22:00,661 - API.main - INFO - SPARQL service initialized successfully
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'adk_agents/utils/owlready2_adapter.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+2025-07-14 15:22:12,583 - API.main - INFO - Shutting down MES Ontology SPARQL API
+2025-07-14 15:22:12,584 - API.sparql_service - INFO - Shutting down SPARQL service
+2025-07-14 15:22:12,584 - API.sparql_service - INFO - Cleaned up quadstore file: /var/folders/l2/z_qwg8756fgc432r7nwvww480000gn/T/mes_quadstore_1752520918.907448.sqlite3
+INFO:     Application shutdown complete.
+INFO:     Finished server process [40124]
+INFO:     Started server process [40130]
+INFO:     Waiting for application startup.
+2025-07-14 15:22:12,900 - API.main - INFO - Starting MES Ontology SPARQL API
+2025-07-14 15:22:12,900 - API.sparql_service - INFO - Initializing SPARQL service with ontology: /Users/michael/github/ontology-project/Ontology/mes_ontology_populated.owl
+2025-07-14 15:22:12,901 - API.sparql_service - INFO - Enabling thread parallelism with quadstore at: /var/folders/l2/z_qwg8756fgc432r7nwvww480000gn/T/mes_quadstore_1752520932.901837.sqlite3
+2025-07-14 15:22:12,903 - API.sparql_service - INFO - Loading ontology from: /Users/michael/github/ontology-project/Ontology/mes_ontology_populated.owl
+2025-07-14 15:22:14,232 - API.sparql_service - INFO - Saving world to enable thread parallelism...
+2025-07-14 15:22:14,672 - API.sparql_service - INFO - Ontology loaded successfully in 1.77s
+2025-07-14 15:22:14,672 - API.sparql_service - INFO - SPARQL service initialized successfully
+2025-07-14 15:22:14,672 - API.main - INFO - SPARQL service initialized successfully
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'adk_agents/config/prompts/system_prompts.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+2025-07-14 15:22:39,531 - API.main - INFO - Shutting down MES Ontology SPARQL API
+2025-07-14 15:22:39,531 - API.sparql_service - INFO - Shutting down SPARQL service
+2025-07-14 15:22:39,533 - API.sparql_service - INFO - Cleaned up quadstore file: /var/folders/l2/z_qwg8756fgc432r7nwvww480000gn/T/mes_quadstore_1752520932.901837.sqlite3
+INFO:     Application shutdown complete.
+INFO:     Finished server process [40130]
+INFO:     Started server process [40148]
+INFO:     Waiting for application startup.
+2025-07-14 15:22:39,844 - API.main - INFO - Starting MES Ontology SPARQL API
+2025-07-14 15:22:39,844 - API.sparql_service - INFO - Initializing SPARQL service with ontology: /Users/michael/github/ontology-project/Ontology/mes_ontology_populated.owl
+2025-07-14 15:22:39,845 - API.sparql_service - INFO - Enabling thread parallelism with quadstore at: /var/folders/l2/z_qwg8756fgc432r7nwvww480000gn/T/mes_quadstore_1752520959.845901.sqlite3
+2025-07-14 15:22:39,847 - API.sparql_service - INFO - Loading ontology from: /Users/michael/github/ontology-project/Ontology/mes_ontology_populated.owl
+2025-07-14 15:22:41,202 - API.sparql_service - INFO - Saving world to enable thread parallelism...
+2025-07-14 15:22:41,619 - API.sparql_service - INFO - Ontology loaded successfully in 1.77s
+2025-07-14 15:22:41,619 - API.sparql_service - INFO - SPARQL service initialized successfully
+2025-07-14 15:22:41,619 - API.main - INFO - SPARQL service initialized successfully
+INFO:     Application startup complete.
+2025-07-14 15:51:30,077 - API.sparql_service - ERROR - Query execution failed: No existing entity for IRI 'http://mes-ontology.org/factory.owl#logsEquipment'! (use error_on_undefined_entities=False to accept unknown entities in SPARQL queries)
+INFO:     127.0.0.1:49887 - "POST /sparql/query HTTP/1.1" 400 Bad Request
+2025-07-14 15:51:33,236 - API.sparql_service - ERROR - Query execution failed: No existing entity for IRI 'http://mes-ontology.org/factory.owl#logsEquipment'! (use error_on_undefined_entities=False to accept unknown entities in SPARQL queries)
+INFO:     127.0.0.1:49891 - "POST /sparql/query HTTP/1.1" 400 Bad Request
+INFO:     127.0.0.1:49895 - "POST /sparql/query HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49899 - "POST /sparql/query HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49903 - "POST /sparql/query HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49907 - "POST /sparql/query HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49911 - "POST /sparql/query HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49925 - "POST /sparql/query HTTP/1.1" 200 OK
+WARNING:  WatchFiles detected changes in 'adk_agents/utils/owlready2_adapter.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+2025-07-14 19:35:03,525 - API.main - INFO - Shutting down MES Ontology SPARQL API
+2025-07-14 19:35:03,527 - API.sparql_service - INFO - Shutting down SPARQL service
+2025-07-14 19:35:03,531 - API.sparql_service - INFO - Cleaned up quadstore file: /var/folders/l2/z_qwg8756fgc432r7nwvww480000gn/T/mes_quadstore_1752520959.845901.sqlite3
+INFO:     Application shutdown complete.
+INFO:     Finished server process [40148]
+INFO:     Started server process [43580]
+INFO:     Waiting for application startup.
+2025-07-14 19:35:03,944 - API.main - INFO - Starting MES Ontology SPARQL API
+2025-07-14 19:35:03,944 - API.sparql_service - INFO - Initializing SPARQL service with ontology: /Users/michael/github/ontology-project/Ontology/mes_ontology_populated.owl
+2025-07-14 19:35:03,946 - API.sparql_service - INFO - Enabling thread parallelism with quadstore at: /var/folders/l2/z_qwg8756fgc432r7nwvww480000gn/T/mes_quadstore_1752536103.946112.sqlite3
+2025-07-14 19:35:03,948 - API.sparql_service - INFO - Loading ontology from: /Users/michael/github/ontology-project/Ontology/mes_ontology_populated.owl
+2025-07-14 19:35:05,313 - API.sparql_service - INFO - Saving world to enable thread parallelism...
+2025-07-14 19:35:05,729 - API.sparql_service - INFO - Ontology loaded successfully in 1.78s
+2025-07-14 19:35:05,729 - API.sparql_service - INFO - SPARQL service initialized successfully
+2025-07-14 19:35:05,729 - API.main - INFO - SPARQL service initialized successfully
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'adk_agents/utils/owlready2_adapter.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+2025-07-14 19:35:17,445 - API.main - INFO - Shutting down MES Ontology SPARQL API
+2025-07-14 19:35:17,445 - API.sparql_service - INFO - Shutting down SPARQL service
+2025-07-14 19:35:17,445 - API.sparql_service - INFO - Cleaned up quadstore file: /var/folders/l2/z_qwg8756fgc432r7nwvww480000gn/T/mes_quadstore_1752536103.946112.sqlite3
+INFO:     Application shutdown complete.
+INFO:     Finished server process [43580]
+INFO:     Started server process [43610]
+INFO:     Waiting for application startup.
+2025-07-14 19:35:17,780 - API.main - INFO - Starting MES Ontology SPARQL API
+2025-07-14 19:35:17,780 - API.sparql_service - INFO - Initializing SPARQL service with ontology: /Users/michael/github/ontology-project/Ontology/mes_ontology_populated.owl
+2025-07-14 19:35:17,781 - API.sparql_service - INFO - Enabling thread parallelism with quadstore at: /var/folders/l2/z_qwg8756fgc432r7nwvww480000gn/T/mes_quadstore_1752536117.781625.sqlite3
+2025-07-14 19:35:17,783 - API.sparql_service - INFO - Loading ontology from: /Users/michael/github/ontology-project/Ontology/mes_ontology_populated.owl
+2025-07-14 19:35:19,150 - API.sparql_service - INFO - Saving world to enable thread parallelism...
+2025-07-14 19:35:19,567 - API.sparql_service - INFO - Ontology loaded successfully in 1.79s
+2025-07-14 19:35:19,567 - API.sparql_service - INFO - SPARQL service initialized successfully
+2025-07-14 19:35:19,567 - API.main - INFO - SPARQL service initialized successfully
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'adk_agents/utils/owlready2_adapter.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+2025-07-14 19:35:57,663 - API.main - INFO - Shutting down MES Ontology SPARQL API
+2025-07-14 19:35:57,663 - API.sparql_service - INFO - Shutting down SPARQL service
+2025-07-14 19:35:57,664 - API.sparql_service - INFO - Cleaned up quadstore file: /var/folders/l2/z_qwg8756fgc432r7nwvww480000gn/T/mes_quadstore_1752536117.781625.sqlite3
+INFO:     Application shutdown complete.
+INFO:     Finished server process [43610]
+INFO:     Started server process [43665]
+INFO:     Waiting for application startup.
+2025-07-14 19:35:58,042 - API.main - INFO - Starting MES Ontology SPARQL API
+2025-07-14 19:35:58,042 - API.sparql_service - INFO - Initializing SPARQL service with ontology: /Users/michael/github/ontology-project/Ontology/mes_ontology_populated.owl
+2025-07-14 19:35:58,044 - API.sparql_service - INFO - Enabling thread parallelism with quadstore at: /var/folders/l2/z_qwg8756fgc432r7nwvww480000gn/T/mes_quadstore_1752536158.044158.sqlite3
+2025-07-14 19:35:58,046 - API.sparql_service - INFO - Loading ontology from: /Users/michael/github/ontology-project/Ontology/mes_ontology_populated.owl
+2025-07-14 19:35:59,370 - API.sparql_service - INFO - Saving world to enable thread parallelism...
+2025-07-14 19:35:59,779 - API.sparql_service - INFO - Ontology loaded successfully in 1.74s
+2025-07-14 19:35:59,779 - API.sparql_service - INFO - SPARQL service initialized successfully
+2025-07-14 19:35:59,779 - API.main - INFO - SPARQL service initialized successfully
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'adk_agents/tools/sparql_tool.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+2025-07-14 19:36:27,770 - API.main - INFO - Shutting down MES Ontology SPARQL API
+2025-07-14 19:36:27,771 - API.sparql_service - INFO - Shutting down SPARQL service
+2025-07-14 19:36:27,773 - API.sparql_service - INFO - Cleaned up quadstore file: /var/folders/l2/z_qwg8756fgc432r7nwvww480000gn/T/mes_quadstore_1752536158.044158.sqlite3
+INFO:     Application shutdown complete.
+INFO:     Finished server process [43665]
+INFO:     Started server process [43683]
+INFO:     Waiting for application startup.
+2025-07-14 19:36:28,116 - API.main - INFO - Starting MES Ontology SPARQL API
+2025-07-14 19:36:28,116 - API.sparql_service - INFO - Initializing SPARQL service with ontology: /Users/michael/github/ontology-project/Ontology/mes_ontology_populated.owl
+2025-07-14 19:36:28,117 - API.sparql_service - INFO - Enabling thread parallelism with quadstore at: /var/folders/l2/z_qwg8756fgc432r7nwvww480000gn/T/mes_quadstore_1752536188.117438.sqlite3
+2025-07-14 19:36:28,119 - API.sparql_service - INFO - Loading ontology from: /Users/michael/github/ontology-project/Ontology/mes_ontology_populated.owl
+2025-07-14 19:36:29,429 - API.sparql_service - INFO - Saving world to enable thread parallelism...
+2025-07-14 19:36:29,840 - API.sparql_service - INFO - Ontology loaded successfully in 1.72s
+2025-07-14 19:36:29,840 - API.sparql_service - INFO - SPARQL service initialized successfully
+2025-07-14 19:36:29,840 - API.main - INFO - SPARQL service initialized successfully
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'adk_agents/tools/sparql_tool.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+2025-07-14 19:36:37,118 - API.main - INFO - Shutting down MES Ontology SPARQL API
+2025-07-14 19:36:37,118 - API.sparql_service - INFO - Shutting down SPARQL service
+2025-07-14 19:36:37,119 - API.sparql_service - INFO - Cleaned up quadstore file: /var/folders/l2/z_qwg8756fgc432r7nwvww480000gn/T/mes_quadstore_1752536188.117438.sqlite3
+INFO:     Application shutdown complete.
+INFO:     Finished server process [43683]
+INFO:     Started server process [43688]
+INFO:     Waiting for application startup.
+2025-07-14 19:36:37,439 - API.main - INFO - Starting MES Ontology SPARQL API
+2025-07-14 19:36:37,439 - API.sparql_service - INFO - Initializing SPARQL service with ontology: /Users/michael/github/ontology-project/Ontology/mes_ontology_populated.owl
+2025-07-14 19:36:37,441 - API.sparql_service - INFO - Enabling thread parallelism with quadstore at: /var/folders/l2/z_qwg8756fgc432r7nwvww480000gn/T/mes_quadstore_1752536197.441101.sqlite3
+2025-07-14 19:36:37,442 - API.sparql_service - INFO - Loading ontology from: /Users/michael/github/ontology-project/Ontology/mes_ontology_populated.owl
+2025-07-14 19:36:38,763 - API.sparql_service - INFO - Saving world to enable thread parallelism...
+2025-07-14 19:36:39,179 - API.sparql_service - INFO - Ontology loaded successfully in 1.74s
+2025-07-14 19:36:39,179 - API.sparql_service - INFO - SPARQL service initialized successfully
+2025-07-14 19:36:39,179 - API.main - INFO - SPARQL service initialized successfully
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'adk_agents/agents/explorer_agent.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+2025-07-14 19:37:02,214 - API.main - INFO - Shutting down MES Ontology SPARQL API
+2025-07-14 19:37:02,214 - API.sparql_service - INFO - Shutting down SPARQL service
+2025-07-14 19:37:02,215 - API.sparql_service - INFO - Cleaned up quadstore file: /var/folders/l2/z_qwg8756fgc432r7nwvww480000gn/T/mes_quadstore_1752536197.441101.sqlite3
+INFO:     Application shutdown complete.
+INFO:     Finished server process [43688]
+INFO:     Started server process [43699]
+INFO:     Waiting for application startup.
+2025-07-14 19:37:02,552 - API.main - INFO - Starting MES Ontology SPARQL API
+2025-07-14 19:37:02,552 - API.sparql_service - INFO - Initializing SPARQL service with ontology: /Users/michael/github/ontology-project/Ontology/mes_ontology_populated.owl
+2025-07-14 19:37:02,553 - API.sparql_service - INFO - Enabling thread parallelism with quadstore at: /var/folders/l2/z_qwg8756fgc432r7nwvww480000gn/T/mes_quadstore_1752536222.553823.sqlite3
+2025-07-14 19:37:02,555 - API.sparql_service - INFO - Loading ontology from: /Users/michael/github/ontology-project/Ontology/mes_ontology_populated.owl
+2025-07-14 19:37:03,869 - API.sparql_service - INFO - Saving world to enable thread parallelism...
+2025-07-14 19:37:04,274 - API.sparql_service - INFO - Ontology loaded successfully in 1.72s
+2025-07-14 19:37:04,275 - API.sparql_service - INFO - SPARQL service initialized successfully
+2025-07-14 19:37:04,275 - API.main - INFO - SPARQL service initialized successfully
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'adk_agents/config/prompts/system_prompts.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+2025-07-14 19:37:20,249 - API.main - INFO - Shutting down MES Ontology SPARQL API
+2025-07-14 19:37:20,249 - API.sparql_service - INFO - Shutting down SPARQL service
+2025-07-14 19:37:20,249 - API.sparql_service - INFO - Cleaned up quadstore file: /var/folders/l2/z_qwg8756fgc432r7nwvww480000gn/T/mes_quadstore_1752536222.553823.sqlite3
+INFO:     Application shutdown complete.
+INFO:     Finished server process [43699]
+INFO:     Started server process [43709]
+INFO:     Waiting for application startup.
+2025-07-14 19:37:20,570 - API.main - INFO - Starting MES Ontology SPARQL API
+2025-07-14 19:37:20,570 - API.sparql_service - INFO - Initializing SPARQL service with ontology: /Users/michael/github/ontology-project/Ontology/mes_ontology_populated.owl
+2025-07-14 19:37:20,571 - API.sparql_service - INFO - Enabling thread parallelism with quadstore at: /var/folders/l2/z_qwg8756fgc432r7nwvww480000gn/T/mes_quadstore_1752536240.571541.sqlite3
+2025-07-14 19:37:20,573 - API.sparql_service - INFO - Loading ontology from: /Users/michael/github/ontology-project/Ontology/mes_ontology_populated.owl
+2025-07-14 19:37:21,902 - API.sparql_service - INFO - Saving world to enable thread parallelism...
+2025-07-14 19:37:22,345 - API.sparql_service - INFO - Ontology loaded successfully in 1.77s
+2025-07-14 19:37:22,345 - API.sparql_service - INFO - SPARQL service initialized successfully
+2025-07-14 19:37:22,345 - API.main - INFO - SPARQL service initialized successfully
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'adk_agents/config/prompts/system_prompts.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+2025-07-14 19:37:31,334 - API.main - INFO - Shutting down MES Ontology SPARQL API
+2025-07-14 19:37:31,334 - API.sparql_service - INFO - Shutting down SPARQL service
+2025-07-14 19:37:31,335 - API.sparql_service - INFO - Cleaned up quadstore file: /var/folders/l2/z_qwg8756fgc432r7nwvww480000gn/T/mes_quadstore_1752536240.571541.sqlite3
+INFO:     Application shutdown complete.
+INFO:     Finished server process [43709]
+INFO:     Started server process [43720]
+INFO:     Waiting for application startup.
+2025-07-14 19:37:31,665 - API.main - INFO - Starting MES Ontology SPARQL API
+2025-07-14 19:37:31,665 - API.sparql_service - INFO - Initializing SPARQL service with ontology: /Users/michael/github/ontology-project/Ontology/mes_ontology_populated.owl
+2025-07-14 19:37:31,666 - API.sparql_service - INFO - Enabling thread parallelism with quadstore at: /var/folders/l2/z_qwg8756fgc432r7nwvww480000gn/T/mes_quadstore_1752536251.666856.sqlite3
+2025-07-14 19:37:31,668 - API.sparql_service - INFO - Loading ontology from: /Users/michael/github/ontology-project/Ontology/mes_ontology_populated.owl
+2025-07-14 19:37:32,983 - API.sparql_service - INFO - Saving world to enable thread parallelism...
+2025-07-14 19:37:33,401 - API.sparql_service - INFO - Ontology loaded successfully in 1.74s
+2025-07-14 19:37:33,401 - API.sparql_service - INFO - SPARQL service initialized successfully
+2025-07-14 19:37:33,401 - API.main - INFO - SPARQL service initialized successfully
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'adk_agents/config/prompts/system_prompts.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+2025-07-14 19:37:41,588 - API.main - INFO - Shutting down MES Ontology SPARQL API
+2025-07-14 19:37:41,589 - API.sparql_service - INFO - Shutting down SPARQL service
+2025-07-14 19:37:41,589 - API.sparql_service - INFO - Cleaned up quadstore file: /var/folders/l2/z_qwg8756fgc432r7nwvww480000gn/T/mes_quadstore_1752536251.666856.sqlite3
+INFO:     Application shutdown complete.
+INFO:     Finished server process [43720]
+INFO:     Started server process [43725]
+INFO:     Waiting for application startup.
+2025-07-14 19:37:41,914 - API.main - INFO - Starting MES Ontology SPARQL API
+2025-07-14 19:37:41,914 - API.sparql_service - INFO - Initializing SPARQL service with ontology: /Users/michael/github/ontology-project/Ontology/mes_ontology_populated.owl
+2025-07-14 19:37:41,915 - API.sparql_service - INFO - Enabling thread parallelism with quadstore at: /var/folders/l2/z_qwg8756fgc432r7nwvww480000gn/T/mes_quadstore_1752536261.915757.sqlite3
+2025-07-14 19:37:41,917 - API.sparql_service - INFO - Loading ontology from: /Users/michael/github/ontology-project/Ontology/mes_ontology_populated.owl
+2025-07-14 19:37:43,221 - API.sparql_service - INFO - Saving world to enable thread parallelism...
+2025-07-14 19:37:43,631 - API.sparql_service - INFO - Ontology loaded successfully in 1.72s
+2025-07-14 19:37:43,631 - API.sparql_service - INFO - SPARQL service initialized successfully
+2025-07-14 19:37:43,631 - API.main - INFO - SPARQL service initialized successfully
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'adk_agents/agents/orchestrator.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+2025-07-14 19:38:05,963 - API.main - INFO - Shutting down MES Ontology SPARQL API
+2025-07-14 19:38:05,963 - API.sparql_service - INFO - Shutting down SPARQL service
+2025-07-14 19:38:05,964 - API.sparql_service - INFO - Cleaned up quadstore file: /var/folders/l2/z_qwg8756fgc432r7nwvww480000gn/T/mes_quadstore_1752536261.915757.sqlite3
+INFO:     Application shutdown complete.
+INFO:     Finished server process [43725]
+INFO:     Started server process [43736]
+INFO:     Waiting for application startup.
+2025-07-14 19:38:06,291 - API.main - INFO - Starting MES Ontology SPARQL API
+2025-07-14 19:38:06,291 - API.sparql_service - INFO - Initializing SPARQL service with ontology: /Users/michael/github/ontology-project/Ontology/mes_ontology_populated.owl
+2025-07-14 19:38:06,292 - API.sparql_service - INFO - Enabling thread parallelism with quadstore at: /var/folders/l2/z_qwg8756fgc432r7nwvww480000gn/T/mes_quadstore_1752536286.292158.sqlite3
+2025-07-14 19:38:06,293 - API.sparql_service - INFO - Loading ontology from: /Users/michael/github/ontology-project/Ontology/mes_ontology_populated.owl
+2025-07-14 19:38:07,636 - API.sparql_service - INFO - Saving world to enable thread parallelism...
+2025-07-14 19:38:08,063 - API.sparql_service - INFO - Ontology loaded successfully in 1.77s
+2025-07-14 19:38:08,063 - API.sparql_service - INFO - SPARQL service initialized successfully
+2025-07-14 19:38:08,063 - API.main - INFO - SPARQL service initialized successfully
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'adk_agents/agents/orchestrator.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+2025-07-14 19:38:23,012 - API.main - INFO - Shutting down MES Ontology SPARQL API
+2025-07-14 19:38:23,013 - API.sparql_service - INFO - Shutting down SPARQL service
+2025-07-14 19:38:23,013 - API.sparql_service - INFO - Cleaned up quadstore file: /var/folders/l2/z_qwg8756fgc432r7nwvww480000gn/T/mes_quadstore_1752536286.292158.sqlite3
+INFO:     Application shutdown complete.
+INFO:     Finished server process [43736]
+INFO:     Started server process [43743]
+INFO:     Waiting for application startup.
+2025-07-14 19:38:23,325 - API.main - INFO - Starting MES Ontology SPARQL API
+2025-07-14 19:38:23,325 - API.sparql_service - INFO - Initializing SPARQL service with ontology: /Users/michael/github/ontology-project/Ontology/mes_ontology_populated.owl
+2025-07-14 19:38:23,326 - API.sparql_service - INFO - Enabling thread parallelism with quadstore at: /var/folders/l2/z_qwg8756fgc432r7nwvww480000gn/T/mes_quadstore_1752536303.326827.sqlite3
+2025-07-14 19:38:23,328 - API.sparql_service - INFO - Loading ontology from: /Users/michael/github/ontology-project/Ontology/mes_ontology_populated.owl
+2025-07-14 19:38:24,670 - API.sparql_service - INFO - Saving world to enable thread parallelism...
+2025-07-14 19:38:25,090 - API.sparql_service - INFO - Ontology loaded successfully in 1.76s
+2025-07-14 19:38:25,090 - API.sparql_service - INFO - SPARQL service initialized successfully
+2025-07-14 19:38:25,090 - API.main - INFO - SPARQL service initialized successfully
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'adk_agents/tools/sparql_tool.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+2025-07-14 19:38:31,053 - API.main - INFO - Shutting down MES Ontology SPARQL API
+2025-07-14 19:38:31,053 - API.sparql_service - INFO - Shutting down SPARQL service
+2025-07-14 19:38:31,054 - API.sparql_service - INFO - Cleaned up quadstore file: /var/folders/l2/z_qwg8756fgc432r7nwvww480000gn/T/mes_quadstore_1752536303.326827.sqlite3
+INFO:     Application shutdown complete.
+INFO:     Finished server process [43743]
+INFO:     Started server process [43748]
+INFO:     Waiting for application startup.
+2025-07-14 19:38:31,360 - API.main - INFO - Starting MES Ontology SPARQL API
+2025-07-14 19:38:31,360 - API.sparql_service - INFO - Initializing SPARQL service with ontology: /Users/michael/github/ontology-project/Ontology/mes_ontology_populated.owl
+2025-07-14 19:38:31,361 - API.sparql_service - INFO - Enabling thread parallelism with quadstore at: /var/folders/l2/z_qwg8756fgc432r7nwvww480000gn/T/mes_quadstore_1752536311.361622.sqlite3
+2025-07-14 19:38:31,363 - API.sparql_service - INFO - Loading ontology from: /Users/michael/github/ontology-project/Ontology/mes_ontology_populated.owl
+2025-07-14 19:38:32,674 - API.sparql_service - INFO - Saving world to enable thread parallelism...
+2025-07-14 19:38:33,089 - API.sparql_service - INFO - Ontology loaded successfully in 1.73s
+2025-07-14 19:38:33,089 - API.sparql_service - INFO - SPARQL service initialized successfully
+2025-07-14 19:38:33,089 - API.main - INFO - SPARQL service initialized successfully
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'adk_agents/tools/sparql_tool.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+2025-07-14 19:38:42,185 - API.main - INFO - Shutting down MES Ontology SPARQL API
+2025-07-14 19:38:42,185 - API.sparql_service - INFO - Shutting down SPARQL service
+2025-07-14 19:38:42,186 - API.sparql_service - INFO - Cleaned up quadstore file: /var/folders/l2/z_qwg8756fgc432r7nwvww480000gn/T/mes_quadstore_1752536311.361622.sqlite3
+INFO:     Application shutdown complete.
+INFO:     Finished server process [43748]
+INFO:     Started server process [43760]
+INFO:     Waiting for application startup.
+2025-07-14 19:38:42,515 - API.main - INFO - Starting MES Ontology SPARQL API
+2025-07-14 19:38:42,515 - API.sparql_service - INFO - Initializing SPARQL service with ontology: /Users/michael/github/ontology-project/Ontology/mes_ontology_populated.owl
+2025-07-14 19:38:42,517 - API.sparql_service - INFO - Enabling thread parallelism with quadstore at: /var/folders/l2/z_qwg8756fgc432r7nwvww480000gn/T/mes_quadstore_1752536322.517064.sqlite3
+2025-07-14 19:38:42,518 - API.sparql_service - INFO - Loading ontology from: /Users/michael/github/ontology-project/Ontology/mes_ontology_populated.owl
+2025-07-14 19:38:43,923 - API.sparql_service - INFO - Saving world to enable thread parallelism...
+2025-07-14 19:38:44,381 - API.sparql_service - INFO - Ontology loaded successfully in 1.87s
+2025-07-14 19:38:44,381 - API.sparql_service - INFO - SPARQL service initialized successfully
+2025-07-14 19:38:44,381 - API.main - INFO - SPARQL service initialized successfully
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'adk_agents/tools/sparql_tool.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+2025-07-14 19:38:53,576 - API.main - INFO - Shutting down MES Ontology SPARQL API
+2025-07-14 19:38:53,577 - API.sparql_service - INFO - Shutting down SPARQL service
+2025-07-14 19:38:53,578 - API.sparql_service - INFO - Cleaned up quadstore file: /var/folders/l2/z_qwg8756fgc432r7nwvww480000gn/T/mes_quadstore_1752536322.517064.sqlite3
+INFO:     Application shutdown complete.
+INFO:     Finished server process [43760]
+INFO:     Started server process [43774]
+INFO:     Waiting for application startup.
+2025-07-14 19:38:53,902 - API.main - INFO - Starting MES Ontology SPARQL API
+2025-07-14 19:38:53,902 - API.sparql_service - INFO - Initializing SPARQL service with ontology: /Users/michael/github/ontology-project/Ontology/mes_ontology_populated.owl
+2025-07-14 19:38:53,903 - API.sparql_service - INFO - Enabling thread parallelism with quadstore at: /var/folders/l2/z_qwg8756fgc432r7nwvww480000gn/T/mes_quadstore_1752536333.903966.sqlite3
+2025-07-14 19:38:53,906 - API.sparql_service - INFO - Loading ontology from: /Users/michael/github/ontology-project/Ontology/mes_ontology_populated.owl
+2025-07-14 19:38:55,245 - API.sparql_service - INFO - Saving world to enable thread parallelism...
+2025-07-14 19:38:55,663 - API.sparql_service - INFO - Ontology loaded successfully in 1.76s
+2025-07-14 19:38:55,663 - API.sparql_service - INFO - SPARQL service initialized successfully
+2025-07-14 19:38:55,663 - API.main - INFO - SPARQL service initialized successfully
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'adk_agents/utils/owlready2_adapter.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+2025-07-14 19:39:14,470 - API.main - INFO - Shutting down MES Ontology SPARQL API
+2025-07-14 19:39:14,471 - API.sparql_service - INFO - Shutting down SPARQL service
+2025-07-14 19:39:14,472 - API.sparql_service - INFO - Cleaned up quadstore file: /var/folders/l2/z_qwg8756fgc432r7nwvww480000gn/T/mes_quadstore_1752536333.903966.sqlite3
+INFO:     Application shutdown complete.
+INFO:     Finished server process [43774]
+INFO:     Started server process [43789]
+INFO:     Waiting for application startup.
+2025-07-14 19:39:14,837 - API.main - INFO - Starting MES Ontology SPARQL API
+2025-07-14 19:39:14,837 - API.sparql_service - INFO - Initializing SPARQL service with ontology: /Users/michael/github/ontology-project/Ontology/mes_ontology_populated.owl
+2025-07-14 19:39:14,838 - API.sparql_service - INFO - Enabling thread parallelism with quadstore at: /var/folders/l2/z_qwg8756fgc432r7nwvww480000gn/T/mes_quadstore_1752536354.838915.sqlite3
+2025-07-14 19:39:14,840 - API.sparql_service - INFO - Loading ontology from: /Users/michael/github/ontology-project/Ontology/mes_ontology_populated.owl
+2025-07-14 19:39:16,189 - API.sparql_service - INFO - Saving world to enable thread parallelism...
+2025-07-14 19:39:16,616 - API.sparql_service - INFO - Ontology loaded successfully in 1.78s
+2025-07-14 19:39:16,616 - API.sparql_service - INFO - SPARQL service initialized successfully
+2025-07-14 19:39:16,616 - API.main - INFO - SPARQL service initialized successfully
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'adk_agents/test_fixes.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+2025-07-14 19:39:58,160 - API.main - INFO - Shutting down MES Ontology SPARQL API
+2025-07-14 19:39:58,160 - API.sparql_service - INFO - Shutting down SPARQL service
+2025-07-14 19:39:58,163 - API.sparql_service - INFO - Cleaned up quadstore file: /var/folders/l2/z_qwg8756fgc432r7nwvww480000gn/T/mes_quadstore_1752536354.838915.sqlite3
+INFO:     Application shutdown complete.
+INFO:     Finished server process [43789]
+INFO:     Started server process [43822]
+INFO:     Waiting for application startup.
+2025-07-14 19:39:58,515 - API.main - INFO - Starting MES Ontology SPARQL API
+2025-07-14 19:39:58,515 - API.sparql_service - INFO - Initializing SPARQL service with ontology: /Users/michael/github/ontology-project/Ontology/mes_ontology_populated.owl
+2025-07-14 19:39:58,516 - API.sparql_service - INFO - Enabling thread parallelism with quadstore at: /var/folders/l2/z_qwg8756fgc432r7nwvww480000gn/T/mes_quadstore_1752536398.516573.sqlite3
+2025-07-14 19:39:58,518 - API.sparql_service - INFO - Loading ontology from: /Users/michael/github/ontology-project/Ontology/mes_ontology_populated.owl
+2025-07-14 19:39:59,840 - API.sparql_service - INFO - Saving world to enable thread parallelism...
+2025-07-14 19:40:00,260 - API.sparql_service - INFO - Ontology loaded successfully in 1.75s
+2025-07-14 19:40:00,260 - API.sparql_service - INFO - SPARQL service initialized successfully
+2025-07-14 19:40:00,260 - API.main - INFO - SPARQL service initialized successfully
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'adk_agents/demo_fixed_analysis.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+2025-07-14 19:40:39,064 - API.main - INFO - Shutting down MES Ontology SPARQL API
+2025-07-14 19:40:39,064 - API.sparql_service - INFO - Shutting down SPARQL service
+2025-07-14 19:40:39,066 - API.sparql_service - INFO - Cleaned up quadstore file: /var/folders/l2/z_qwg8756fgc432r7nwvww480000gn/T/mes_quadstore_1752536398.516573.sqlite3
+INFO:     Application shutdown complete.
+INFO:     Finished server process [43822]
+INFO:     Started server process [43845]
+INFO:     Waiting for application startup.
+2025-07-14 19:40:39,419 - API.main - INFO - Starting MES Ontology SPARQL API
+2025-07-14 19:40:39,419 - API.sparql_service - INFO - Initializing SPARQL service with ontology: /Users/michael/github/ontology-project/Ontology/mes_ontology_populated.owl
+2025-07-14 19:40:39,421 - API.sparql_service - INFO - Enabling thread parallelism with quadstore at: /var/folders/l2/z_qwg8756fgc432r7nwvww480000gn/T/mes_quadstore_1752536439.421206.sqlite3
+2025-07-14 19:40:39,423 - API.sparql_service - INFO - Loading ontology from: /Users/michael/github/ontology-project/Ontology/mes_ontology_populated.owl
+2025-07-14 19:40:40,779 - API.sparql_service - INFO - Saving world to enable thread parallelism...
+2025-07-14 19:40:41,200 - API.sparql_service - INFO - Ontology loaded successfully in 1.78s
+2025-07-14 19:40:41,200 - API.sparql_service - INFO - SPARQL service initialized successfully
+2025-07-14 19:40:41,200 - API.main - INFO - SPARQL service initialized successfully
+INFO:     Application startup complete.
+INFO:     127.0.0.1:52486 - "GET /health HTTP/1.1" 200 OK
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+2025-07-14 19:56:37,161 - API.main - INFO - Shutting down MES Ontology SPARQL API
+2025-07-14 19:56:37,162 - API.sparql_service - INFO - Shutting down SPARQL service
+2025-07-14 19:56:37,164 - API.sparql_service - INFO - Cleaned up quadstore file: /var/folders/l2/z_qwg8756fgc432r7nwvww480000gn/T/mes_quadstore_1752536439.421206.sqlite3
+INFO:     Application shutdown complete.
+INFO:     Finished server process [43845]
+INFO:     Stopping reloader process [39100]

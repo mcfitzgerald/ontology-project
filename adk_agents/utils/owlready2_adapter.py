@@ -23,7 +23,7 @@ class Owlready2Adapter:
         Key adaptations:
         1. Remove PREFIX declarations
         2. Remove angle brackets
-        3. Add automatic prefix
+        3. Convert : prefix to mes_ontology_populated:
         4. Convert property syntax
         5. Add FILTER(ISIRI()) where needed
         """
@@ -39,8 +39,26 @@ class Owlready2Adapter:
         # Convert rdf:type to 'a'
         query = re.sub(r'\brdf:type\b', 'a', query)
         
-        # Don't add PREFIX - Owlready2 doesn't support it and uses : automatically
-        # query = f"{self.auto_prefix}\n{query.strip()}"
+        # CRITICAL: Convert : prefix to mes_ontology_populated:
+        # This handles patterns like :Equipment, :hasOEEScore, etc.
+        query = re.sub(r'\s:(\w+)', r' mes_ontology_populated:\1', query)
+        query = re.sub(r'\{:(\w+)', r'{mes_ontology_populated:\1', query)
+        query = re.sub(r'\(:(\w+)', r'(mes_ontology_populated:\1', query)
+        
+        # CRITICAL: Also convert mes: prefix to mes_ontology_populated:
+        # This handles patterns like mes:Equipment, mes:hasOEEScore, etc.
+        query = re.sub(r'\bmes:(\w+)', r'mes_ontology_populated:\1', query)
+        
+        # Convert common wrong property names to correct ones
+        # logsEquipment should be logsEvent
+        query = re.sub(r'\blogsEquipment\b', 'logsEvent', query)
+        
+        # Add debug logging for prefix conversions
+        import logging
+        if 'mes:' in original_query or ':' in original_query:
+            logging.info(f"[SPARQL Adapter] Prefix conversion applied")
+            logging.debug(f"[SPARQL Adapter] Original: {original_query}")
+            logging.debug(f"[SPARQL Adapter] Adapted: {query}")
         
         # Add FILTER(ISIRI()) for entity variables if not present
         query = self._add_iri_filters(query)
@@ -94,16 +112,16 @@ class Owlready2Adapter:
         query = f"""
         SELECT DISTINCT ?equipment ?equipmentID ?avgOEE
         WHERE {{
-            ?event a :ProductionLog .
-            ?event :logsEquipment ?equipment .
-            ?equipment :hasEquipmentID ?equipmentID .
-            ?event :hasOEEScore ?oee .
+            ?event a mes_ontology_populated:ProductionLog .
+            ?equipment mes_ontology_populated:logsEvent ?event .
+            ?equipment mes_ontology_populated:hasEquipmentID ?equipmentID .
+            ?event mes_ontology_populated:hasOEEScore ?oee .
             
             FILTER(ISIRI(?equipment))
             FILTER(?oee < {oee_threshold})
         }}
         """
-        return self.adapt_query(query)
+        return query  # Already has correct prefix
     
     def build_temporal_query(self, time_window_hours: int = 24) -> str:
         """Build a query for temporal pattern analysis."""
@@ -112,7 +130,7 @@ class Owlready2Adapter:
         WHERE {{
             {{
                 ?event a :DowntimeLog .
-                ?event :logsEquipment ?equipment .
+                ?equipment mes_ontology_populated:logsEvent ?event .
                 ?event :hasTimestamp ?timestamp .
                 ?event :hasDowntimeDuration ?duration .
                 BIND("downtime" AS ?eventType)
@@ -120,7 +138,7 @@ class Owlready2Adapter:
             UNION
             {{
                 ?event a :ProductionLog .
-                ?event :logsEquipment ?equipment .
+                ?equipment mes_ontology_populated:logsEvent ?event .
                 ?event :hasTimestamp ?timestamp .
                 ?event :hasOEEScore ?oee .
                 FILTER(?oee < 70.0)
@@ -140,12 +158,13 @@ class Owlready2Adapter:
         SELECT ?product ?goodUnits ?scrapUnits ?targetRate ?unitCost ?salePrice
         WHERE {{
             ?event a :ProductionLog .
-            ?event :logsEquipment ?equipment .
+            ?equipment mes_ontology_populated:logsEvent ?event .
             ?equipment :hasEquipmentID "{equipment_id}" .
-            ?event :producesProduct ?product .
+            ?order :producesProduct ?product .
+            ?equipment :executesOrder ?order .
             ?product :hasProductName ?productName .
-            ?event :hasGoodUnitsProduced ?goodUnits .
-            ?event :hasScrapUnitsProduced ?scrapUnits .
+            ?event :hasGoodUnits ?goodUnits .
+            ?event :hasScrapUnits ?scrapUnits .
             ?product :hasTargetRate ?targetRate .
             ?product :hasStandardCost ?unitCost .
             ?product :hasSalePrice ?salePrice .
