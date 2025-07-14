@@ -45,18 +45,32 @@ SELECT ?x WHERE { ?x mes_ontology_populated:hasOEEScore ?score }
 ?equipment a ?type . FILTER(ISIRI(?equipment))
 ```
 
-### 2a. **Use Colon Prefix (:) Instead of Custom Prefixes**
+### 2a. **Understanding Owlready2's Prefix System**
+
+**The Root Issue**: Owlready2 automatically generates a prefix from the OWL filename, not from the ontology's IRI:
+- Ontology IRI: `http://mes-ontology.org/factory.owl`
+- Filename: `mes_ontology_populated.owl`
+- Auto-generated prefix: `mes_ontology_populated:`
+
 ```sparql
-# ❌ WRONG - Custom prefixes don't work as expected
+# ❌ WRONG - Custom prefixes from Turtle files don't work
 ?event mes:hasOEEScore ?oee
 FILTER(?oee < 85.0)  # This causes "Error at COMPARATOR:'<'"
 
-# ✅ CORRECT - Use : prefix for default namespace
+# ✅ CORRECT OPTION 1 - Use auto-generated prefix from filename
+?event mes_ontology_populated:hasOEEScore ?oee
+FILTER(?oee < 85.0)  # This works with the actual prefix
+
+# ✅ CORRECT OPTION 2 - Use : prefix for default namespace
 ?event :hasOEEScore ?oee
-FILTER(?oee < 85.0)  # This works correctly
+FILTER(?oee < 85.0)  # This maps to the default namespace
 ```
 
-**Important**: When using the `:` prefix in queries, Owlready2 maps it to the default namespace. This is different from standard SPARQL where you would declare prefixes explicitly. The `mes:` prefix may cause parsing errors, especially with comparison operators.
+**Important**: 
+- Owlready2 derives the prefix from the OWL filename (`mes_ontology_populated.owl` → `mes_ontology_populated:`)
+- The `:` prefix maps to the default namespace in Owlready2
+- The `mes:` prefix from Turtle files causes parsing errors, especially with comparison operators
+- PREFIX declarations in SPARQL queries are completely ignored by Owlready2
 
 ### 3. **Functions NOT Supported**
 - ❌ `regex()` - Causes "user-defined function raised exception"
@@ -542,13 +556,15 @@ for equipment in equipment_response.json()["data"]["results"]:
 ## Summary: Key Rules for Success
 
 1. **NO angle brackets** - Ever
-2. **NO PREFIX declarations** - Use automatic prefixes
-3. **Use : prefix** - NOT mes: or other custom prefixes (causes comparator errors)
+2. **NO PREFIX declarations** - Owlready2 ignores them completely
+3. **Use mes_ontology_populated: prefix** - This is auto-generated from the OWL filename
 4. **NO regex() or str()** - Post-process instead
 5. **YES to FILTER(ISIRI())** - Use liberally
 6. **YES to simple patterns** - Complex logic in Python
 7. **YES to parameters (??)** - For repeated queries
 8. **Always test incrementally** - Start simple, add complexity
+
+**CRITICAL**: The prefix `mes_ontology_populated:` comes from the OWL filename, NOT from any namespace declaration or the ontology IRI. This is how Owlready2 works.
 
 ## Testing Recommendations
 

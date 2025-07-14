@@ -1,5 +1,5 @@
 # MES Ontology Mind Map for LLM SPARQL Query Generation
-# Generated: 2025-07-13T13:49:03.814866
+# Generated: 2025-07-14T11:16:09.096335
 # Purpose: Provide ontology structure with business context for accurate SPARQL query construction
 
 # This file contains:
@@ -7,12 +7,26 @@
 # 2. All properties with domains, ranges, and operational context  
 # 3. Key individuals as real-world examples
 
-# IMPORTANT PREFIX NOTE FOR SPARQL QUERIES:
-# This Turtle file uses 'mes:' prefix which is correct for Turtle format.
-# However, when writing SPARQL queries for Owlready2, you MUST use ':' prefix instead:
-#   Turtle format (this file): mes:hasOEEScore
-#   SPARQL queries: :hasOEEScore
-# The 'mes:' prefix causes parsing errors in Owlready2, especially with comparison operators.
+# CRITICAL PREFIX INFORMATION FOR SPARQL QUERIES:
+# ============================================
+# Owlready2 IGNORES all PREFIX declarations and creates its own prefix from the OWL filename.
+# 
+# PREFIX MAPPING:
+#   - Turtle format (this file): mes:hasOEEScore
+#   - OWL filename: mes_ontology_populated.owl
+#   - Owlready2 auto-prefix: mes_ontology_populated:hasOEEScore
+#   - SPARQL queries MUST use: mes_ontology_populated:hasOEEScore
+#
+# IMPORTANT: The 'mes:' prefix shown in this file will NOT work in SPARQL queries!
+# You MUST use 'mes_ontology_populated:' as the prefix in all SPARQL queries.
+#
+# Example SPARQL query:
+#   SELECT ?equipment ?oee WHERE {
+#     ?equipment mes_ontology_populated:logsEvent ?event .
+#     ?event a mes_ontology_populated:ProductionLog .
+#     ?event mes_ontology_populated:hasOEEScore ?oee .
+#     FILTER(?oee < 85.0)
+#   }
 
 #############################################################################
 # NAMESPACE INFORMATION
@@ -299,8 +313,8 @@ mes:LINE1-FIL a mes:Filler ;
     mes:logsEvent mes:EVENT-LINE1-FIL-2025-06-01T00-00-00 ;
     mes:logsEvent mes:EVENT-LINE1-FIL-2025-06-01T00-05-00 ;
     mes:logsEvent mes:EVENT-LINE1-FIL-2025-06-01T00-10-00 ;
-    mes:isUpstreamOf mes:LINE1-PCK ;
-    mes:belongsToLine mes:LINE1 .
+    mes:belongsToLine mes:LINE1 ;
+    mes:isUpstreamOf mes:LINE1-PCK .
 
 mes:LINE1-PCK a mes:Packer ;
     rdfs:label "LINE1-PCK" ;
@@ -310,9 +324,9 @@ mes:LINE1-PCK a mes:Packer ;
     mes:logsEvent mes:EVENT-LINE1-PCK-2025-06-01T00-00-00 ;
     mes:logsEvent mes:EVENT-LINE1-PCK-2025-06-01T00-05-00 ;
     mes:logsEvent mes:EVENT-LINE1-PCK-2025-06-01T00-10-00 ;
+    mes:belongsToLine mes:LINE1 ;
     mes:isDownstreamOf mes:LINE1-FIL ;
-    mes:isUpstreamOf mes:LINE1-PAL ;
-    mes:belongsToLine mes:LINE1 .
+    mes:isUpstreamOf mes:LINE1-PAL .
 
 mes:LINE2-PCK a mes:Packer ;
     rdfs:label "LINE2-PCK" ;
@@ -322,9 +336,9 @@ mes:LINE2-PCK a mes:Packer ;
     mes:logsEvent mes:EVENT-LINE2-PCK-2025-06-01T00-00-00 ;
     mes:logsEvent mes:EVENT-LINE2-PCK-2025-06-01T00-05-00 ;
     mes:logsEvent mes:EVENT-LINE2-PCK-2025-06-01T00-10-00 ;
+    mes:belongsToLine mes:LINE2 ;
     mes:isDownstreamOf mes:LINE2-FIL ;
     mes:isUpstreamOf mes:LINE2-PAL ;
-    mes:belongsToLine mes:LINE2 ;
     mes:businessContext "Packer with chronic micro-stops. 25% chance of 1-5 minute stops each period. Needs preventive maintenance. Micro-stops: 25% probability per period." .
 
 mes:LINE3-FIL a mes:Filler ;
@@ -335,8 +349,8 @@ mes:LINE3-FIL a mes:Filler ;
     mes:logsEvent mes:EVENT-LINE3-FIL-2025-06-01T00-00-00 ;
     mes:logsEvent mes:EVENT-LINE3-FIL-2025-06-01T00-05-00 ;
     mes:logsEvent mes:EVENT-LINE3-FIL-2025-06-01T00-10-00 ;
-    mes:isUpstreamOf mes:LINE3-PCK ;
     mes:belongsToLine mes:LINE3 ;
+    mes:isUpstreamOf mes:LINE3-PCK ;
     mes:businessContext "Older filler prone to failures. Major breakdown on June 8 caused 5.5 hour downtime. Scheduled for replacement Q3 2025. Major failure: 2025-06-08 02:00:00 to 2025-06-08 07:30:00." .
 
 mes:SKU-1001 a mes:Product ;
@@ -378,3 +392,45 @@ mes:SKU-3001 a mes:Product ;
     mes:salePrice 0.75 ;
     mes:profitMargin "66.7%" ;
     mes:businessContext "8oz Kids Drink - Small format, high speed production. Popular in school channels." .
+
+
+#############################################################################
+# EXAMPLE SPARQL QUERIES - Using correct prefix for Owlready2
+#############################################################################
+
+# REMEMBER: Use 'mes_ontology_populated:' NOT 'mes:' in your SPARQL queries!
+
+# 1. Find underperforming equipment (OEE < 85%)
+# SELECT ?equipment ?oee WHERE {
+#     ?equipment mes_ontology_populated:logsEvent ?event .
+#     ?event a mes_ontology_populated:ProductionLog .
+#     ?event mes_ontology_populated:hasOEEScore ?oee .
+#     FILTER(?oee < 85.0)
+# } LIMIT 10
+
+# 2. Get equipment downtime events
+# SELECT ?equipment ?timestamp ?reason WHERE {
+#     ?equipment mes_ontology_populated:logsEvent ?event .
+#     ?event a mes_ontology_populated:DowntimeLog .
+#     ?event mes_ontology_populated:hasTimestamp ?timestamp .
+#     OPTIONAL { ?event mes_ontology_populated:hasDowntimeReasonCode ?reason }
+# } ORDER BY DESC(?timestamp)
+
+# 3. Find production quality issues
+# SELECT ?equipment ?product ?qualityScore WHERE {
+#     ?equipment mes_ontology_populated:logsEvent ?event .
+#     ?event a mes_ontology_populated:ProductionLog .
+#     ?order mes_ontology_populated:producesProduct ?product .
+#     ?equipment mes_ontology_populated:executesOrder ?order .
+#     ?event mes_ontology_populated:hasQualityScore ?qualityScore .
+#     FILTER(?qualityScore < 98.0)
+# }
+
+# 4. Calculate average OEE by equipment
+# SELECT ?equipment ?equipmentID (AVG(?oee) AS ?avgOEE) WHERE {
+#     ?equipment mes_ontology_populated:logsEvent ?event .
+#     ?event a mes_ontology_populated:ProductionLog .
+#     ?equipment mes_ontology_populated:hasEquipmentID ?equipmentID .
+#     ?event mes_ontology_populated:hasOEEScore ?oee .
+# } GROUP BY ?equipment ?equipmentID
+

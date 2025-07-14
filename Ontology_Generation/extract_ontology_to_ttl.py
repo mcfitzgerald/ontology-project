@@ -95,12 +95,26 @@ def extract_ontology_to_ttl(owl_file_path, output_ttl_path):
 # 2. All properties with domains, ranges, and operational context  
 # 3. Key individuals as real-world examples
 
-# IMPORTANT PREFIX NOTE FOR SPARQL QUERIES:
-# This Turtle file uses 'mes:' prefix which is correct for Turtle format.
-# However, when writing SPARQL queries for Owlready2, you MUST use ':' prefix instead:
-#   Turtle format (this file): mes:hasOEEScore
-#   SPARQL queries: :hasOEEScore
-# The 'mes:' prefix causes parsing errors in Owlready2, especially with comparison operators.
+# CRITICAL PREFIX INFORMATION FOR SPARQL QUERIES:
+# ============================================
+# Owlready2 IGNORES all PREFIX declarations and creates its own prefix from the OWL filename.
+# 
+# PREFIX MAPPING:
+#   - Turtle format (this file): mes:hasOEEScore
+#   - OWL filename: mes_ontology_populated.owl
+#   - Owlready2 auto-prefix: mes_ontology_populated:hasOEEScore
+#   - SPARQL queries MUST use: mes_ontology_populated:hasOEEScore
+#
+# IMPORTANT: The 'mes:' prefix shown in this file will NOT work in SPARQL queries!
+# You MUST use 'mes_ontology_populated:' as the prefix in all SPARQL queries.
+#
+# Example SPARQL query:
+#   SELECT ?equipment ?oee WHERE {{
+#     ?equipment mes_ontology_populated:logsEvent ?event .
+#     ?event a mes_ontology_populated:ProductionLog .
+#     ?event mes_ontology_populated:hasOEEScore ?oee .
+#     FILTER(?oee < 85.0)
+#   }}
 
 #############################################################################
 # NAMESPACE INFORMATION
@@ -374,6 +388,45 @@ mes:calculationMethod a owl:AnnotationProperty ;
         # Add example SPARQL queries section
         f.write(
             """
+#############################################################################
+# EXAMPLE SPARQL QUERIES - Using correct prefix for Owlready2
+#############################################################################
+
+# REMEMBER: Use 'mes_ontology_populated:' NOT 'mes:' in your SPARQL queries!
+
+# 1. Find underperforming equipment (OEE < 85%)
+# SELECT ?equipment ?oee WHERE {
+#     ?equipment mes_ontology_populated:logsEvent ?event .
+#     ?event a mes_ontology_populated:ProductionLog .
+#     ?event mes_ontology_populated:hasOEEScore ?oee .
+#     FILTER(?oee < 85.0)
+# } LIMIT 10
+
+# 2. Get equipment downtime events
+# SELECT ?equipment ?timestamp ?reason WHERE {
+#     ?equipment mes_ontology_populated:logsEvent ?event .
+#     ?event a mes_ontology_populated:DowntimeLog .
+#     ?event mes_ontology_populated:hasTimestamp ?timestamp .
+#     OPTIONAL { ?event mes_ontology_populated:hasDowntimeReasonCode ?reason }
+# } ORDER BY DESC(?timestamp)
+
+# 3. Find production quality issues
+# SELECT ?equipment ?product ?qualityScore WHERE {
+#     ?equipment mes_ontology_populated:logsEvent ?event .
+#     ?event a mes_ontology_populated:ProductionLog .
+#     ?order mes_ontology_populated:producesProduct ?product .
+#     ?equipment mes_ontology_populated:executesOrder ?order .
+#     ?event mes_ontology_populated:hasQualityScore ?qualityScore .
+#     FILTER(?qualityScore < 98.0)
+# }
+
+# 4. Calculate average OEE by equipment
+# SELECT ?equipment ?equipmentID (AVG(?oee) AS ?avgOEE) WHERE {
+#     ?equipment mes_ontology_populated:logsEvent ?event .
+#     ?event a mes_ontology_populated:ProductionLog .
+#     ?equipment mes_ontology_populated:hasEquipmentID ?equipmentID .
+#     ?event mes_ontology_populated:hasOEEScore ?oee .
+# } GROUP BY ?equipment ?equipmentID
 
 """
         )
