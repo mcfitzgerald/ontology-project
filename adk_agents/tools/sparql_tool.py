@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field
 
 from ..config.settings import SPARQL_ENDPOINT, SPARQL_TIMEOUT
 from ..utils.owlready2_adapter import adapt_sparql_for_owlready2, format_owlready2_results
+from ..agents.orchestrator import shared_context
 
 
 class SPARQLQueryParams(BaseModel):
@@ -68,6 +69,14 @@ async def execute_sparql_query(
                     # Format results for consistency
                     formatted_results = format_owlready2_results(results)
                     
+                    # Record successful query in shared context
+                    if formatted_results:
+                        shared_context.add_successful_query(
+                            adapted_query, 
+                            formatted_results,
+                            purpose=f"Retrieved {len(formatted_results)} results"
+                        )
+                    
                     return {
                         "success": True,
                         "results": formatted_results,
@@ -76,6 +85,10 @@ async def execute_sparql_query(
                     }
                 else:
                     error_text = await response.text()
+                    
+                    # Record failed query in shared context
+                    shared_context.add_failed_query(adapted_query, error_text)
+                    
                     return {
                         "success": False,
                         "error": f"HTTP {response.status}: {error_text}",
@@ -101,14 +114,87 @@ async def execute_sparql_query(
 sparql_tool = FunctionTool(execute_sparql_query)
 
 
+# Discovery queries for ontology exploration
+async def discover_classes() -> Dict[str, Any]:
+    """Discover all classes in the ontology."""
+    query = """
+    SELECT DISTINCT ?class WHERE {
+        ?class a owl:Class .
+        FILTER(ISIRI(?class))
+    }
+    ORDER BY ?class
+    """
+    return await execute_sparql_query(query)
+
+
+async def discover_equipment_instances() -> Dict[str, Any]:
+    """Discover all equipment instances in the ontology."""
+    query = """
+    SELECT DISTINCT ?equipment ?type WHERE {
+        ?equipment a ?type .
+        ?type rdfs:subClassOf* mes_ontology_populated:Equipment .
+        FILTER(ISIRI(?equipment))
+        FILTER(ISIRI(?type))
+    }
+    ORDER BY ?equipment
+    """
+    result = await execute_sparql_query(query)
+    
+    # Add discovered equipment to shared context
+    if result.get('success') and result.get('results'):
+        for row in result['results']:
+            if len(row) >= 1:
+                equipment = str(row[0]).split('#')[-1] if '#' in str(row[0]) else str(row[0])
+                shared_context.add_discovered_entity('equipment', equipment)
+    
+    return result
+
+
+async def discover_properties_for_class(class_name: str) -> Dict[str, Any]:
+    """Discover all properties associated with instances of a class."""
+    query = f"""
+    SELECT DISTINCT ?property WHERE {{
+        ?instance a mes_ontology_populated:{class_name} .
+        ?instance ?property ?value .
+        FILTER(ISIRI(?property))
+    }}
+    ORDER BY ?property
+    """
+    return await execute_sparql_query(query)
+
+
+async def discover_entity_properties(entity_uri: str) -> Dict[str, Any]:
+    """Discover all properties and values for a specific entity."""
+    query = """
+    SELECT ?property ?value WHERE {
+        ?? ?property ?value .
+        FILTER(ISIRI(?property))
+    }
+    ORDER BY ?property
+    """
+    return await execute_sparql_query(query, parameters=[entity_uri])
+
+
+async def validate_entity_exists(entity_uri: str) -> Dict[str, Any]:
+    """Check if an entity exists in the ontology."""
+    query = """
+    SELECT ?type WHERE {
+        ?? a ?type .
+        FILTER(ISIRI(?type))
+    }
+    LIMIT 1
+    """
+    return await execute_sparql_query(query, parameters=[entity_uri])
+
+
 # Helper functions for common queries
 async def query_underperforming_equipment(oee_threshold: float = 85.0) -> Dict[str, Any]:
     """Find equipment with OEE below threshold."""
     query = f"""
     SELECT DISTINCT ?equipment ?equipmentID ?avgOEE
     WHERE {{
+        ?equipment mes_ontology_populated:logsEvent ?event .
         ?event a mes_ontology_populated:ProductionLog .
-        ?event mes_ontology_populated:logsEquipment ?equipment .
         ?equipment mes_ontology_populated:hasEquipmentID ?equipmentID .
         ?event mes_ontology_populated:hasOEEScore ?oee .
         
