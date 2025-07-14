@@ -32,7 +32,7 @@ async def execute_sparql_query(
     Args:
         query: SPARQL query string
         parameters: Optional query parameters
-        timeout: Query timeout in milliseconds
+        timeout: Query timeout in seconds
         adapt_for_owlready2: Whether to adapt query for Owlready2
     
     Returns:
@@ -59,7 +59,7 @@ async def execute_sparql_query(
             async with session.post(
                 SPARQL_ENDPOINT,
                 json=payload,
-                timeout=aiohttp.ClientTimeout(total=timeout/1000)
+                timeout=aiohttp.ClientTimeout(total=timeout)
             ) as response:
                 
                 if response.status == 200:
@@ -97,20 +97,8 @@ async def execute_sparql_query(
 
 
 # Create the ADK tool
-sparql_tool = FunctionTool(
-    func=execute_sparql_query,
-    name="sparql_query",
-    description="""Execute SPARQL queries against the manufacturing ontology.
-    
-    Automatically adapts queries for Owlready2 compatibility:
-    - Removes PREFIX declarations
-    - Removes angle brackets
-    - Adds FILTER(ISIRI()) where needed
-    - Converts property syntax
-    
-    Returns query results in a consistent format with success/error status.""",
-    input_schema=SPARQLQueryParams
-)
+# FunctionTool automatically extracts metadata from the function's docstring and annotations
+sparql_tool = FunctionTool(execute_sparql_query)
 
 
 # Helper functions for common queries
@@ -119,10 +107,10 @@ async def query_underperforming_equipment(oee_threshold: float = 85.0) -> Dict[s
     query = f"""
     SELECT DISTINCT ?equipment ?equipmentID ?avgOEE
     WHERE {{
-        ?event a mes:ProductionLog .
-        ?event mes:logsEquipment ?equipment .
-        ?equipment mes:hasEquipmentID ?equipmentID .
-        ?event mes:hasOEEScore ?oee .
+        ?event a mes_ontology_populated:ProductionLog .
+        ?event mes_ontology_populated:logsEquipment ?equipment .
+        ?equipment mes_ontology_populated:hasEquipmentID ?equipmentID .
+        ?event mes_ontology_populated:hasOEEScore ?oee .
         
         FILTER(?oee < {oee_threshold})
     }}
@@ -133,14 +121,13 @@ async def query_underperforming_equipment(oee_threshold: float = 85.0) -> Dict[s
 async def query_equipment_downtime(equipment_id: str) -> Dict[str, Any]:
     """Get downtime events for specific equipment."""
     query = f"""
-    SELECT ?timestamp ?reason ?duration
+    SELECT ?timestamp ?reasonCode
     WHERE {{
-        ?event a mes:DowntimeLog .
-        ?event mes:logsEquipment ?equipment .
-        ?equipment mes:hasEquipmentID "{equipment_id}" .
-        ?event mes:hasTimestamp ?timestamp .
-        ?event mes:hasDowntimeReason ?reason .
-        ?event mes:hasDowntimeDuration ?duration .
+        ?equipment mes_ontology_populated:hasEquipmentID "{equipment_id}" .
+        ?equipment mes_ontology_populated:logsEvent ?event .
+        ?event a mes_ontology_populated:DowntimeLog .
+        ?event mes_ontology_populated:hasTimestamp ?timestamp .
+        OPTIONAL {{ ?event mes_ontology_populated:hasDowntimeReasonCode ?reasonCode }}
     }}
     ORDER BY DESC(?timestamp)
     LIMIT 100
@@ -153,14 +140,15 @@ async def query_product_quality(product_name: str) -> Dict[str, Any]:
     query = f"""
     SELECT ?equipment ?qualityScore ?scrapRate ?timestamp
     WHERE {{
-        ?event a mes:ProductionLog .
-        ?event mes:producesProduct ?product .
-        ?product mes:hasProductName "{product_name}" .
-        ?event mes:logsEquipment ?equipment .
-        ?event mes:hasQualityScore ?qualityScore .
-        ?event mes:hasScrapUnitsProduced ?scrap .
-        ?event mes:hasGoodUnitsProduced ?good .
-        ?event mes:hasTimestamp ?timestamp .
+        ?equipment mes_ontology_populated:logsEvent ?event .
+        ?event a mes_ontology_populated:ProductionLog .
+        ?order mes_ontology_populated:producesProduct ?product .
+        ?product mes_ontology_populated:hasProductName "{product_name}" .
+        ?equipment mes_ontology_populated:executesOrder ?order .
+        ?event mes_ontology_populated:hasQualityScore ?qualityScore .
+        ?event mes_ontology_populated:hasScrapUnits ?scrap .
+        ?event mes_ontology_populated:hasGoodUnits ?good .
+        ?event mes_ontology_populated:hasTimestamp ?timestamp .
         
         BIND((?scrap / (?good + ?scrap)) AS ?scrapRate)
     }}

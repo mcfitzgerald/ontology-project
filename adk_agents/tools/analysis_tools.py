@@ -347,46 +347,9 @@ def _estimate_payback_months(annual_value: float) -> int:
 
 
 # Create ADK tools
-temporal_analysis_tool = FunctionTool(
-    func=analyze_temporal_patterns,
-    name="analyze_temporal_patterns",
-    description="""Analyze temporal patterns in time series data.
-    
-    Identifies:
-    - Hourly, daily, weekly patterns
-    - Peak and low periods
-    - Trends over time
-    - Event clustering
-    
-    Use for discovering when problems occur and operational rhythms.""",
-    input_schema=TemporalAnalysisParams
-)
+# FunctionTool automatically extracts metadata from the function's docstring
+temporal_analysis_tool = FunctionTool(analyze_temporal_patterns)
 
-financial_modeling_tool = FunctionTool(
-    func=calculate_financial_impact,
-    name="calculate_financial_impact",
-    description="""Calculate ROI and financial impact of performance improvements.
-    
-    Provides:
-    - Current performance vs benchmark
-    - Volume and quality opportunities
-    - Annual financial impact
-    - ROI scenarios
-    
-    Essential for quantifying improvement value.""",
-    input_schema=FinancialImpactParams
-)
+financial_modeling_tool = FunctionTool(calculate_financial_impact)
 
-anomaly_detection_tool = FunctionTool(
-    func=detect_anomalies,
-    name="detect_anomalies",
-    description="""Detect anomalies and outliers in operational data.
-    
-    Finds:
-    - Statistical outliers
-    - Unusual patterns
-    - Performance deviations
-    
-    Helps identify problems and exceptional events.""",
-    input_schema=AnomalyDetectionParams
-)
+anomaly_detection_tool = FunctionTool(detect_anomalies)

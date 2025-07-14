@@ -310,10 +310,11 @@ Key metrics to monitor:
 
 ### Common Owlready2 SPARQL Limitations
 1. PREFIX declarations are often ignored
-2. Automatic namespace prefix created from ontology filename (e.g., `mes_ontology_populated`)
-3. Integer predicates used internally (6=rdf:type, 7=rdfs:domain, etc.)
-4. No support for regex() or str() functions
-5. Complex datetime operations should be done in post-processing
+2. **Use `:` prefix instead of `mes:` to avoid comparator errors** (e.g., `:hasOEEScore` not `mes:hasOEEScore`)
+3. Automatic namespace prefix created from ontology filename (e.g., `mes_ontology_populated`)
+4. Integer predicates used internally (6=rdf:type, 7=rdfs:domain, etc.)
+5. No support for regex() or str() functions
+6. Complex datetime operations should be done in post-processing
 
 ## Query Writing Guidelines
 

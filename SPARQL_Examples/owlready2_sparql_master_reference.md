@@ -45,6 +45,19 @@ SELECT ?x WHERE { ?x mes_ontology_populated:hasOEEScore ?score }
 ?equipment a ?type . FILTER(ISIRI(?equipment))
 ```
 
+### 2a. **Use Colon Prefix (:) Instead of Custom Prefixes**
+```sparql
+# ❌ WRONG - Custom prefixes don't work as expected
+?event mes:hasOEEScore ?oee
+FILTER(?oee < 85.0)  # This causes "Error at COMPARATOR:'<'"
+
+# ✅ CORRECT - Use : prefix for default namespace
+?event :hasOEEScore ?oee
+FILTER(?oee < 85.0)  # This works correctly
+```
+
+**Important**: When using the `:` prefix in queries, Owlready2 maps it to the default namespace. This is different from standard SPARQL where you would declare prefixes explicitly. The `mes:` prefix may cause parsing errors, especially with comparison operators.
+
 ### 3. **Functions NOT Supported**
 - ❌ `regex()` - Causes "user-defined function raised exception"
 - ❌ `str()` - Not supported
@@ -530,11 +543,12 @@ for equipment in equipment_response.json()["data"]["results"]:
 
 1. **NO angle brackets** - Ever
 2. **NO PREFIX declarations** - Use automatic prefixes
-3. **NO regex() or str()** - Post-process instead
-4. **YES to FILTER(ISIRI())** - Use liberally
-5. **YES to simple patterns** - Complex logic in Python
-6. **YES to parameters (??)** - For repeated queries
-7. **Always test incrementally** - Start simple, add complexity
+3. **Use : prefix** - NOT mes: or other custom prefixes (causes comparator errors)
+4. **NO regex() or str()** - Post-process instead
+5. **YES to FILTER(ISIRI())** - Use liberally
+6. **YES to simple patterns** - Complex logic in Python
+7. **YES to parameters (??)** - For repeated queries
+8. **Always test incrementally** - Start simple, add complexity
 
 ## Testing Recommendations
 

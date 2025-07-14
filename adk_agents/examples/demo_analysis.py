@@ -13,11 +13,11 @@ from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
 from google.genai import types
 
-from agents.orchestrator import create_orchestrator
-from agents.explorer_agent import create_explorer_agent
-from agents.query_agent import create_query_builder_agent
-from agents.analyst_agent import create_analyst_agent
-from config.settings import validate_config
+from adk_agents.agents.orchestrator import create_orchestrator
+from adk_agents.agents.explorer_agent import create_explorer_agent
+from adk_agents.agents.query_agent import create_query_builder_agent
+from adk_agents.agents.analyst_agent import create_analyst_agent
+from adk_agents.config.settings import validate_config
 
 
 class ManufacturingAnalyticsChat:

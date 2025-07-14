@@ -22,7 +22,7 @@ GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY', '')
 
 # SPARQL Configuration
 SPARQL_ENDPOINT = os.getenv('SPARQL_ENDPOINT', 'http://localhost:8000/sparql/query')
-SPARQL_TIMEOUT = int(os.getenv('SPARQL_TIMEOUT', '30000'))
+SPARQL_TIMEOUT = int(os.getenv('SPARQL_TIMEOUT', '30'))  # Timeout in seconds
 
 # Analysis Configuration
 DEFAULT_OEE_BENCHMARK = float(os.getenv('DEFAULT_OEE_BENCHMARK', '85.0'))
