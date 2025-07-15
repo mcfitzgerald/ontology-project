@@ -11,6 +11,8 @@ from pydantic import BaseModel, Field
 from ..config.settings import SPARQL_ENDPOINT, SPARQL_TIMEOUT
 from ..utils.owlready2_adapter import adapt_sparql_for_owlready2, format_owlready2_results
 from ..agents.orchestrator import shared_context
+from .sparql_builder import SPARQLQueryBuilder
+from .sparql_validator import validate_and_optimize_query, analyze_query_failure
 
 
 class SPARQLQueryParams(BaseModel):
@@ -25,7 +27,8 @@ async def execute_sparql_query(
     query: str,
     parameters: Optional[List[str]] = None,
     timeout: int = SPARQL_TIMEOUT,
-    adapt_for_owlready2: bool = True
+    adapt_for_owlready2: bool = True,
+    optimize: bool = True
 ) -> Dict[str, Any]:
     """
     Execute SPARQL query against the MES ontology.
@@ -35,11 +38,16 @@ async def execute_sparql_query(
         parameters: Optional query parameters
         timeout: Query timeout in seconds
         adapt_for_owlready2: Whether to adapt query for Owlready2
+        optimize: Whether to validate and optimize the query
     
     Returns:
         Dictionary containing query results or error information
     """
     try:
+        # Validate and optimize query if requested
+        if optimize:
+            query = validate_and_optimize_query(query)
+        
         # Adapt query if needed
         if adapt_for_owlready2:
             adapted_query = adapt_sparql_for_owlready2(query)
@@ -89,10 +97,15 @@ async def execute_sparql_query(
                     # Record failed query in shared context
                     shared_context.add_failed_query(adapted_query, error_text)
                     
+                    # Analyze the failure
+                    failure_analysis = analyze_query_failure(adapted_query, error_text)
+                    
                     return {
                         "success": False,
                         "error": f"HTTP {response.status}: {error_text}",
-                        "query": adapted_query
+                        "query": adapted_query,
+                        "suggestions": failure_analysis.get("suggestions", []),
+                        "fixed_query": failure_analysis.get("fixed_query")
                     }
                     
     except asyncio.TimeoutError:
@@ -112,6 +125,9 @@ async def execute_sparql_query(
 # Create the ADK tool
 # FunctionTool automatically extracts metadata from the function's docstring and annotations
 sparql_tool = FunctionTool(execute_sparql_query)
+
+# Initialize query builder
+query_builder = SPARQLQueryBuilder()
 
 
 # Discovery queries for ontology exploration
@@ -241,4 +257,45 @@ async def query_product_quality(product_name: str) -> Dict[str, Any]:
     ORDER BY DESC(?timestamp)
     LIMIT 100
     """
+    return await execute_sparql_query(query)
+
+
+# New functions using the query builder
+async def query_downtime_pareto() -> Dict[str, Any]:
+    """Get Pareto analysis of downtime reasons with proper aggregation."""
+    query = query_builder.build_downtime_pareto_query()
+    return await execute_sparql_query(query)
+
+
+async def query_time_series_downtime(
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None
+) -> Dict[str, Any]:
+    """Get time series of downtime events with optional date filtering."""
+    query = query_builder.build_time_series_query(start_date, end_date)
+    return await execute_sparql_query(query)
+
+
+async def query_oee_analysis(equipment_type: Optional[str] = None) -> Dict[str, Any]:
+    """Analyze OEE metrics by equipment with aggregation."""
+    query = query_builder.build_oee_analysis_query(equipment_type)
+    return await execute_sparql_query(query)
+
+
+async def query_defect_analysis() -> Dict[str, Any]:
+    """Analyze defect rates by product and line."""
+    query = query_builder.build_defect_analysis_query()
+    return await execute_sparql_query(query)
+
+
+async def build_progressive_query(
+    base_pattern: str,
+    filters: Optional[List[str]] = None,
+    aggregations: Optional[Dict[str, str]] = None,
+    group_by: Optional[List[str]] = None
+) -> Dict[str, Any]:
+    """Build and execute a query progressively with optional components."""
+    query = query_builder.build_progressive_query(
+        base_pattern, filters, aggregations, group_by
+    )
     return await execute_sparql_query(query)
