@@ -71,12 +71,18 @@ ontology-project/
 │   └── README-api.md               # API documentation
 ├── adk_agents/
 │   ├── agents/                     # ADK agent implementations
+│   │   └── enhanced/               # Enhanced agents with context sharing
 │   ├── tools/                      # SPARQL and analysis tools
+│   │   ├── sparql_builder.py       # Query builder with optimizations
+│   │   └── sparql_validator.py     # Query validation and error analysis
+│   ├── context/                    # Shared context management
+│   │   └── shared_context.py       # Context sharing between agents
 │   ├── config/                     # Prompts and settings
 │   └── README-adk.md               # ADK system documentation
 ├── SPARQL_Examples/
 │   ├── owlready2_sparql_master_reference.md  # SPARQL guidelines
 │   └── working_patterns_summary.md            # Tested query patterns
+├── ADK_AGENT_IMPROVEMENTS.md       # Implementation plan for enhancements
 └── Utils/
     └── mes_llm_validation.py       # Data validation utilities
 ```
@@ -147,6 +153,10 @@ python -m adk_agents.test_simple
 
 # Run interactive demo
 python -m adk_agents.examples.demo_analysis
+
+# Run ADK Web Interface (enhanced agents)
+adk web --port 8001
+# Access at http://localhost:8001
 ```
 
 ## 💡 Key Features
@@ -168,6 +178,13 @@ python -m adk_agents.examples.demo_analysis
 - **Emergent Patterns**: Discovers insights without predefined templates
 - **Financial Focus**: Every finding connects to ROI
 - **Cost Monitoring**: Built-in token counting and spend limits
+
+### 4. Enhanced Agent Capabilities (NEW)
+- **SPARQL Query Optimization**: Automatic DISTINCT, GROUP BY, and aggregation
+- **Shared Context Management**: Agents share discoveries to avoid redundant queries
+- **Query Pattern Learning**: Successful patterns are cached and reused
+- **Error Recovery**: Intelligent error analysis with fix suggestions
+- **Progressive Query Building**: Start simple, add complexity incrementally
 
 ## 🔍 Analysis Patterns & Results
 
@@ -224,6 +241,54 @@ Owlready2 automatically generates prefixes from OWL filenames:
 - `mes:hasOEEScore` (Turtle prefix doesn't work in SPARQL)
 - `:hasOEEScore` (Undefined prefix error)
 
+## 🆕 Recent Improvements (December 2024)
+
+### Enhanced SPARQL Query Generation
+- **Query Builder Module** (`sparql_builder.py`): Pre-built optimized queries
+  - Downtime Pareto analysis with proper aggregation
+  - OEE analysis with AVG/MIN/MAX calculations
+  - Time series queries with literal timestamp handling
+  - Progressive query construction
+
+- **Query Validator** (`sparql_validator.py`): Automatic optimization
+  - Adds DISTINCT to prevent duplicates
+  - Ensures GROUP BY for aggregations
+  - Analyzes failures and suggests fixes
+  - Extracts reusable patterns from successful queries
+
+### Shared Context Management
+- **SharedAgentContext** (`shared_context.py`): Cross-agent memory
+  - Caches discovered properties and data types
+  - Stores successful query patterns
+  - Records known issues with workarounds
+  - Tracks query results to avoid redundant work
+
+### Enhanced Agent Instructions
+- **Dynamic Instructions**: Context-aware agent behavior
+  - Checks cached discoveries before exploring
+  - Reuses successful query patterns
+  - Applies known workarounds automatically
+  - Provides performance warnings
+
+### Example: Before vs After
+```sparql
+# Before (returned 1003 duplicate rows):
+SELECT ?downtimeReason WHERE {
+    ?log a mes_ontology_populated:DowntimeLog .
+    ?log mes_ontology_populated:hasDowntimeReason ?downtimeReason .
+}
+
+# After (returns aggregated counts):
+SELECT ?downtimeReason (COUNT(DISTINCT ?downtimeLog) AS ?count) WHERE {
+    ?downtimeLog a mes_ontology_populated:DowntimeLog .
+    ?downtimeLog mes_ontology_populated:hasDowntimeReason ?downtimeReason .
+    FILTER(ISIRI(?downtimeReason))
+}
+GROUP BY ?downtimeReason
+ORDER BY DESC(?count)
+LIMIT 20
+```
+
 ## 🛠️ Technical Stack
 
 - **Python 3.8+**: Core language
@@ -268,6 +333,12 @@ Update `Ontology_Generation/Tbox_Rbox.md` and regenerate.
 Error at COMPARATOR:'<'  OR  Undefined prefix ':'
 ```
 **Solution**: Use `mes_ontology_populated:` prefix (see prefix requirements above)
+
+### Enhanced Agent Import Errors
+```
+TypeError: 'mappingproxy' object is not callable
+```
+**Solution**: This occurs when using `context.state()` instead of `context.state` (it's a property, not a method)
 
 ### No Query Results
 - Verify API is running: `curl http://localhost:8000/health`
