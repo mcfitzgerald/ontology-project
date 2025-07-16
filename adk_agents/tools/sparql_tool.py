@@ -38,8 +38,8 @@ async def execute_sparql_query(
     parameters: Optional[List[str]] = None,
     timeout: int = SPARQL_TIMEOUT,
     adapt_for_owlready2: bool = True,
-    purpose: str = None,
-    analysis_type: str = None
+    purpose: Optional[str] = None,
+    analysis_type: Optional[str] = None
 ) -> Dict[str, Any]:
     """
     Execute SPARQL query against the MES ontology with learning.

@@ -93,6 +93,10 @@ ORDER BY ?avgOEE
 - "No results" → Check class/property names
 - Timeout → Add LIMIT, optimize pattern
 
+## Available Entities for Quick Reference
+Equipment IDs: {', '.join([e['id'] for eq_list in self.context_loader.get_equipment_list().get('by_type', {}).values() for e in eq_list])}
+Product IDs: {', '.join([p['id'] for p in self.context_loader.get_product_catalog().get('catalog', [])])}
+
 ## Full Technical Context
 {self.context_loader.get_full_context()}
 
@@ -106,6 +110,5 @@ Always explain what you're querying and why. If a query fails, explain what you'
             model=DEFAULT_MODEL,
             instruction=self.get_system_prompt(),
             description="Executes SPARQL queries with learning and optimization",
-            tools=[sparql_tool],
-            temperature=0.1  # Low temperature for consistency
+            tools=[sparql_tool]
         )

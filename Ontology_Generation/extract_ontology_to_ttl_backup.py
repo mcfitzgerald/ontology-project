@@ -56,30 +56,6 @@ def get_business_context(entity_name, config):
     # Check for specific equipment IDs
     base_context = contexts.get(entity_name, "")
 
-
-def get_column_mapping():
-    """Get mapping from ontology properties to CSV columns."""
-    return {
-        "hasTimestamp": {"column": "Timestamp", "context": "5-minute interval timestamp for production events"},
-        "hasOrderID": {"column": "ProductionOrderID", "context": "Unique identifier for production order"},
-        "hasLineID": {"column": "LineID", "context": "Production line identifier (1-3)"},
-        "hasEquipmentID": {"column": "EquipmentID", "context": "Unique equipment identifier (e.g., LINE1-FIL)"},
-        "hasEquipmentType": {"column": "EquipmentType", "context": "Type of equipment (Filler, Packer, Palletizer)"},
-        "hasProductID": {"column": "ProductID", "context": "Product SKU identifier"},
-        "hasProductName": {"column": "ProductName", "context": "Human-readable product name"},
-        "hasMachineStatus": {"column": "MachineStatus", "context": "Current equipment state (Running/Stopped)"},
-        "hasDowntimeReasonCode": {"column": "DowntimeReason", "context": "Reason code for equipment stoppage"},
-        "hasGoodUnits": {"column": "GoodUnitsProduced", "context": "Count of sellable units produced in 5-min interval"},
-        "hasScrapUnits": {"column": "ScrapUnitsProduced", "context": "Count of defective units in 5-min interval"},
-        "hasTargetRate": {"column": "TargetRate_units_per_5min", "context": "Expected production rate per 5-minute interval"},
-        "hasStandardCost": {"column": "StandardCost_per_unit", "context": "Manufacturing cost per unit"},
-        "hasSalePrice": {"column": "SalePrice_per_unit", "context": "Selling price per unit"},
-        "hasAvailabilityScore": {"column": "Availability_Score", "context": "Equipment availability percentage (0-100)"},
-        "hasPerformanceScore": {"column": "Performance_Score", "context": "Production speed efficiency (0-100)"},
-        "hasQualityScore": {"column": "Quality_Score", "context": "Product quality percentage (0-100)"},
-        "hasOEEScore": {"column": "OEE_Score", "context": "Overall Equipment Effectiveness (0-100)"}
-    }
-
     # Add anomaly information if applicable
     if (
         entity_name == "LINE3-FIL"
@@ -169,18 +145,6 @@ mes:typicalValue a owl:AnnotationProperty ;
 mes:calculationMethod a owl:AnnotationProperty ;
     rdfs:label "Calculation Method" ;
     rdfs:comment "How this metric is calculated" .
-
-mes:mapsToColumn a owl:AnnotationProperty ;
-    rdfs:label "Maps to Column" ;
-    rdfs:comment "The CSV column name this property maps to" .
-
-mes:dataContext a owl:AnnotationProperty ;
-    rdfs:label "Data Context" ;
-    rdfs:comment "Describes the type and meaning of the data" .
-
-mes:exampleValue a owl:AnnotationProperty ;
-    rdfs:label "Example Value" ;
-    rdfs:comment "Example value from the dataset" .
 
 #############################################################################
 # CLASSES - Core business entities
@@ -287,7 +251,6 @@ mes:exampleValue a owl:AnnotationProperty ;
 
         print("Extracting data properties...")
         data_props = list(onto.data_properties())
-        column_mappings = get_column_mapping()
 
         for prop in sorted(data_props, key=lambda x: x.name):
             if prop.namespace == onto:
@@ -322,20 +285,6 @@ mes:exampleValue a owl:AnnotationProperty ;
 
                 if prop.comment:
                     f.write(f' ;\n    rdfs:comment "{prop.comment[0]}"')
-
-                # Add column mapping if available
-                if prop.name in column_mappings:
-                    mapping = column_mappings[prop.name]
-                    f.write(f' ;\n    mes:mapsToColumn "{mapping["column"]}"')
-                    f.write(f' ;\n    mes:dataContext "{mapping["context"]}"')
-                    
-                    # Add example values for specific properties
-                    if prop.name == "hasTimestamp":
-                        f.write(f' ;\n    mes:exampleValue "2025-06-01 00:00:00"')
-                    elif prop.name == "hasEquipmentID":
-                        f.write(f' ;\n    mes:exampleValue "LINE1-FIL"')
-                    elif prop.name == "hasProductID":
-                        f.write(f' ;\n    mes:exampleValue "SKU-1001"')
 
                 # Business context
                 context = get_business_context(prop.name, config)

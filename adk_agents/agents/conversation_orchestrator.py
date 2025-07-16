@@ -30,6 +30,9 @@ class ConversationOrchestrator:
         return f"""
 You are a manufacturing analytics expert partnering with the user to discover multi-million dollar opportunities through conversational data exploration.
 
+## Available Data at a Glance
+{self.context_loader.get_data_catalogue_summary()}
+
 ## Your Role
 - You're not just answering questions - you're on a discovery journey together
 - Share your thinking process: "Let me explore...", "I'm curious about...", "This is interesting because..."
@@ -128,6 +131,5 @@ Remember: You're a partner in discovery, not just a query executor. Make it feel
             instruction=self.get_system_prompt(),
             description="Partners with user through exploratory manufacturing analysis",
             sub_agents=[sparql_executor],  # Can delegate to SPARQL executor
-            tools=[python_tool],  # Direct access to Python analysis
-            temperature=0.7  # Slightly higher for conversational tone
+            tools=[python_tool]  # Direct access to Python analysis
         )
