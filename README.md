@@ -147,16 +147,37 @@ SPARQL_TIMEOUT=30
 ```
 
 ### 6. Test the System
+
+#### Option A: Run with ADK Web Development UI (Recommended)
+```bash
+# Start SPARQL API in background (port 8000)
+python -m uvicorn API.main:app --reload > sparql_api.log 2>&1 &
+
+# Start ADK Web UI in background (port 8001)
+adk web --port 8001 > adk_web.log 2>&1 &
+
+# Access the ADK Dev UI at http://localhost:8001
+
+# Check services are running
+curl http://localhost:8000/health  # SPARQL API health check
+curl http://localhost:8001/         # ADK Web UI
+
+# View logs if needed
+tail -f sparql_api.log   # SPARQL API logs
+tail -f adk_web.log      # ADK Web logs
+
+# Stop services when done
+pkill -f "uvicorn API.main:app"
+pkill -f "adk web"
+```
+
+#### Option B: Run from Command Line
 ```bash
 # Test SPARQL connectivity
 python -m adk_agents.test_simple
 
 # Run interactive demo
 python -m adk_agents.examples.demo_analysis
-
-# Run ADK Web Interface (enhanced agents)
-adk web --port 8001
-# Access at http://localhost:8001
 ```
 
 ## 💡 Key Features

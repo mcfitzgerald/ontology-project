@@ -77,14 +77,24 @@ class Owlready2Adapter:
             entity_vars = [v for v in variables if v.startswith('?') and 
                           not any(kw in v.lower() for kw in ['value', 'score', 'count', 'avg', 'sum'])]
             
-            # Check if WHERE clause already has FILTER(ISIRI()) for these vars
-            where_match = re.search(r'WHERE\s*\{(.*)\}', query, re.IGNORECASE | re.DOTALL)
+            # Find the WHERE clause and its content
+            where_match = re.search(r'WHERE\s*\{(.*)\}\s*(?:ORDER|LIMIT|$)', query, re.IGNORECASE | re.DOTALL)
             if where_match:
-                where_clause = where_match.group(1)
+                where_content = where_match.group(1)
+                filters_to_add = []
+                
                 for var in entity_vars:
-                    if f'FILTER(ISIRI({var}))' not in where_clause:
-                        # Add filter at the end of WHERE clause
-                        query = query.replace('}', f'\n    FILTER(ISIRI({var}))\n}}', 1)
+                    if f'FILTER(ISIRI({var}))' not in where_content:
+                        filters_to_add.append(f'FILTER(ISIRI({var}))')
+                
+                if filters_to_add:
+                    # Find the position of the last } in the WHERE clause
+                    # But make sure we don't add extra } at the end
+                    filter_text = '\n    ' + '\n    '.join(filters_to_add)
+                    
+                    # Replace only the WHERE clause content
+                    new_where = where_content.rstrip() + filter_text
+                    query = query.replace(where_content, new_where)
         
         return query
     

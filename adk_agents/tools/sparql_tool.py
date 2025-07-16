@@ -12,7 +12,7 @@ from ..config.settings import SPARQL_ENDPOINT, SPARQL_TIMEOUT
 from ..utils.owlready2_adapter import adapt_sparql_for_owlready2, format_owlready2_results
 from ..agents.orchestrator import shared_context
 from .sparql_builder import SPARQLQueryBuilder
-from .sparql_validator import validate_and_optimize_query, analyze_query_failure
+# Validator removed - using LLM-based query construction instead
 
 
 class SPARQLQueryParams(BaseModel):
@@ -23,12 +23,19 @@ class SPARQLQueryParams(BaseModel):
     adapt_for_owlready2: bool = Field(True, description="Adapt query for Owlready2 compatibility")
 
 
+class ProgressiveQueryParams(BaseModel):
+    """Parameters for progressive query building."""
+    base_pattern: str = Field(..., description="Base SPARQL pattern")
+    filters: Optional[List[str]] = Field(None, description="Filter conditions")
+    aggregations: Optional[Dict[str, str]] = Field(None, description="Aggregation functions")
+    group_by: Optional[List[str]] = Field(None, description="Group by variables")
+
+
 async def execute_sparql_query(
     query: str,
     parameters: Optional[List[str]] = None,
     timeout: int = SPARQL_TIMEOUT,
-    adapt_for_owlready2: bool = True,
-    optimize: bool = True
+    adapt_for_owlready2: bool = True
 ) -> Dict[str, Any]:
     """
     Execute SPARQL query against the MES ontology.
@@ -38,15 +45,13 @@ async def execute_sparql_query(
         parameters: Optional query parameters
         timeout: Query timeout in seconds
         adapt_for_owlready2: Whether to adapt query for Owlready2
-        optimize: Whether to validate and optimize the query
+        # optimize parameter removed - LLM handles query optimization
     
     Returns:
         Dictionary containing query results or error information
     """
     try:
-        # Validate and optimize query if requested
-        if optimize:
-            query = validate_and_optimize_query(query)
+        # Query optimization handled by LLM during construction
         
         # Adapt query if needed
         if adapt_for_owlready2:
@@ -97,15 +102,12 @@ async def execute_sparql_query(
                     # Record failed query in shared context
                     shared_context.add_failed_query(adapted_query, error_text)
                     
-                    # Analyze the failure
-                    failure_analysis = analyze_query_failure(adapted_query, error_text)
-                    
+                    # Return structured error for LLM to learn from
                     return {
                         "success": False,
                         "error": f"HTTP {response.status}: {error_text}",
                         "query": adapted_query,
-                        "suggestions": failure_analysis.get("suggestions", []),
-                        "fixed_query": failure_analysis.get("fixed_query")
+                        "suggestion": "Check query syntax, ensure proper use of mes_ontology_populated: prefix"
                     }
                     
     except asyncio.TimeoutError:
@@ -133,27 +135,23 @@ query_builder = SPARQLQueryBuilder()
 # Discovery queries for ontology exploration
 async def discover_classes() -> Dict[str, Any]:
     """Discover all classes in the ontology."""
-    query = """
-    SELECT DISTINCT ?class WHERE {
+    query = """SELECT DISTINCT ?class WHERE {
         ?class a owl:Class .
         FILTER(ISIRI(?class))
     }
-    ORDER BY ?class
-    """
+    ORDER BY ?class"""
     return await execute_sparql_query(query)
 
 
 async def discover_equipment_instances() -> Dict[str, Any]:
     """Discover all equipment instances in the ontology."""
-    query = """
-    SELECT DISTINCT ?equipment ?type WHERE {
+    query = """SELECT DISTINCT ?equipment ?type WHERE {
         ?equipment a ?type .
         ?type rdfs:subClassOf* mes_ontology_populated:Equipment .
         FILTER(ISIRI(?equipment))
         FILTER(ISIRI(?type))
     }
-    ORDER BY ?equipment
-    """
+    ORDER BY ?equipment"""
     result = await execute_sparql_query(query)
     
     # Add discovered equipment to shared context
@@ -289,13 +287,10 @@ async def query_defect_analysis() -> Dict[str, Any]:
 
 
 async def build_progressive_query(
-    base_pattern: str,
-    filters: Optional[List[str]] = None,
-    aggregations: Optional[Dict[str, str]] = None,
-    group_by: Optional[List[str]] = None
+    params: ProgressiveQueryParams
 ) -> Dict[str, Any]:
     """Build and execute a query progressively with optional components."""
     query = query_builder.build_progressive_query(
-        base_pattern, filters, aggregations, group_by
+        params.base_pattern, params.filters, params.aggregations, params.group_by
     )
     return await execute_sparql_query(query)

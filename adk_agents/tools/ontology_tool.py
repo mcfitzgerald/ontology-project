@@ -7,7 +7,7 @@ from pathlib import Path
 from google.adk.tools import FunctionTool
 from pydantic import BaseModel, Field
 
-from ..config.settings import MINDMAP_FILE, ONTOLOGY_NAMESPACE
+from ..config.settings import MINDMAP_FILE, ONTOLOGY_NAMESPACE, OWLREADY2_SPARQL_GUIDE
 
 
 class OntologyExplorationParams(BaseModel):
@@ -26,7 +26,9 @@ class OntologyExplorer:
         self.entities = {}
         self.relationships = {}
         self.annotations = {}
+        self.sparql_reference = {}
         self._load_mindmap()
+        self._load_sparql_reference()
     
     def _load_mindmap(self):
         """Load and parse the ontology mindmap."""
@@ -100,6 +102,62 @@ class OntologyExplorer:
             if entity not in self.annotations:
                 self.annotations[entity] = []
             self.annotations[entity].append(context)
+    
+    def _load_sparql_reference(self):
+        """Load SPARQL reference guide."""
+        if not OWLREADY2_SPARQL_GUIDE.exists():
+            print(f"Warning: SPARQL reference file not found at {OWLREADY2_SPARQL_GUIDE}")
+            return
+        
+        try:
+            with open(OWLREADY2_SPARQL_GUIDE, 'r') as f:
+                content = f.read()
+            
+            # Parse key sections
+            self.sparql_reference = {
+                'rules': self._extract_rules(content),
+                'patterns': self._extract_patterns(content),
+                'examples': self._extract_examples(content)
+            }
+            
+        except Exception as e:
+            print(f"Error loading SPARQL reference: {e}")
+    
+    def _extract_rules(self, content: str) -> List[str]:
+        """Extract key rules from SPARQL reference."""
+        rules = []
+        # Find rules section
+        rules_match = re.search(r'## Key Rules.*?\n(.*?)(?=##|\Z)', content, re.DOTALL)
+        if rules_match:
+            rules_text = rules_match.group(1)
+            # Extract numbered rules
+            rule_pattern = r'\d+\.\s*(.+?)(?=\n\d+\.|\n\n|\Z)'
+            for match in re.finditer(rule_pattern, rules_text, re.DOTALL):
+                rules.append(match.group(1).strip())
+        return rules
+    
+    def _extract_patterns(self, content: str) -> Dict[str, str]:
+        """Extract SPARQL patterns from reference."""
+        patterns = {}
+        # Find pattern sections
+        pattern_matches = re.finditer(r'### (.+?)\n```sparql\n(.*?)\n```', content, re.DOTALL)
+        for match in pattern_matches:
+            pattern_name = match.group(1).strip()
+            pattern_query = match.group(2).strip()
+            patterns[pattern_name] = pattern_query
+        return patterns
+    
+    def _extract_examples(self, content: str) -> List[Dict[str, str]]:
+        """Extract example queries from reference."""
+        examples = []
+        # Find example sections
+        example_matches = re.finditer(r'Example: (.+?)\n```sparql\n(.*?)\n```', content, re.DOTALL)
+        for match in example_matches:
+            examples.append({
+                'description': match.group(1).strip(),
+                'query': match.group(2).strip()
+            })
+        return examples
     
     def explore_entity(self, entity_name: str) -> Dict[str, Any]:
         """Explore a specific entity and its context."""
