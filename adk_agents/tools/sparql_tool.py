@@ -8,11 +8,13 @@ import aiohttp
 from google.adk.tools import FunctionTool
 from pydantic import BaseModel, Field
 
-from ..config.settings import SPARQL_ENDPOINT, SPARQL_TIMEOUT
+from ..config.settings import SPARQL_ENDPOINT, SPARQL_TIMEOUT, CONTEXT_DIR
 from ..utils.owlready2_adapter import adapt_sparql_for_owlready2, format_owlready2_results
-from ..agents.orchestrator import shared_context
+from ..utils.query_cache import QueryCache
 from .sparql_builder import SPARQLQueryBuilder
-# Validator removed - using LLM-based query construction instead
+
+# Initialize cache for learning
+cache = QueryCache(CONTEXT_DIR)
 
 
 class SPARQLQueryParams(BaseModel):
@@ -35,23 +37,30 @@ async def execute_sparql_query(
     query: str,
     parameters: Optional[List[str]] = None,
     timeout: int = SPARQL_TIMEOUT,
-    adapt_for_owlready2: bool = True
+    adapt_for_owlready2: bool = True,
+    purpose: str = None,
+    analysis_type: str = None
 ) -> Dict[str, Any]:
     """
-    Execute SPARQL query against the MES ontology.
+    Execute SPARQL query against the MES ontology with learning.
     
     Args:
         query: SPARQL query string
         parameters: Optional query parameters
         timeout: Query timeout in seconds
         adapt_for_owlready2: Whether to adapt query for Owlready2
-        # optimize parameter removed - LLM handles query optimization
+        purpose: Description of query purpose for caching
+        analysis_type: Type of analysis for better cache matching
     
     Returns:
         Dictionary containing query results or error information
     """
     try:
-        # Query optimization handled by LLM during construction
+        # Check cache for similar query
+        if purpose:
+            similar = cache.find_similar_success(purpose, analysis_type)
+            if similar:
+                print(f"Found similar query pattern: {similar['pattern']}")
         
         # Adapt query if needed
         if adapt_for_owlready2:
@@ -82,25 +91,36 @@ async def execute_sparql_query(
                     # Format results for consistency
                     formatted_results = format_owlready2_results(results)
                     
-                    # Record successful query in shared context
-                    if formatted_results:
-                        shared_context.add_successful_query(
-                            adapted_query, 
-                            formatted_results,
-                            purpose=f"Retrieved {len(formatted_results)} results"
+                    # Add to cache
+                    if purpose and formatted_results:
+                        cache.add_success(
+                            query=adapted_query,
+                            purpose=purpose,
+                            results=formatted_results,
+                            row_count=len(formatted_results),
+                            analysis_type=analysis_type
                         )
                     
                     return {
                         "success": True,
                         "results": formatted_results,
                         "query": adapted_query,
-                        "row_count": len(formatted_results)
+                        "row_count": len(formatted_results),
+                        "cached": False
                     }
                 else:
                     error_text = await response.text()
                     
-                    # Record failed query in shared context
-                    shared_context.add_failed_query(adapted_query, error_text)
+                    # Record failure
+                    cache.add_failure(query, error_text)
+                    
+                    # Attempt common fixes
+                    if "Unknown prefix" in error_text:
+                        fixed_query = query.replace("mes:", "mes_ontology_populated:")
+                        return await execute_sparql_query(
+                            fixed_query, parameters, timeout, 
+                            adapt_for_owlready2, purpose, analysis_type
+                        )
                     
                     # Return structured error for LLM to learn from
                     return {
@@ -154,12 +174,15 @@ async def discover_equipment_instances() -> Dict[str, Any]:
     ORDER BY ?equipment"""
     result = await execute_sparql_query(query)
     
-    # Add discovered equipment to shared context
+    # Equipment discovery tracked in cache via purpose
     if result.get('success') and result.get('results'):
-        for row in result['results']:
-            if len(row) >= 1:
-                equipment = str(row[0]).split('#')[-1] if '#' in str(row[0]) else str(row[0])
-                shared_context.add_discovered_entity('equipment', equipment)
+        cache.add_success(
+            query=query,
+            purpose="Discovered equipment instances",
+            results=result.get('results'),
+            row_count=len(result.get('results')),
+            analysis_type="discovery"
+        )
     
     return result
 
