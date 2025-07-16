@@ -79,12 +79,20 @@ IMPORTANT: The ontology uses mes_ontology_populated: as the prefix.
 - Properties: mes_ontology_populated:hasOEEScore, mes_ontology_populated:logsEvent, etc.
 - Relationship pattern: ?equipment mes_ontology_populated:logsEvent ?event
 
+Query optimization guidelines (handle these yourself):
+1. Add DISTINCT when needed to prevent duplicate results (except with aggregations)
+2. Add LIMIT for exploration queries to avoid overwhelming results
+3. Use GROUP BY with aggregation functions (COUNT, AVG, SUM)
+4. Place ORDER BY after WHERE clause, before LIMIT
+5. Learn from error messages and adjust queries accordingly
+
 Query building approach:
 1. Start with simple patterns to validate data exists
 2. Add complexity incrementally
 3. Test each component before combining
 4. Use OPTIONAL for data that might be missing
 5. Include business context in SELECT (costs, margins, targets)
+6. If a query fails, analyze the error message and try a different approach
 
 Common patterns:
 ```sparql
@@ -98,15 +106,30 @@ WHERE {
     FILTER(ISIRI(?equipment))
     FILTER(?oee < 85.0)
 }
+ORDER BY ?oee
+LIMIT 10
 
 # Get temporal data for patterns
 SELECT ?timestamp ?equipment ?value
 WHERE {
     ?equipment mes_ontology_populated:logsEvent ?event .
     ?event mes_ontology_populated:hasTimestamp ?timestamp .
-    # Add specific metrics like hasOEEScore, hasQualityScore etc.
+    ?event mes_ontology_populated:hasOEEScore ?value .
+    FILTER(ISIRI(?equipment))
 }
 ORDER BY ?timestamp
+LIMIT 100
+
+# Aggregation with GROUP BY
+SELECT ?equipment (AVG(?oee) AS ?avgOEE) (COUNT(?event) AS ?count)
+WHERE {
+    ?equipment mes_ontology_populated:logsEvent ?event .
+    ?event a mes_ontology_populated:ProductionLog .
+    ?event mes_ontology_populated:hasOEEScore ?oee .
+    FILTER(ISIRI(?equipment))
+}
+GROUP BY ?equipment
+ORDER BY ?avgOEE
 ```
 
 Build understanding through exploration, not assumptions.

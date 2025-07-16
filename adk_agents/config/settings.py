@@ -41,7 +41,7 @@ POPULATED_ONTOLOGY = ONTOLOGY_DIR / "mes_ontology_populated.owl"
 MES_DATA_CSV = DATA_DIR / "mes_data_with_kpis.csv"
 
 # SPARQL Reference Guides
-OWLREADY2_SPARQL_GUIDE = SPARQL_EXAMPLES_DIR / "owlready2_sparql_master_reference.md"
+OWLREADY2_SPARQL_GUIDE = CONTEXT_DIR / "owlready2_sparql_master_reference.md"
 LLM_ANALYSIS_GUIDE = SPARQL_EXAMPLES_DIR / "llm_driven_oee_analysis_guide.md"
 LLM_SPARQL_GUIDE = SPARQL_EXAMPLES_DIR / "owlready2_sparql_llm_guide.md"
 

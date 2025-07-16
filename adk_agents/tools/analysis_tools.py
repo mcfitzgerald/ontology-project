@@ -37,11 +37,7 @@ class AnomalyDetectionParams(BaseModel):
 
 
 async def analyze_temporal_patterns(
-    data: List[Dict],
-    time_column: str = "timestamp",
-    value_columns: List[str] = None,
-    group_by: Optional[List[str]] = None,
-    aggregation: str = "mean"
+    params: TemporalAnalysisParams
 ) -> Dict[str, Any]:
     """
     Analyze temporal patterns in time series data.
@@ -52,6 +48,13 @@ async def analyze_temporal_patterns(
     - Trend analysis
     - Clustering of events
     """
+    # Extract parameters from Pydantic model
+    data = params.data
+    time_column = params.time_column
+    value_columns = params.value_columns
+    group_by = params.group_by
+    aggregation = params.aggregation
+    
     try:
         # Convert to DataFrame
         df = pd.DataFrame(data)
@@ -136,11 +139,7 @@ async def analyze_temporal_patterns(
 
 
 async def calculate_financial_impact(
-    metric_data: List[Dict],
-    benchmark: float = DEFAULT_OEE_BENCHMARK,
-    volume_column: str = "units_produced",
-    margin_column: str = "unit_margin",
-    time_period_days: int = 365
+    params: FinancialImpactParams
 ) -> Dict[str, Any]:
     """
     Calculate financial impact of performance gaps.
@@ -151,6 +150,13 @@ async def calculate_financial_impact(
     - Annual financial impact
     - ROI scenarios
     """
+    # Extract parameters from Pydantic model
+    metric_data = params.metric_data
+    benchmark = params.benchmark
+    volume_column = params.volume_column
+    margin_column = params.margin_column
+    time_period_days = params.time_period_days
+    
     try:
         df = pd.DataFrame(metric_data)
         
@@ -235,9 +241,7 @@ async def calculate_financial_impact(
 
 
 async def detect_anomalies(
-    data: List[Dict],
-    method: str = "statistical",
-    sensitivity: float = 2.0
+    params: AnomalyDetectionParams
 ) -> Dict[str, Any]:
     """
     Detect anomalies in operational data.
@@ -246,6 +250,11 @@ async def detect_anomalies(
     - Statistical: Based on standard deviation
     - Clustering: Based on density
     """
+    # Extract parameters from Pydantic model
+    data = params.data
+    method = params.method
+    sensitivity = params.sensitivity
+    
     try:
         df = pd.DataFrame(data)
         
