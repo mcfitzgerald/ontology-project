@@ -94,7 +94,5 @@ async def execute_python_analysis(
     return results
 
 # Create ADK tool
-python_analysis_tool = FunctionTool(
-    execute_python_analysis,
-    description="Execute Python code for data analysis, statistical calculations, and visualization"
-)
+# FunctionTool extracts description from function docstring
+python_analysis_tool = FunctionTool(execute_python_analysis)

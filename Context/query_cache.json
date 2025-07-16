@@ -1,0 +1,26 @@
+{
+  "successful_queries": [
+    {
+      "query": "SELECT ?property WHERE {\n  ?property rdfs:domain mes_ontology_populated:Equipment .\n  FILTER(ISIRI(?property))\n}",
+      "purpose": "List all properties associated with the Equipment class.",
+      "row_count": 7,
+      "analysis_type": "Ontology Exploration",
+      "timestamp": "2025-07-16T12:49:26.314786",
+      "pattern": "SELECT"
+    }
+  ],
+  "failed_queries": [],
+  "patterns": {
+    "SELECT": {
+      "count": 1,
+      "examples": [
+        {
+          "query": "SELECT ?property WHERE {\n  ?property rdfs:domain mes_ontology_populated:Equipment .\n  FILTER(ISIRI(?property))\n}",
+          "purpose": "List all properties associated with the Equipment class.",
+          "row_count": 7
+        }
+      ]
+    }
+  },
+  "fixes": {}
+}

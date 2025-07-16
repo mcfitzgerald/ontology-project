@@ -24,10 +24,8 @@ context_loader = ContextLoader(CONTEXT_DIR, ONTOLOGY_DIR)
 query_cache = QueryCache(CONTEXT_DIR)
 
 # Create SPARQL tool
-sparql_tool = FunctionTool(
-    execute_sparql_query,
-    description="Execute SPARQL queries against the MES ontology"
-)
+# FunctionTool extracts description from function docstring
+sparql_tool = FunctionTool(execute_sparql_query)
 
 # Create agents
 sparql_executor_instance = SPARQLExecutor(context_loader, query_cache)
