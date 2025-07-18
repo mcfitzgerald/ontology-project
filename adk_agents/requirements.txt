@@ -1,0 +1,32 @@
+# Google ADK and AI dependencies
+google-genai==0.2.0
+google-ai-generativelanguage==0.6.1
+google-generativeai==0.8.3
+
+# Environment and configuration
+python-dotenv==1.0.0
+
+# HTTP client for SPARQL endpoint
+requests==2.31.0
+
+# Data processing and analysis
+pandas==2.1.4
+numpy==1.26.2
+
+# JSON handling
+orjson==3.9.10
+
+# Date/time handling
+python-dateutil==2.8.2
+
+# Optional: For Vertex AI support
+google-cloud-aiplatform==1.38.1
+
+# Optional: For code execution support
+ipython==8.18.1
+
+# Logging and monitoring
+structlog==23.2.0
+
+# Type hints
+typing-extensions==4.9.0

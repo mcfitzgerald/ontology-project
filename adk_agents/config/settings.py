@@ -1,77 +1,99 @@
-"""
-Configuration settings and path management for ADK Manufacturing Analytics Agents.
-"""
+"""Configuration settings for ADK Agents system."""
 import os
-import sys
 from pathlib import Path
+from typing import Optional, Dict, Any
 from dotenv import load_dotenv
 
-# Add parent directory to path for accessing ontology project files
-ADK_AGENTS_DIR = Path(__file__).parent.parent
-PROJECT_ROOT = ADK_AGENTS_DIR.parent
-sys.path.insert(0, str(PROJECT_ROOT))
-
 # Load environment variables
-load_dotenv(ADK_AGENTS_DIR / '.env')
+load_dotenv()
+
+# Base directories
+PROJECT_ROOT = Path(__file__).parent.parent
+CONFIG_DIR = PROJECT_ROOT / "config"
+CACHE_DIR = PROJECT_ROOT / "cache"
+CONTEXT_DIR = PROJECT_ROOT / "context"
+
+# Ensure directories exist
+CACHE_DIR.mkdir(exist_ok=True)
+CONTEXT_DIR.mkdir(exist_ok=True)
 
 # LLM Configuration
-GOOGLE_GENAI_USE_VERTEXAI = os.getenv('GOOGLE_GENAI_USE_VERTEXAI', 'FALSE').upper() == 'TRUE'
-GOOGLE_CLOUD_PROJECT = os.getenv('GOOGLE_CLOUD_PROJECT', '')
-GOOGLE_CLOUD_LOCATION = os.getenv('GOOGLE_CLOUD_LOCATION', 'us-central1')
-GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY', '')
-
-# SPARQL Configuration
-SPARQL_ENDPOINT = os.getenv('SPARQL_ENDPOINT', 'http://localhost:8000/sparql/query')
-SPARQL_TIMEOUT = int(os.getenv('SPARQL_TIMEOUT', '30'))  # Timeout in seconds
-
-# Analysis Configuration
-DEFAULT_OEE_BENCHMARK = float(os.getenv('DEFAULT_OEE_BENCHMARK', '85.0'))
-DEFAULT_ANALYSIS_WINDOW_DAYS = int(os.getenv('DEFAULT_ANALYSIS_WINDOW_DAYS', '14'))
-ONTOLOGY_NAMESPACE = os.getenv('ONTOLOGY_NAMESPACE', 'http://example.com/mes#')
-
-# Resource Paths
-ONTOLOGY_DIR = PROJECT_ROOT / "Ontology"
-CONTEXT_DIR = PROJECT_ROOT / "Context"
-SPARQL_EXAMPLES_DIR = PROJECT_ROOT / "SPARQL_Examples"
-DATA_DIR = PROJECT_ROOT / "Data"
-
-# Specific Files
-MINDMAP_FILE = CONTEXT_DIR / "mes_ontology_mindmap.ttl"
-POPULATED_ONTOLOGY = ONTOLOGY_DIR / "mes_ontology_populated.owl"
-MES_DATA_CSV = DATA_DIR / "mes_data_with_kpis.csv"
-
-# SPARQL Reference Guides
-OWLREADY2_SPARQL_GUIDE = CONTEXT_DIR / "owlready2_sparql_master_reference.md"
-LLM_ANALYSIS_GUIDE = SPARQL_EXAMPLES_DIR / "llm_driven_oee_analysis_guide.md"
-LLM_SPARQL_GUIDE = SPARQL_EXAMPLES_DIR / "owlready2_sparql_llm_guide.md"
+USE_VERTEX_AI = os.getenv("USE_VERTEX_AI", "false").lower() == "true"
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+PROJECT_ID = os.getenv("VERTEX_PROJECT_ID", "adk-exploration")
+LOCATION = os.getenv("VERTEX_LOCATION", "us-east1")
 
 # Model Configuration
-DEFAULT_MODEL = "gemini-2.0-flash"
-DEFAULT_TEMPERATURE = 0.1  # Low temperature for consistent analysis
+DEFAULT_MODEL = os.getenv("DEFAULT_MODEL", "gemini-2.0-flash")
+MODEL_TEMPERATURE = float(os.getenv("MODEL_TEMPERATURE", "0.1"))
+MAX_OUTPUT_TOKENS = int(os.getenv("MAX_OUTPUT_TOKENS", "8192"))
 
-# Rate Limiting Configuration
-RATE_LIMIT_ENABLED = os.getenv('RATE_LIMIT_ENABLED', 'TRUE').upper() == 'TRUE'
-RATE_LIMIT_REQUESTS_PER_MINUTE = int(os.getenv('RATE_LIMIT_RPM', '48'))  # 80% of Vertex AI limit (60)
-RATE_LIMIT_THROTTLE_MS = int(os.getenv('RATE_LIMIT_THROTTLE_MS', '1250'))  # Milliseconds between requests
-RATE_LIMIT_BURST_SIZE = int(os.getenv('RATE_LIMIT_BURST_SIZE', '5'))  # Allow small bursts
+# SPARQL Configuration
+SPARQL_ENDPOINT = os.getenv("SPARQL_ENDPOINT", "http://localhost:8000/sparql/query")
+SPARQL_TIMEOUT = int(os.getenv("SPARQL_TIMEOUT", "30"))
+SPARQL_MAX_RESULTS = int(os.getenv("SPARQL_MAX_RESULTS", "1000"))
 
-# Validation
-def validate_config():
-    """Validate configuration settings."""
-    if GOOGLE_GENAI_USE_VERTEXAI and not GOOGLE_CLOUD_PROJECT:
-        raise ValueError("GOOGLE_CLOUD_PROJECT must be set when using Vertex AI")
-    
-    if not GOOGLE_GENAI_USE_VERTEXAI and not GOOGLE_API_KEY:
-        raise ValueError("GOOGLE_API_KEY must be set when not using Vertex AI")
-    
-    if not MINDMAP_FILE.exists():
-        print(f"Warning: Ontology mindmap not found at {MINDMAP_FILE}")
-    
-    return True
+# Analysis Configuration
+OEE_BENCHMARK = float(os.getenv("OEE_BENCHMARK", "85.0"))
+ANALYSIS_WINDOW_DAYS = int(os.getenv("ANALYSIS_WINDOW_DAYS", "30"))
+ONTOLOGY_NAMESPACE = os.getenv("ONTOLOGY_NAMESPACE", "http://www.semanticweb.org/michael/ontologies/2024/mes-ontology#")
 
-# Run validation on import
-try:
-    validate_config()
-except ValueError as e:
-    print(f"Configuration Error: {e}")
-    print("Please check your .env file settings")
+# Resource Paths
+ONTOLOGY_FILE = os.getenv("ONTOLOGY_FILE", "Ontology/mes_ontology_populated.owl")
+SPARQL_EXAMPLES_DIR = os.getenv("SPARQL_EXAMPLES_DIR", "sparql_examples")
+DATA_DIR = os.getenv("DATA_DIR", "data")
+
+# Rate Limiting
+RATE_LIMIT_REQUESTS = int(os.getenv("RATE_LIMIT_REQUESTS", "48"))  # 80% of Vertex AI limit
+RATE_LIMIT_PERIOD = int(os.getenv("RATE_LIMIT_PERIOD", "60"))  # seconds
+
+# Logging
+LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
+LOG_FORMAT = os.getenv("LOG_FORMAT", "%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+
+# Cache Configuration
+CACHE_ENABLED = os.getenv("CACHE_ENABLED", "true").lower() == "true"
+CACHE_TTL = int(os.getenv("CACHE_TTL", "3600"))  # seconds
+CACHE_MAX_SIZE = int(os.getenv("CACHE_MAX_SIZE", "1000"))  # entries
+
+# Vertex AI specific settings
+if USE_VERTEX_AI:
+    os.environ["GOOGLE_CLOUD_PROJECT"] = PROJECT_ID
+
+def get_llm_config() -> Dict[str, Any]:
+    """Get LLM configuration based on authentication method."""
+    config = {
+        "model": DEFAULT_MODEL,
+        "temperature": MODEL_TEMPERATURE,
+        "max_output_tokens": MAX_OUTPUT_TOKENS
+    }
+    
+    if USE_VERTEX_AI:
+        config.update({
+            "project": PROJECT_ID,
+            "location": LOCATION
+        })
+    else:
+        if not GOOGLE_API_KEY:
+            raise ValueError("GOOGLE_API_KEY must be set when not using Vertex AI")
+        config["api_key"] = GOOGLE_API_KEY
+    
+    return config
+
+def get_sparql_config() -> Dict[str, Any]:
+    """Get SPARQL configuration."""
+    return {
+        "endpoint": SPARQL_ENDPOINT,
+        "timeout": SPARQL_TIMEOUT,
+        "max_results": SPARQL_MAX_RESULTS,
+        "namespace": ONTOLOGY_NAMESPACE
+    }
+
+def get_analysis_config() -> Dict[str, Any]:
+    """Get analysis configuration."""
+    return {
+        "oee_benchmark": OEE_BENCHMARK,
+        "analysis_window_days": ANALYSIS_WINDOW_DAYS,
+        "cache_enabled": CACHE_ENABLED,
+        "cache_ttl": CACHE_TTL
+    }

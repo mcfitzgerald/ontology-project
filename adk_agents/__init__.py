@@ -1,10 +1,16 @@
-"""
-ADK Manufacturing Analytics Agents
-"""
+"""ADK Manufacturing Analytics Agent System."""
 __version__ = "0.1.0"
 
-# Import and expose root_agent for ADK web discovery
-# Using new conversational analysis system
-from .app import root_agent
+from .agents.manufacturing_analyst import ManufacturingAnalystAgent, create_manufacturing_analyst
+from .tools.sparql_tool import execute_sparql
+from .tools.analysis_tools import analyze_patterns, calculate_roi
+from .tools.cache_manager import cache_manager
 
-__all__ = ['root_agent']
+__all__ = [
+    "ManufacturingAnalystAgent",
+    "create_manufacturing_analyst",
+    "execute_sparql", 
+    "analyze_patterns",
+    "calculate_roi",
+    "cache_manager"
+]
