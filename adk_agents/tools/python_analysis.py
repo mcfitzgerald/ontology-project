@@ -9,9 +9,11 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from typing import Dict, Any, Optional
 import asyncio
-from google.adk.tools import FunctionTool
+import time
+from google.adk.tools import FunctionTool, ToolContext
 
 async def execute_python_analysis(
+    tool_context: ToolContext,
     code: str,
     data: Optional[Dict[str, Any]] = None,
     purpose: str = "analysis"
@@ -27,6 +29,8 @@ async def execute_python_analysis(
     Returns:
         Dict with results, visualizations, and insights
     """
+    # Track analysis in state
+    analysis_history = tool_context.state.get("analysis_history", [])
     # Create execution namespace
     namespace = {
         'pd': pd,
@@ -85,11 +89,28 @@ async def execute_python_analysis(
         # Extract any metrics if defined
         if 'metrics' in namespace:
             results['metrics'] = namespace['metrics']
+        
+        # Save analysis to history
+        analysis_history.append({
+            "purpose": purpose,
+            "timestamp": time.time(),
+            "success": True
+        })
+        tool_context.state["analysis_history"] = analysis_history[-10:]  # Keep last 10
             
     except Exception as e:
         results['success'] = False
         results['error'] = str(e)
         results['error_type'] = type(e).__name__
+        
+        # Track failed analysis
+        analysis_history.append({
+            "purpose": purpose,
+            "timestamp": time.time(),
+            "success": False,
+            "error": str(e)
+        })
+        tool_context.state["analysis_history"] = analysis_history[-10:]
     
     return results
 

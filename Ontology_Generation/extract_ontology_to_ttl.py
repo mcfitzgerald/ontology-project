@@ -60,24 +60,75 @@ def get_business_context(entity_name, config):
 def get_column_mapping():
     """Get mapping from ontology properties to CSV columns."""
     return {
-        "hasTimestamp": {"column": "Timestamp", "context": "5-minute interval timestamp for production events"},
-        "hasOrderID": {"column": "ProductionOrderID", "context": "Unique identifier for production order"},
-        "hasLineID": {"column": "LineID", "context": "Production line identifier (1-3)"},
-        "hasEquipmentID": {"column": "EquipmentID", "context": "Unique equipment identifier (e.g., LINE1-FIL)"},
-        "hasEquipmentType": {"column": "EquipmentType", "context": "Type of equipment (Filler, Packer, Palletizer)"},
+        "hasTimestamp": {
+            "column": "Timestamp",
+            "context": "5-minute interval timestamp for production events",
+        },
+        "hasOrderID": {
+            "column": "ProductionOrderID",
+            "context": "Unique identifier for production order",
+        },
+        "hasLineID": {
+            "column": "LineID",
+            "context": "Production line identifier (1-3)",
+        },
+        "hasEquipmentID": {
+            "column": "EquipmentID",
+            "context": "Unique equipment identifier (e.g., LINE1-FIL)",
+        },
+        "hasEquipmentType": {
+            "column": "EquipmentType",
+            "context": "Type of equipment (Filler, Packer, Palletizer)",
+        },
         "hasProductID": {"column": "ProductID", "context": "Product SKU identifier"},
-        "hasProductName": {"column": "ProductName", "context": "Human-readable product name"},
-        "hasMachineStatus": {"column": "MachineStatus", "context": "Current equipment state (Running/Stopped)"},
-        "hasDowntimeReasonCode": {"column": "DowntimeReason", "context": "Reason code for equipment stoppage"},
-        "hasGoodUnits": {"column": "GoodUnitsProduced", "context": "Count of sellable units produced in 5-min interval"},
-        "hasScrapUnits": {"column": "ScrapUnitsProduced", "context": "Count of defective units in 5-min interval"},
-        "hasTargetRate": {"column": "TargetRate_units_per_5min", "context": "Expected production rate per 5-minute interval"},
-        "hasStandardCost": {"column": "StandardCost_per_unit", "context": "Manufacturing cost per unit"},
-        "hasSalePrice": {"column": "SalePrice_per_unit", "context": "Selling price per unit"},
-        "hasAvailabilityScore": {"column": "Availability_Score", "context": "Equipment availability percentage (0-100)"},
-        "hasPerformanceScore": {"column": "Performance_Score", "context": "Production speed efficiency (0-100)"},
-        "hasQualityScore": {"column": "Quality_Score", "context": "Product quality percentage (0-100)"},
-        "hasOEEScore": {"column": "OEE_Score", "context": "Overall Equipment Effectiveness (0-100)"}
+        "hasProductName": {
+            "column": "ProductName",
+            "context": "Human-readable product name",
+        },
+        "hasMachineStatus": {
+            "column": "MachineStatus",
+            "context": "Current equipment state (Running/Stopped)",
+        },
+        "hasDowntimeReasonCode": {
+            "column": "DowntimeReason",
+            "context": "Reason code for equipment stoppage",
+        },
+        "hasGoodUnits": {
+            "column": "GoodUnitsProduced",
+            "context": "Count of sellable units produced in 5-min interval",
+        },
+        "hasScrapUnits": {
+            "column": "ScrapUnitsProduced",
+            "context": "Count of defective units in 5-min interval",
+        },
+        "hasTargetRate": {
+            "column": "TargetRate_units_per_5min",
+            "context": "Expected production rate per 5-minute interval",
+        },
+        "hasStandardCost": {
+            "column": "StandardCost_per_unit",
+            "context": "Manufacturing cost per unit",
+        },
+        "hasSalePrice": {
+            "column": "SalePrice_per_unit",
+            "context": "Selling price per unit",
+        },
+        "hasAvailabilityScore": {
+            "column": "Availability_Score",
+            "context": "Equipment availability percentage (0-100)",
+        },
+        "hasPerformanceScore": {
+            "column": "Performance_Score",
+            "context": "Production speed efficiency (0-100)",
+        },
+        "hasQualityScore": {
+            "column": "Quality_Score",
+            "context": "Product quality percentage (0-100)",
+        },
+        "hasOEEScore": {
+            "column": "OEE_Score",
+            "context": "Overall Equipment Effectiveness (0-100)",
+        },
     }
 
     # Add anomaly information if applicable
@@ -328,7 +379,7 @@ mes:exampleValue a owl:AnnotationProperty ;
                     mapping = column_mappings[prop.name]
                     f.write(f' ;\n    mes:mapsToColumn "{mapping["column"]}"')
                     f.write(f' ;\n    mes:dataContext "{mapping["context"]}"')
-                    
+
                     # Add example values for specific properties
                     if prop.name == "hasTimestamp":
                         f.write(f' ;\n    mes:exampleValue "2025-06-01 00:00:00"')
@@ -435,52 +486,6 @@ mes:exampleValue a owl:AnnotationProperty ;
                     f.write(f' ;\n    mes:businessContext "{context}"')
 
                 f.write(" .\n\n")
-
-        # Add example SPARQL queries section
-        f.write(
-            """
-#############################################################################
-# EXAMPLE SPARQL QUERIES - Using correct prefix for Owlready2
-#############################################################################
-
-# REMEMBER: Use 'mes_ontology_populated:' NOT 'mes:' in your SPARQL queries!
-
-# 1. Find underperforming equipment (OEE < 85%)
-# SELECT ?equipment ?oee WHERE {
-#     ?equipment mes_ontology_populated:logsEvent ?event .
-#     ?event a mes_ontology_populated:ProductionLog .
-#     ?event mes_ontology_populated:hasOEEScore ?oee .
-#     FILTER(?oee < 85.0)
-# } LIMIT 10
-
-# 2. Get equipment downtime events
-# SELECT ?equipment ?timestamp ?reason WHERE {
-#     ?equipment mes_ontology_populated:logsEvent ?event .
-#     ?event a mes_ontology_populated:DowntimeLog .
-#     ?event mes_ontology_populated:hasTimestamp ?timestamp .
-#     OPTIONAL { ?event mes_ontology_populated:hasDowntimeReasonCode ?reason }
-# } ORDER BY DESC(?timestamp)
-
-# 3. Find production quality issues
-# SELECT ?equipment ?product ?qualityScore WHERE {
-#     ?equipment mes_ontology_populated:logsEvent ?event .
-#     ?event a mes_ontology_populated:ProductionLog .
-#     ?order mes_ontology_populated:producesProduct ?product .
-#     ?equipment mes_ontology_populated:executesOrder ?order .
-#     ?event mes_ontology_populated:hasQualityScore ?qualityScore .
-#     FILTER(?qualityScore < 98.0)
-# }
-
-# 4. Calculate average OEE by equipment
-# SELECT ?equipment ?equipmentID (AVG(?oee) AS ?avgOEE) WHERE {
-#     ?equipment mes_ontology_populated:logsEvent ?event .
-#     ?event a mes_ontology_populated:ProductionLog .
-#     ?equipment mes_ontology_populated:hasEquipmentID ?equipmentID .
-#     ?event mes_ontology_populated:hasOEEScore ?oee .
-# } GROUP BY ?equipment ?equipmentID
-
-"""
-        )
 
     print(f"Turtle mind map written to {output_ttl_path}")
     print(f"Total classes: {len(classes)}")

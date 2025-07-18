@@ -39,6 +39,70 @@
       "analysis_type": "Debugging",
       "timestamp": "2025-07-16T15:54:14.999582",
       "pattern": "SELECT"
+    },
+    {
+      "query": "SELECT DISTINCT ?class WHERE { ?class a owl:Class . FILTER(ISIRI(?class)) }",
+      "purpose": "Discover available classes in the ontology",
+      "row_count": 21,
+      "analysis_type": null,
+      "timestamp": "2025-07-17T08:52:59.266248",
+      "pattern": "SELECT"
+    },
+    {
+      "query": "SELECT DISTINCT ?property WHERE { ?property rdfs:domain mes_ontology_populated:Equipment .\n    FILTER(ISIRI(?property))}",
+      "purpose": "Find properties with Equipment as domain",
+      "row_count": 7,
+      "analysis_type": null,
+      "timestamp": "2025-07-17T08:53:03.979545",
+      "pattern": "SELECT"
+    },
+    {
+      "query": "SELECT DISTINCT ?eventType WHERE { ?equipment mes_ontology_populated:logsEvent ?event . ?event a ?eventType . FILTER(ISIRI(?eventType)) }",
+      "purpose": "Find event types logged by equipment",
+      "row_count": 3,
+      "analysis_type": null,
+      "timestamp": "2025-07-17T08:53:07.277954",
+      "pattern": "SELECT"
+    },
+    {
+      "query": "SELECT DISTINCT ?property WHERE { ?event a mes_ontology_populated:ProductionLog . ?event ?property ?value . FILTER(ISIRI(?property)) }",
+      "purpose": "Discover properties of ProductionLog",
+      "row_count": 9,
+      "analysis_type": null,
+      "timestamp": "2025-07-17T08:53:09.915809",
+      "pattern": "SELECT"
+    },
+    {
+      "query": "SELECT DISTINCT ?property WHERE { ?event a mes_ontology_populated:DowntimeLog . ?event ?property ?value . FILTER(ISIRI(?property)) }",
+      "purpose": "Discover properties of DowntimeLog",
+      "row_count": 9,
+      "analysis_type": null,
+      "timestamp": "2025-07-17T08:53:12.655244",
+      "pattern": "SELECT"
+    },
+    {
+      "query": "SELECT ?equipment (AVG(?oee) AS ?avgOEE) WHERE { ?equipment mes_ontology_populated:logsEvent ?event . ?event a mes_ontology_populated:ProductionLog . ?event mes_ontology_populated:hasOEEScore ?oee . FILTER(ISIRI(?equipment)) } GROUP BY ?equipment ORDER BY ?avgOEE",
+      "purpose": "Calculate average OEE for each equipment",
+      "row_count": 9,
+      "analysis_type": null,
+      "timestamp": "2025-07-17T08:54:02.387765",
+      "pattern": "SELECT"
+    },
+    {
+      "query": "SELECT DISTINCT ?p WHERE { ?s ?p ?o . VALUES ?s {mes_ontology_populated:LINE1-FIL mes_ontology_populated:LINE1-PCK mes_ontology_populated:LINE1-PAL} FILTER(ISIRI(?p))}",
+      "purpose": "verify property names",
+      "row_count": 7,
+      "analysis_type": null,
+      "timestamp": "2025-07-17T08:54:57.846866",
+      "pattern": "SELECT"
+    },
+    {
+      "query": "SELECT ?s ?p ?o WHERE { ?s ?p ?o .\n    FILTER(ISIRI(?s))\n    FILTER(ISIRI(?p))\n    FILTER(ISIRI(?o))} LIMIT 10",
+      "purpose": "List all triples",
+      "row_count": 10,
+      "analysis_type": null,
+      "timestamp": "2025-07-17T08:55:13.703206",
+      "pattern": "SELECT"
     }
   ],
   "failed_queries": [
@@ -57,7 +121,7 @@
   ],
   "patterns": {
     "SELECT": {
-      "count": 4,
+      "count": 12,
       "examples": [
         {
           "query": "SELECT ?property WHERE {\n  ?property rdfs:domain mes_ontology_populated:Equipment .\n  FILTER(ISIRI(?property))\n}",
@@ -78,6 +142,46 @@
           "query": "SELECT ?p ?o WHERE {\n  mes_ontology_populated:LINE2-PCK ?p ?o .\n  FILTER(ISIRI(?p))\n    FILTER(ISIRI(?o))}",
           "purpose": "Find all triples where LINE2-PCK is the subject",
           "row_count": 3899
+        },
+        {
+          "query": "SELECT DISTINCT ?class WHERE { ?class a owl:Class . FILTER(ISIRI(?class)) }",
+          "purpose": "Discover available classes in the ontology",
+          "row_count": 21
+        },
+        {
+          "query": "SELECT DISTINCT ?property WHERE { ?property rdfs:domain mes_ontology_populated:Equipment .\n    FILTER(ISIRI(?property))}",
+          "purpose": "Find properties with Equipment as domain",
+          "row_count": 7
+        },
+        {
+          "query": "SELECT DISTINCT ?eventType WHERE { ?equipment mes_ontology_populated:logsEvent ?event . ?event a ?eventType . FILTER(ISIRI(?eventType)) }",
+          "purpose": "Find event types logged by equipment",
+          "row_count": 3
+        },
+        {
+          "query": "SELECT DISTINCT ?property WHERE { ?event a mes_ontology_populated:ProductionLog . ?event ?property ?value . FILTER(ISIRI(?property)) }",
+          "purpose": "Discover properties of ProductionLog",
+          "row_count": 9
+        },
+        {
+          "query": "SELECT DISTINCT ?property WHERE { ?event a mes_ontology_populated:DowntimeLog . ?event ?property ?value . FILTER(ISIRI(?property)) }",
+          "purpose": "Discover properties of DowntimeLog",
+          "row_count": 9
+        },
+        {
+          "query": "SELECT ?equipment (AVG(?oee) AS ?avgOEE) WHERE { ?equipment mes_ontology_populated:logsEvent ?event . ?event a mes_ontology_populated:ProductionLog . ?event mes_ontology_populated:hasOEEScore ?oee . FILTER(ISIRI(?equipment)) } GROUP BY ?equipment ORDER BY ?avgOEE",
+          "purpose": "Calculate average OEE for each equipment",
+          "row_count": 9
+        },
+        {
+          "query": "SELECT DISTINCT ?p WHERE { ?s ?p ?o . VALUES ?s {mes_ontology_populated:LINE1-FIL mes_ontology_populated:LINE1-PCK mes_ontology_populated:LINE1-PAL} FILTER(ISIRI(?p))}",
+          "purpose": "verify property names",
+          "row_count": 7
+        },
+        {
+          "query": "SELECT ?s ?p ?o WHERE { ?s ?p ?o .\n    FILTER(ISIRI(?s))\n    FILTER(ISIRI(?p))\n    FILTER(ISIRI(?o))} LIMIT 10",
+          "purpose": "List all triples",
+          "row_count": 10
         }
       ]
     },

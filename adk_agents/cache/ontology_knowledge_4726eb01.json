@@ -1,0 +1,734 @@
+{
+  "classes": {
+    "Changeover": {
+      "uri": "http://mes-ontology.org/factory.owl#Changeover",
+      "label": "Changeover",
+      "subclass_of": [
+        "PlannedDowntime"
+      ],
+      "annotations": {}
+    },
+    "Cleaning": {
+      "uri": "http://mes-ontology.org/factory.owl#Cleaning",
+      "label": "Cleaning",
+      "subclass_of": [
+        "PlannedDowntime"
+      ],
+      "annotations": {}
+    },
+    "DowntimeLog": {
+      "uri": "http://mes-ontology.org/factory.owl#DowntimeLog",
+      "label": "DowntimeLog",
+      "subclass_of": [
+        "Event"
+      ],
+      "annotations": {}
+    },
+    "DowntimeReason": {
+      "uri": "http://mes-ontology.org/factory.owl#DowntimeReason",
+      "label": "DowntimeReason",
+      "subclass_of": [
+        "Reason"
+      ],
+      "annotations": {}
+    },
+    "Equipment": {
+      "uri": "http://mes-ontology.org/factory.owl#Equipment",
+      "label": "Equipment",
+      "subclass_of": [
+        "Resource"
+      ],
+      "annotations": {}
+    },
+    "Event": {
+      "uri": "http://mes-ontology.org/factory.owl#Event",
+      "label": "Event",
+      "subclass_of": [],
+      "annotations": {}
+    },
+    "Filler": {
+      "uri": "http://mes-ontology.org/factory.owl#Filler",
+      "label": "Filler",
+      "subclass_of": [
+        "Equipment"
+      ],
+      "annotations": {}
+    },
+    "MaterialJam": {
+      "uri": "http://mes-ontology.org/factory.owl#MaterialJam",
+      "label": "MaterialJam",
+      "subclass_of": [
+        "UnplannedDowntime"
+      ],
+      "annotations": {}
+    },
+    "MaterialStarvation": {
+      "uri": "http://mes-ontology.org/factory.owl#MaterialStarvation",
+      "label": "MaterialStarvation",
+      "subclass_of": [
+        "UnplannedDowntime"
+      ],
+      "annotations": {}
+    },
+    "MechanicalFailure": {
+      "uri": "http://mes-ontology.org/factory.owl#MechanicalFailure",
+      "label": "MechanicalFailure",
+      "subclass_of": [
+        "UnplannedDowntime"
+      ],
+      "annotations": {}
+    },
+    "Packer": {
+      "uri": "http://mes-ontology.org/factory.owl#Packer",
+      "label": "Packer",
+      "subclass_of": [
+        "Equipment"
+      ],
+      "annotations": {}
+    },
+    "Palletizer": {
+      "uri": "http://mes-ontology.org/factory.owl#Palletizer",
+      "label": "Palletizer",
+      "subclass_of": [
+        "Equipment"
+      ],
+      "annotations": {}
+    },
+    "PlannedDowntime": {
+      "uri": "http://mes-ontology.org/factory.owl#PlannedDowntime",
+      "label": "PlannedDowntime",
+      "subclass_of": [
+        "DowntimeReason"
+      ],
+      "annotations": {}
+    },
+    "Process": {
+      "uri": "http://mes-ontology.org/factory.owl#Process",
+      "label": "Process",
+      "subclass_of": [],
+      "annotations": {}
+    },
+    "Product": {
+      "uri": "http://mes-ontology.org/factory.owl#Product",
+      "label": "Product",
+      "subclass_of": [
+        "Resource"
+      ],
+      "annotations": {}
+    },
+    "ProductionLine": {
+      "uri": "http://mes-ontology.org/factory.owl#ProductionLine",
+      "label": "ProductionLine",
+      "subclass_of": [
+        "Resource"
+      ],
+      "annotations": {}
+    },
+    "ProductionLog": {
+      "uri": "http://mes-ontology.org/factory.owl#ProductionLog",
+      "label": "ProductionLog",
+      "subclass_of": [
+        "Event"
+      ],
+      "annotations": {}
+    },
+    "ProductionOrder": {
+      "uri": "http://mes-ontology.org/factory.owl#ProductionOrder",
+      "label": "ProductionOrder",
+      "subclass_of": [
+        "Process"
+      ],
+      "annotations": {}
+    },
+    "Reason": {
+      "uri": "http://mes-ontology.org/factory.owl#Reason",
+      "label": "Reason",
+      "subclass_of": [],
+      "annotations": {}
+    },
+    "Resource": {
+      "uri": "http://mes-ontology.org/factory.owl#Resource",
+      "label": "Resource",
+      "subclass_of": [],
+      "annotations": {}
+    },
+    "UnplannedDowntime": {
+      "uri": "http://mes-ontology.org/factory.owl#UnplannedDowntime",
+      "label": "UnplannedDowntime",
+      "subclass_of": [
+        "DowntimeReason"
+      ],
+      "annotations": {}
+    }
+  },
+  "object_properties": {
+    "belongsToLine": {
+      "uri": "http://mes-ontology.org/factory.owl#belongsToLine",
+      "label": "belongsToLine",
+      "domain": [
+        "Equipment"
+      ],
+      "range": [
+        "ProductionLine"
+      ],
+      "annotations": {}
+    },
+    "executesOrder": {
+      "uri": "http://mes-ontology.org/factory.owl#executesOrder",
+      "label": "executesOrder",
+      "domain": [
+        "Equipment"
+      ],
+      "range": [
+        "ProductionOrder"
+      ],
+      "annotations": {}
+    },
+    "hasDowntimeReason": {
+      "uri": "http://mes-ontology.org/factory.owl#hasDowntimeReason",
+      "label": "hasDowntimeReason",
+      "domain": [
+        "DowntimeLog"
+      ],
+      "range": [
+        "DowntimeReason"
+      ],
+      "annotations": {}
+    },
+    "hasEquipment": {
+      "uri": "http://mes-ontology.org/factory.owl#hasEquipment",
+      "label": "hasEquipment",
+      "domain": [
+        "ProductionLine"
+      ],
+      "range": [
+        "Equipment"
+      ],
+      "annotations": {}
+    },
+    "isDownstreamOf": {
+      "uri": "http://mes-ontology.org/factory.owl#isDownstreamOf",
+      "label": "isDownstreamOf",
+      "domain": [
+        "Equipment"
+      ],
+      "range": [
+        "Equipment"
+      ],
+      "annotations": {}
+    },
+    "isUpstreamOf": {
+      "uri": "http://mes-ontology.org/factory.owl#isUpstreamOf",
+      "label": "isUpstreamOf",
+      "domain": [
+        "Equipment"
+      ],
+      "range": [
+        "Equipment"
+      ],
+      "annotations": {}
+    },
+    "logsEvent": {
+      "uri": "http://mes-ontology.org/factory.owl#logsEvent",
+      "label": "logsEvent",
+      "domain": [
+        "Equipment"
+      ],
+      "range": [
+        "Event"
+      ],
+      "annotations": {}
+    },
+    "producesProduct": {
+      "uri": "http://mes-ontology.org/factory.owl#producesProduct",
+      "label": "producesProduct",
+      "domain": [
+        "ProductionOrder"
+      ],
+      "range": [
+        "Product"
+      ],
+      "annotations": {}
+    }
+  },
+  "data_properties": {
+    "hasAvailabilityScore": {
+      "uri": "http://mes-ontology.org/factory.owl#hasAvailabilityScore",
+      "label": "hasAvailabilityScore",
+      "domain": [
+        "Event"
+      ],
+      "range": [
+        "float"
+      ],
+      "annotations": {
+        "mapsToColumn": "Availability_Score",
+        "dataContext": "Equipment availability percentage (0-100)",
+        "typicalValue": "85-95% for world-class operations"
+      }
+    },
+    "hasDowntimeReasonCode": {
+      "uri": "http://mes-ontology.org/factory.owl#hasDowntimeReasonCode",
+      "label": "hasDowntimeReasonCode",
+      "domain": [
+        "DowntimeLog"
+      ],
+      "range": [
+        "string"
+      ],
+      "annotations": {
+        "mapsToColumn": "DowntimeReason",
+        "dataContext": "Reason code for equipment stoppage"
+      }
+    },
+    "hasEquipmentID": {
+      "uri": "http://mes-ontology.org/factory.owl#hasEquipmentID",
+      "label": "hasEquipmentID",
+      "domain": [
+        "Equipment"
+      ],
+      "range": [
+        "string"
+      ],
+      "annotations": {
+        "mapsToColumn": "EquipmentID",
+        "dataContext": "Unique equipment identifier (e.g., LINE1-FIL)"
+      }
+    },
+    "hasEquipmentType": {
+      "uri": "http://mes-ontology.org/factory.owl#hasEquipmentType",
+      "label": "hasEquipmentType",
+      "domain": [
+        "Equipment"
+      ],
+      "range": [
+        "string"
+      ],
+      "annotations": {
+        "mapsToColumn": "EquipmentType",
+        "dataContext": "Type of equipment (Filler, Packer, Palletizer)"
+      }
+    },
+    "hasGoodUnits": {
+      "uri": "http://mes-ontology.org/factory.owl#hasGoodUnits",
+      "label": "hasGoodUnits",
+      "domain": [
+        "ProductionLog"
+      ],
+      "range": [
+        "integer"
+      ],
+      "annotations": {
+        "mapsToColumn": "GoodUnitsProduced",
+        "dataContext": "Count of sellable units produced in 5-min interval"
+      }
+    },
+    "hasLineID": {
+      "uri": "http://mes-ontology.org/factory.owl#hasLineID",
+      "label": "hasLineID",
+      "domain": [
+        "ProductionLine"
+      ],
+      "range": [
+        "integer"
+      ],
+      "annotations": {
+        "mapsToColumn": "LineID",
+        "dataContext": "Production line identifier (1-3)"
+      }
+    },
+    "hasMachineStatus": {
+      "uri": "http://mes-ontology.org/factory.owl#hasMachineStatus",
+      "label": "hasMachineStatus",
+      "domain": [
+        "Event"
+      ],
+      "range": [
+        "string"
+      ],
+      "annotations": {
+        "mapsToColumn": "MachineStatus",
+        "dataContext": "Current equipment state (Running/Stopped)"
+      }
+    },
+    "hasOEEScore": {
+      "uri": "http://mes-ontology.org/factory.owl#hasOEEScore",
+      "label": "hasOEEScore",
+      "domain": [
+        "Event"
+      ],
+      "range": [
+        "float"
+      ],
+      "annotations": {
+        "mapsToColumn": "OEE_Score",
+        "dataContext": "Overall Equipment Effectiveness (0-100)",
+        "typicalValue": "85-95% for world-class operations",
+        "calculationMethod": "Availability \u00d7 Performance \u00d7 Quality"
+      }
+    },
+    "hasOrderID": {
+      "uri": "http://mes-ontology.org/factory.owl#hasOrderID",
+      "label": "hasOrderID",
+      "domain": [
+        "ProductionOrder"
+      ],
+      "range": [
+        "string"
+      ],
+      "annotations": {
+        "mapsToColumn": "ProductionOrderID",
+        "dataContext": "Unique identifier for production order"
+      }
+    },
+    "hasPerformanceScore": {
+      "uri": "http://mes-ontology.org/factory.owl#hasPerformanceScore",
+      "label": "hasPerformanceScore",
+      "domain": [
+        "Event"
+      ],
+      "range": [
+        "float"
+      ],
+      "annotations": {
+        "mapsToColumn": "Performance_Score",
+        "dataContext": "Production speed efficiency (0-100)",
+        "typicalValue": "85-95% for world-class operations"
+      }
+    },
+    "hasProductID": {
+      "uri": "http://mes-ontology.org/factory.owl#hasProductID",
+      "label": "hasProductID",
+      "domain": [
+        "Product"
+      ],
+      "range": [
+        "string"
+      ],
+      "annotations": {
+        "mapsToColumn": "ProductID",
+        "dataContext": "Product SKU identifier",
+        "exampleValue": "SKU-1001"
+      }
+    },
+    "hasProductName": {
+      "uri": "http://mes-ontology.org/factory.owl#hasProductName",
+      "label": "hasProductName",
+      "domain": [
+        "Product"
+      ],
+      "range": [
+        "string"
+      ],
+      "annotations": {
+        "mapsToColumn": "ProductName",
+        "dataContext": "Human-readable product name"
+      }
+    },
+    "hasQualityScore": {
+      "uri": "http://mes-ontology.org/factory.owl#hasQualityScore",
+      "label": "hasQualityScore",
+      "domain": [
+        "Event"
+      ],
+      "range": [
+        "float"
+      ],
+      "annotations": {
+        "mapsToColumn": "Quality_Score",
+        "dataContext": "Product quality percentage (0-100)",
+        "typicalValue": "85-95% for world-class operations"
+      }
+    },
+    "hasSalePrice": {
+      "uri": "http://mes-ontology.org/factory.owl#hasSalePrice",
+      "label": "hasSalePrice",
+      "domain": [
+        "Product"
+      ],
+      "range": [
+        "float"
+      ],
+      "annotations": {
+        "mapsToColumn": "SalePrice_per_unit",
+        "dataContext": "Selling price per unit"
+      }
+    },
+    "hasScrapUnits": {
+      "uri": "http://mes-ontology.org/factory.owl#hasScrapUnits",
+      "label": "hasScrapUnits",
+      "domain": [
+        "ProductionLog"
+      ],
+      "range": [
+        "integer"
+      ],
+      "annotations": {
+        "mapsToColumn": "ScrapUnitsProduced",
+        "dataContext": "Count of defective units in 5-min interval"
+      }
+    },
+    "hasStandardCost": {
+      "uri": "http://mes-ontology.org/factory.owl#hasStandardCost",
+      "label": "hasStandardCost",
+      "domain": [
+        "Product"
+      ],
+      "range": [
+        "float"
+      ],
+      "annotations": {
+        "mapsToColumn": "StandardCost_per_unit",
+        "dataContext": "Manufacturing cost per unit"
+      }
+    },
+    "hasTargetRate": {
+      "uri": "http://mes-ontology.org/factory.owl#hasTargetRate",
+      "label": "hasTargetRate",
+      "domain": [
+        "Product"
+      ],
+      "range": [
+        "float"
+      ],
+      "annotations": {
+        "mapsToColumn": "TargetRate_units_per_5min",
+        "dataContext": "Expected production rate per 5-minute interval"
+      }
+    },
+    "hasTimestamp": {
+      "uri": "http://mes-ontology.org/factory.owl#hasTimestamp",
+      "label": "hasTimestamp",
+      "domain": [
+        "Event"
+      ],
+      "range": [
+        "string"
+      ],
+      "annotations": {
+        "mapsToColumn": "Timestamp",
+        "dataContext": "5-minute interval timestamp for production events",
+        "exampleValue": "2025-06-01 00:00:00"
+      }
+    }
+  },
+  "individuals": {
+    "LINE1-FIL": {
+      "uri": "http://mes-ontology.org/factory.owl#LINE1-FIL",
+      "label": "LINE1-FIL",
+      "types": [
+        "Filler"
+      ],
+      "properties": {
+        "belongsToLine": [
+          "LINE1"
+        ]
+      }
+    },
+    "LINE1-PCK": {
+      "uri": "http://mes-ontology.org/factory.owl#LINE1-PCK",
+      "label": "LINE1-PCK",
+      "types": [
+        "Packer"
+      ],
+      "properties": {
+        "isDownstreamOf": [
+          "LINE1-FIL"
+        ]
+      }
+    },
+    "LINE2-PCK": {
+      "uri": "http://mes-ontology.org/factory.owl#LINE2-PCK",
+      "label": "LINE2-PCK",
+      "types": [
+        "Packer"
+      ],
+      "properties": {
+        "isDownstreamOf": [
+          "LINE2-FIL"
+        ]
+      }
+    },
+    "LINE3-FIL": {
+      "uri": "http://mes-ontology.org/factory.owl#LINE3-FIL",
+      "label": "LINE3-FIL",
+      "types": [
+        "Filler"
+      ],
+      "properties": {
+        "belongsToLine": [
+          "LINE3"
+        ]
+      }
+    },
+    "SKU-1001": {
+      "uri": "http://mes-ontology.org/factory.owl#SKU-1001",
+      "label": "SKU-1001",
+      "types": [
+        "Product"
+      ],
+      "properties": {
+        "standardCost": [
+          "0.15"
+        ]
+      }
+    },
+    "SKU-1002": {
+      "uri": "http://mes-ontology.org/factory.owl#SKU-1002",
+      "label": "SKU-1002",
+      "types": [
+        "Product"
+      ],
+      "properties": {
+        "standardCost": [
+          "0.45"
+        ]
+      }
+    },
+    "SKU-2001": {
+      "uri": "http://mes-ontology.org/factory.owl#SKU-2001",
+      "label": "SKU-2001",
+      "types": [
+        "Product"
+      ],
+      "properties": {
+        "standardCost": [
+          "0.2"
+        ]
+      }
+    },
+    "SKU-2002": {
+      "uri": "http://mes-ontology.org/factory.owl#SKU-2002",
+      "label": "SKU-2002",
+      "types": [
+        "Product"
+      ],
+      "properties": {
+        "standardCost": [
+          "0.55"
+        ]
+      }
+    },
+    "SKU-3001": {
+      "uri": "http://mes-ontology.org/factory.owl#SKU-3001",
+      "label": "SKU-3001",
+      "types": [
+        "Product"
+      ],
+      "properties": {
+        "standardCost": [
+          "0.25"
+        ]
+      }
+    }
+  },
+  "annotations": {},
+  "class_hierarchy": {
+    "PlannedDowntime": [
+      "Changeover",
+      "Cleaning"
+    ],
+    "Event": [
+      "DowntimeLog",
+      "ProductionLog"
+    ],
+    "Reason": [
+      "DowntimeReason"
+    ],
+    "Resource": [
+      "Equipment",
+      "Product",
+      "ProductionLine"
+    ],
+    "Equipment": [
+      "Filler",
+      "Packer",
+      "Palletizer"
+    ],
+    "UnplannedDowntime": [
+      "MaterialJam",
+      "MaterialStarvation",
+      "MechanicalFailure"
+    ],
+    "DowntimeReason": [
+      "PlannedDowntime",
+      "UnplannedDowntime"
+    ],
+    "Process": [
+      "ProductionOrder"
+    ]
+  },
+  "property_domains": {
+    "Equipment": [
+      "belongsToLine",
+      "executesOrder",
+      "isDownstreamOf",
+      "isUpstreamOf",
+      "logsEvent"
+    ],
+    "DowntimeLog": [
+      "hasDowntimeReason"
+    ],
+    "ProductionLine": [
+      "hasEquipment"
+    ],
+    "ProductionOrder": [
+      "producesProduct"
+    ]
+  },
+  "property_ranges": {
+    "ProductionLine": [
+      "belongsToLine"
+    ],
+    "ProductionOrder": [
+      "executesOrder"
+    ],
+    "DowntimeReason": [
+      "hasDowntimeReason"
+    ],
+    "Equipment": [
+      "hasEquipment",
+      "isDownstreamOf",
+      "isUpstreamOf"
+    ],
+    "Event": [
+      "logsEvent"
+    ],
+    "Product": [
+      "producesProduct"
+    ]
+  },
+  "equipment_types": [
+    "Filler",
+    "Palletizer",
+    "Packer"
+  ],
+  "metrics": [
+    "hasPerformanceScore",
+    "hasAvailabilityScore",
+    "hasQualityScore",
+    "hasTargetRate",
+    "hasOEEScore"
+  ],
+  "csv_mappings": {
+    "Availability_Score": "hasAvailabilityScore",
+    "DowntimeReason": "hasDowntimeReasonCode",
+    "EquipmentID": "hasEquipmentID",
+    "EquipmentType": "hasEquipmentType",
+    "GoodUnitsProduced": "hasGoodUnits",
+    "LineID": "hasLineID",
+    "MachineStatus": "hasMachineStatus",
+    "OEE_Score": "hasOEEScore",
+    "ProductionOrderID": "hasOrderID",
+    "Performance_Score": "hasPerformanceScore",
+    "ProductID": "hasProductID",
+    "ProductName": "hasProductName",
+    "Quality_Score": "hasQualityScore",
+    "SalePrice_per_unit": "hasSalePrice",
+    "ScrapUnitsProduced": "hasScrapUnits",
+    "StandardCost_per_unit": "hasStandardCost",
+    "TargetRate_units_per_5min": "hasTargetRate",
+    "Timestamp": "hasTimestamp"
+  },
+  "cached_at": "2025-07-17T15:14:03.347682"
+}

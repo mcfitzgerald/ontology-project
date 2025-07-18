@@ -9,8 +9,9 @@ This project demonstrates how ontologies serve as a semantic layer between raw m
 ### What We Built
 - **Semantic Manufacturing Ontology**: A comprehensive OWL ontology modeling a 3-line bottling plant with equipment, products, and processes
 - **SPARQL Query API**: High-performance REST API using Owlready2's native SPARQL engine
-- **AI Agent System**: Google ADK-based agents that discover $2.5M+ in annual opportunities through emergent analysis patterns
+- **AI Agent System**: Simplified two-agent architecture (Conversation Orchestrator + SPARQL Executor) that discovers $2.5M+ in annual opportunities
 - **Synthetic Data Generator**: Realistic manufacturing data with known anomalies for testing and validation
+- **Observability Tools**: Smart log parsing and analysis for diagnosing issues and optimizing performance
 
 ### Key Achievements
 - **$2.5M+ in opportunities discovered** through AI-driven analysis
@@ -28,7 +29,8 @@ This project demonstrates how ontologies serve as a semantic layer between raw m
 ┌─────────────────────────────────────────────────────────────┐
 │                    ADK Agent System                          │
 │  ┌─────────────────────────────────────────────────────┐   │
-│  │ Orchestrator → Explorer → Query Builder → Analyst   │   │
+│  │ Conversation Orchestrator ←→ SPARQL Executor        │   │
+│  │        (Main Agent)           (Specialized Agent)   │   │
 │  └─────────────────────────────────────────────────────┘   │
 └────────────────────────────┬────────────────────────────────┘
                              ▼
@@ -71,14 +73,25 @@ ontology-project/
 │   └── README-api.md               # API documentation
 ├── adk_agents/
 │   ├── agents/                     # ADK agent implementations
-│   │   └── enhanced/               # Enhanced agents with context sharing
+│   │   ├── conversation_orchestrator.py  # Main conversational agent
+│   │   └── sparql_executor.py      # Specialized SPARQL agent
 │   ├── tools/                      # SPARQL and analysis tools
+│   │   ├── sparql_tool.py          # SPARQL execution with rate limiting
 │   │   ├── sparql_builder.py       # Query builder with optimizations
-│   │   └── sparql_validator.py     # Query validation and error analysis
+│   │   ├── sparql_validator.py     # Query validation and error analysis
+│   │   └── python_analysis.py      # Python analysis capabilities
+│   ├── utils/                      # Utility modules
+│   │   ├── log_parser.py           # Smart log parsing with truncation
+│   │   ├── log_analyzer.py         # Pattern detection and diagnostics
+│   │   ├── rate_limiter.py         # Token bucket rate limiting
+│   │   ├── query_cache.py          # Query pattern learning
+│   │   └── owlready2_adapter.py    # SPARQL query adaptation
 │   ├── context/                    # Shared context management
 │   │   └── shared_context.py       # Context sharing between agents
 │   ├── config/                     # Prompts and settings
-│   └── README-adk.md               # ADK system documentation
+│   ├── app.py                      # Main entry point
+│   ├── ARCHITECTURE.md             # Detailed architecture reference
+│   └── TROUBLESHOOTING.md          # Comprehensive troubleshooting guide
 ├── SPARQL_Examples/
 │   ├── owlready2_sparql_master_reference.md  # SPARQL guidelines
 │   └── working_patterns_summary.md            # Tested query patterns
@@ -144,6 +157,12 @@ GOOGLE_GENAI_USE_VERTEXAI=FALSE
 # SPARQL endpoint
 SPARQL_ENDPOINT=http://localhost:8000/sparql/query
 SPARQL_TIMEOUT=30
+
+# Rate Limiting (enabled by default)
+RATE_LIMIT_ENABLED=TRUE
+RATE_LIMIT_RPM=48  # 80% of Vertex AI's 60 RPM limit
+RATE_LIMIT_THROTTLE_MS=1250
+RATE_LIMIT_BURST_SIZE=5
 ```
 
 ### 6. Test the System
@@ -195,17 +214,23 @@ python -m adk_agents.examples.demo_analysis
 - **Error Handling**: Detailed messages with helpful hints
 
 ### 3. AI Agent System
-- **Multi-Agent Architecture**: Orchestrator coordinates specialized agents
+- **Simplified Two-Agent Architecture**: Conversation Orchestrator + SPARQL Executor
 - **Emergent Patterns**: Discovers insights without predefined templates
 - **Financial Focus**: Every finding connects to ROI
-- **Cost Monitoring**: Built-in token counting and spend limits
+- **Built-in Rate Limiting**: Prevents API quota exhaustion with token bucket algorithm
 
-### 4. Enhanced Agent Capabilities (NEW)
+### 4. Enhanced Agent Capabilities
 - **SPARQL Query Optimization**: Automatic DISTINCT, GROUP BY, and aggregation
 - **Shared Context Management**: Agents share discoveries to avoid redundant queries
 - **Query Pattern Learning**: Successful patterns are cached and reused
 - **Error Recovery**: Intelligent error analysis with fix suggestions
 - **Progressive Query Building**: Start simple, add complexity incrementally
+
+### 5. Observability & Diagnostics (NEW)
+- **Smart Log Parsing**: Extracts meaningful info while truncating large data
+- **Pattern Analysis**: Detects rate limits, query failures, and performance issues
+- **Actionable Recommendations**: Suggests optimal throttling and configuration
+- **Session Summaries**: Key metrics and insights from each analysis run
 
 ## 🔍 Analysis Patterns & Results
 
@@ -349,29 +374,78 @@ Update `Ontology_Generation/Tbox_Rbox.md` and regenerate.
 
 ## 🚨 Troubleshooting
 
-### SPARQL Query Errors
-```
-Error at COMPARATOR:'<'  OR  Undefined prefix ':'
-```
-**Solution**: Use `mes_ontology_populated:` prefix (see prefix requirements above)
+### Quick Diagnostics
+```bash
+# Analyze recent session for issues
+python adk_agents/utils/log_analyzer.py adk_web.log
 
-### Enhanced Agent Import Errors
-```
-TypeError: 'mappingproxy' object is not callable
-```
-**Solution**: This occurs when using `context.state()` instead of `context.state` (it's a property, not a method)
+# View analysis report
+cat adk_web.analysis.json
 
-### No Query Results
-- Verify API is running: `curl http://localhost:8000/health`
-- Check ontology loaded (should show entity counts)
-- Use correct prefixes in queries
-- Add `FILTER(ISIRI(?variable))` for entity variables
+# Check system health
+curl http://localhost:8000/health
 
-### Vertex AI Authentication
+# Monitor logs in real-time
+tail -f adk_web.log | grep -E "ERROR|429|failed"
 ```
-Your default credentials were not found
+
+### Common Issues
+
+#### 1. Rate Limit Errors (429 RESOURCE_EXHAUSTED)
+**Solution**: Rate limiting is enabled by default, but if you still hit limits:
+```bash
+# Check current rate
+python adk_agents/utils/log_analyzer.py adk_web.log | grep "requests_per_minute"
+
+# Increase throttling if needed
+echo "RATE_LIMIT_THROTTLE_MS=2000" >> adk_agents/.env
 ```
-**Solution**: Run `gcloud auth application-default login`
+
+#### 2. SPARQL Query Errors
+```
+Error: Unknown prefix 'mes:' OR Lexing error
+```
+**Solution**: Always use full prefix:
+- ❌ Wrong: `mes:hasOEEScore`
+- ✅ Correct: `mes_ontology_populated:hasOEEScore`
+
+#### 3. Large Log Files / High Token Usage
+**Solution**: Log parser automatically truncates data:
+```bash
+# Parse logs with smart truncation
+python adk_agents/utils/log_parser.py adk_web.log
+
+# Results limited to 10 rows per query
+# Long content truncated to 1000 chars
+```
+
+#### 4. No Query Results
+```bash
+# Check API health (should show entity counts)
+curl http://localhost:8000/health
+
+# Test simple query
+curl -X POST http://localhost:8000/sparql/query \
+  -H "Content-Type: application/json" \
+  -d '{"query": "SELECT ?s WHERE { ?s a mes_ontology_populated:Equipment } LIMIT 1"}'
+```
+
+#### 5. Vertex AI Authentication
+```
+Error: Your default credentials were not found
+```
+**Solution**: 
+```bash
+gcloud auth application-default login
+```
+
+### Comprehensive Troubleshooting
+See [ADK Agents Troubleshooting Guide](adk_agents/TROUBLESHOOTING.md) for:
+- Detailed diagnostics with log analysis tools
+- Performance optimization strategies
+- Error recovery procedures
+- Configuration reference
+- Best practices for stable operation
 
 ## 🎯 Generic Framework for Any Domain
 
