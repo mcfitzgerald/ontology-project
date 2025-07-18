@@ -49,6 +49,12 @@ LLM_SPARQL_GUIDE = SPARQL_EXAMPLES_DIR / "owlready2_sparql_llm_guide.md"
 DEFAULT_MODEL = "gemini-2.0-flash"
 DEFAULT_TEMPERATURE = 0.1  # Low temperature for consistent analysis
 
+# Rate Limiting Configuration
+RATE_LIMIT_ENABLED = os.getenv('RATE_LIMIT_ENABLED', 'TRUE').upper() == 'TRUE'
+RATE_LIMIT_REQUESTS_PER_MINUTE = int(os.getenv('RATE_LIMIT_RPM', '48'))  # 80% of Vertex AI limit (60)
+RATE_LIMIT_THROTTLE_MS = int(os.getenv('RATE_LIMIT_THROTTLE_MS', '1250'))  # Milliseconds between requests
+RATE_LIMIT_BURST_SIZE = int(os.getenv('RATE_LIMIT_BURST_SIZE', '5'))  # Allow small bursts
+
 # Validation
 def validate_config():
     """Validate configuration settings."""

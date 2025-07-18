@@ -3,9 +3,10 @@ Query caching and learning system.
 Stores successful patterns and learns from failures.
 """
 import json
+import hashlib
 from pathlib import Path
 from typing import Dict, List, Optional, Any
-from datetime import datetime
+from datetime import datetime, timedelta
 
 class QueryCache:
     """Learns from query successes and failures."""
@@ -130,4 +131,200 @@ class QueryCache:
             "failed_queries": len(self.cache["failed_queries"]),
             "learned_patterns": len(self.cache["patterns"]),
             "known_fixes": len(self.cache["fixes"])
+        }
+
+
+class SimpleQueryCache:
+    """
+    A simple file-based cache for SPARQL query results.
+    
+    Uses MD5 hashing for query keys and JSON storage with TTL support.
+    Designed for prototype systems with moderate query volumes.
+    """
+    
+    def __init__(self, cache_dir: str = "adk_agents/cache/queries", default_ttl_minutes: int = 5):
+        """
+        Initialize the query cache.
+        
+        Args:
+            cache_dir: Directory to store cached queries
+            default_ttl_minutes: Default time-to-live in minutes for cached results
+        """
+        self.cache_dir = Path(cache_dir)
+        self.default_ttl_minutes = default_ttl_minutes
+        
+        # Create cache directory if it doesn't exist
+        self.cache_dir.mkdir(parents=True, exist_ok=True)
+    
+    def _get_cache_key(self, query: str) -> str:
+        """
+        Generate a cache key from the query using MD5 hash.
+        
+        Args:
+            query: SPARQL query string
+            
+        Returns:
+            MD5 hash of the query
+        """
+        # Normalize query by stripping whitespace and converting to lowercase
+        normalized = query.strip().lower()
+        return hashlib.md5(normalized.encode()).hexdigest()
+    
+    def _get_cache_filepath(self, cache_key: str) -> Path:
+        """
+        Get the filepath for a cached query.
+        
+        Args:
+            cache_key: MD5 hash key
+            
+        Returns:
+            Path to the cache file
+        """
+        return self.cache_dir / f"{cache_key}.json"
+    
+    def get(self, query: str, ttl_minutes: Optional[int] = None) -> Optional[List[Dict[str, Any]]]:
+        """
+        Get cached results for a query if available and not expired.
+        
+        Args:
+            query: SPARQL query string
+            ttl_minutes: Override default TTL for this query
+            
+        Returns:
+            Cached results if available and valid, None otherwise
+        """
+        cache_key = self._get_cache_key(query)
+        cache_file = self._get_cache_filepath(cache_key)
+        
+        # Check if cache file exists
+        if not cache_file.exists():
+            return None
+        
+        try:
+            # Load cached data
+            with open(cache_file, 'r') as f:
+                cache_data = json.load(f)
+            
+            # Check timestamp
+            cached_time = datetime.fromisoformat(cache_data['timestamp'])
+            ttl = ttl_minutes if ttl_minutes is not None else self.default_ttl_minutes
+            
+            if datetime.now() - cached_time > timedelta(minutes=ttl):
+                # Cache expired, remove file
+                cache_file.unlink()
+                return None
+            
+            return cache_data['results']
+            
+        except (json.JSONDecodeError, KeyError, ValueError):
+            # Invalid cache file, remove it
+            cache_file.unlink()
+            return None
+    
+    def set(self, query: str, results: List[Dict[str, Any]]) -> None:
+        """
+        Cache query results.
+        
+        Args:
+            query: SPARQL query string
+            results: Query results to cache
+        """
+        cache_key = self._get_cache_key(query)
+        cache_file = self._get_cache_filepath(cache_key)
+        
+        cache_data = {
+            'query': query,
+            'results': results,
+            'timestamp': datetime.now().isoformat(),
+            'cache_key': cache_key
+        }
+        
+        try:
+            with open(cache_file, 'w') as f:
+                json.dump(cache_data, f, indent=2)
+        except Exception as e:
+            # Log error but don't fail - caching is optional
+            print(f"Failed to cache query results: {e}")
+    
+    def clear(self) -> int:
+        """
+        Clear all cached queries.
+        
+        Returns:
+            Number of cache files removed
+        """
+        count = 0
+        for cache_file in self.cache_dir.glob("*.json"):
+            try:
+                cache_file.unlink()
+                count += 1
+            except Exception:
+                pass
+        return count
+    
+    def clear_expired(self, ttl_minutes: Optional[int] = None) -> int:
+        """
+        Clear only expired cache entries.
+        
+        Args:
+            ttl_minutes: Override default TTL for expiration check
+            
+        Returns:
+            Number of expired cache files removed
+        """
+        count = 0
+        ttl = ttl_minutes if ttl_minutes is not None else self.default_ttl_minutes
+        
+        for cache_file in self.cache_dir.glob("*.json"):
+            try:
+                with open(cache_file, 'r') as f:
+                    cache_data = json.load(f)
+                
+                cached_time = datetime.fromisoformat(cache_data['timestamp'])
+                if datetime.now() - cached_time > timedelta(minutes=ttl):
+                    cache_file.unlink()
+                    count += 1
+                    
+            except Exception:
+                # Invalid cache file, remove it
+                try:
+                    cache_file.unlink()
+                    count += 1
+                except Exception:
+                    pass
+        
+        return count
+    
+    def get_cache_stats(self) -> Dict[str, Any]:
+        """
+        Get statistics about the cache.
+        
+        Returns:
+            Dictionary with cache statistics
+        """
+        total_files = 0
+        total_size = 0
+        expired_count = 0
+        
+        for cache_file in self.cache_dir.glob("*.json"):
+            total_files += 1
+            total_size += cache_file.stat().st_size
+            
+            try:
+                with open(cache_file, 'r') as f:
+                    cache_data = json.load(f)
+                
+                cached_time = datetime.fromisoformat(cache_data['timestamp'])
+                if datetime.now() - cached_time > timedelta(minutes=self.default_ttl_minutes):
+                    expired_count += 1
+                    
+            except Exception:
+                expired_count += 1
+        
+        return {
+            'total_cached_queries': total_files,
+            'total_cache_size_bytes': total_size,
+            'expired_queries': expired_count,
+            'cache_directory': str(self.cache_dir.absolute()),
+            'default_ttl_minutes': self.default_ttl_minutes
         }

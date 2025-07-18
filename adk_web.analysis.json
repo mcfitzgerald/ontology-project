@@ -1,0 +1,31 @@
+{
+  "session_id": "default",
+  "rate_limit": {
+    "total_requests": 25,
+    "duration_minutes": 2.6099166666666664,
+    "requests_per_minute": 9.578849899422076,
+    "peak_rpm": 9.578849899422076,
+    "hit_limit": true,
+    "recommended_throttle_ms": 1250
+  },
+  "queries": {
+    "total": 68,
+    "success_rate": 0.23529411764705882,
+    "failed_count": 10,
+    "large_result_count": 0,
+    "optimization_suggestions": [
+      "Consider caching equipment data - queried >10 times in session"
+    ]
+  },
+  "warnings": [
+    "\ud83d\udea8 RATE LIMIT HIT: Service returned 429 error",
+    "\ud83d\udea8 RESOURCE EXHAUSTED: Quota limit reached",
+    "\u26a0\ufe0f  Context detachment error - possible memory issue",
+    "\u26a0\ufe0f  Very low query success rate - check SPARQL syntax"
+  ],
+  "recommendations": [
+    "CRITICAL: Implement request throttling of 1250ms between requests",
+    "Low query success rate (23.5%). Review query patterns and fix common errors",
+    "Consider caching equipment data - queried >10 times in session"
+  ]
+}

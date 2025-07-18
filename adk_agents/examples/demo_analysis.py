@@ -9,8 +9,8 @@ from pathlib import Path
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from google.adk.runners import Runner
-from google.adk.sessions import InMemorySessionService
+# Note: In ADK 2025, Runner and SessionService are managed internally
+# We interact with agents directly or use the CLI tools
 from google.genai import types
 
 from adk_agents.agents.orchestrator import create_orchestrator

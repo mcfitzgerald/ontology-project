@@ -1,5 +1,5 @@
 # MES Ontology Mind Map for LLM SPARQL Query Generation
-# Generated: 2025-07-16T13:42:14.904361
+# Generated: 2025-07-17T10:31:28.187536
 # Purpose: Provide ontology structure with business context for accurate SPARQL query construction
 
 # This file contains:
@@ -12,12 +12,12 @@
 # Owlready2 IGNORES all PREFIX declarations and creates its own prefix from the OWL filename.
 # 
 # PREFIX MAPPING:
-#   - Turtle format (this file): mes:hasOEEScore
+#   - Turtle format (this file): :hasOEEScore (default namespace)
 #   - OWL filename: mes_ontology_populated.owl
 #   - Owlready2 auto-prefix: mes_ontology_populated:hasOEEScore
 #   - SPARQL queries MUST use: mes_ontology_populated:hasOEEScore
 #
-# IMPORTANT: The 'mes:' prefix shown in this file will NOT work in SPARQL queries!
+# IMPORTANT: The ':' prefix (default namespace) shown in this file maps to 'mes_ontology_populated:' in SPARQL!
 # You MUST use 'mes_ontology_populated:' as the prefix in all SPARQL queries.
 #
 # Example SPARQL query:
@@ -42,31 +42,31 @@
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
-# Ontology prefix:
-@prefix mes: <http://mes-ontology.org/factory.owl#> .
+# Default namespace (no prefix needed):
+@prefix : <http://mes-ontology.org/factory.owl#> .
 
 # Business context annotation property
-mes:businessContext a owl:AnnotationProperty ;
+:businessContext a owl:AnnotationProperty ;
     rdfs:label "Business Context" ;
     rdfs:comment "Explains the business meaning and operational significance" .
 
-mes:typicalValue a owl:AnnotationProperty ;
+:typicalValue a owl:AnnotationProperty ;
     rdfs:label "Typical Value" ;
     rdfs:comment "Common or expected values in production" .
 
-mes:calculationMethod a owl:AnnotationProperty ;
+:calculationMethod a owl:AnnotationProperty ;
     rdfs:label "Calculation Method" ;
     rdfs:comment "How this metric is calculated" .
 
-mes:mapsToColumn a owl:AnnotationProperty ;
+:mapsToColumn a owl:AnnotationProperty ;
     rdfs:label "Maps to Column" ;
     rdfs:comment "The CSV column name this property maps to" .
 
-mes:dataContext a owl:AnnotationProperty ;
+:dataContext a owl:AnnotationProperty ;
     rdfs:label "Data Context" ;
     rdfs:comment "Describes the type and meaning of the data" .
 
-mes:exampleValue a owl:AnnotationProperty ;
+:exampleValue a owl:AnnotationProperty ;
     rdfs:label "Example Value" ;
     rdfs:comment "Example value from the dataset" .
 
@@ -74,84 +74,84 @@ mes:exampleValue a owl:AnnotationProperty ;
 # CLASSES - Core business entities
 #############################################################################
 
-mes:Changeover a owl:Class ;
-    rdfs:subClassOf mes:PlannedDowntime ;
+:Changeover a owl:Class ;
+    rdfs:subClassOf :PlannedDowntime ;
     rdfs:label "Changeover" .
 
-mes:Cleaning a owl:Class ;
-    rdfs:subClassOf mes:PlannedDowntime ;
+:Cleaning a owl:Class ;
+    rdfs:subClassOf :PlannedDowntime ;
     rdfs:label "Cleaning" .
 
-mes:DowntimeLog a owl:Class ;
-    rdfs:subClassOf mes:Event ;
+:DowntimeLog a owl:Class ;
+    rdfs:subClassOf :Event ;
     rdfs:label "DowntimeLog" .
 
-mes:DowntimeReason a owl:Class ;
-    rdfs:subClassOf mes:Reason ;
+:DowntimeReason a owl:Class ;
+    rdfs:subClassOf :Reason ;
     rdfs:label "DowntimeReason" .
 
-mes:Equipment a owl:Class ;
-    rdfs:subClassOf mes:Resource ;
+:Equipment a owl:Class ;
+    rdfs:subClassOf :Resource ;
     rdfs:label "Equipment" .
 
-mes:Event a owl:Class ;
+:Event a owl:Class ;
     rdfs:label "Event" .
 
-mes:Filler a owl:Class ;
-    rdfs:subClassOf mes:Equipment ;
+:Filler a owl:Class ;
+    rdfs:subClassOf :Equipment ;
     rdfs:label "Filler" .
 
-mes:MaterialJam a owl:Class ;
-    rdfs:subClassOf mes:UnplannedDowntime ;
+:MaterialJam a owl:Class ;
+    rdfs:subClassOf :UnplannedDowntime ;
     rdfs:label "MaterialJam" .
 
-mes:MaterialStarvation a owl:Class ;
-    rdfs:subClassOf mes:UnplannedDowntime ;
+:MaterialStarvation a owl:Class ;
+    rdfs:subClassOf :UnplannedDowntime ;
     rdfs:label "MaterialStarvation" .
 
-mes:MechanicalFailure a owl:Class ;
-    rdfs:subClassOf mes:UnplannedDowntime ;
+:MechanicalFailure a owl:Class ;
+    rdfs:subClassOf :UnplannedDowntime ;
     rdfs:label "MechanicalFailure" .
 
-mes:Packer a owl:Class ;
-    rdfs:subClassOf mes:Equipment ;
+:Packer a owl:Class ;
+    rdfs:subClassOf :Equipment ;
     rdfs:label "Packer" .
 
-mes:Palletizer a owl:Class ;
-    rdfs:subClassOf mes:Equipment ;
+:Palletizer a owl:Class ;
+    rdfs:subClassOf :Equipment ;
     rdfs:label "Palletizer" .
 
-mes:PlannedDowntime a owl:Class ;
-    rdfs:subClassOf mes:DowntimeReason ;
+:PlannedDowntime a owl:Class ;
+    rdfs:subClassOf :DowntimeReason ;
     rdfs:label "PlannedDowntime" .
 
-mes:Process a owl:Class ;
+:Process a owl:Class ;
     rdfs:label "Process" .
 
-mes:Product a owl:Class ;
-    rdfs:subClassOf mes:Resource ;
+:Product a owl:Class ;
+    rdfs:subClassOf :Resource ;
     rdfs:label "Product" .
 
-mes:ProductionLine a owl:Class ;
-    rdfs:subClassOf mes:Resource ;
+:ProductionLine a owl:Class ;
+    rdfs:subClassOf :Resource ;
     rdfs:label "ProductionLine" .
 
-mes:ProductionLog a owl:Class ;
-    rdfs:subClassOf mes:Event ;
+:ProductionLog a owl:Class ;
+    rdfs:subClassOf :Event ;
     rdfs:label "ProductionLog" .
 
-mes:ProductionOrder a owl:Class ;
-    rdfs:subClassOf mes:Process ;
+:ProductionOrder a owl:Class ;
+    rdfs:subClassOf :Process ;
     rdfs:label "ProductionOrder" .
 
-mes:Reason a owl:Class ;
+:Reason a owl:Class ;
     rdfs:label "Reason" .
 
-mes:Resource a owl:Class ;
+:Resource a owl:Class ;
     rdfs:label "Resource" .
 
-mes:UnplannedDowntime a owl:Class ;
-    rdfs:subClassOf mes:DowntimeReason ;
+:UnplannedDowntime a owl:Class ;
+    rdfs:subClassOf :DowntimeReason ;
     rdfs:label "UnplannedDowntime" .
 
 
@@ -159,44 +159,44 @@ mes:UnplannedDowntime a owl:Class ;
 # OBJECT PROPERTIES - Relationships between entities
 #############################################################################
 
-mes:belongsToLine a owl:ObjectProperty ;
-    rdfs:domain mes:Equipment ;
-    rdfs:range mes:ProductionLine ;
+:belongsToLine a owl:ObjectProperty ;
+    rdfs:domain :Equipment ;
+    rdfs:range :ProductionLine ;
     rdfs:label "belongsToLine" .
 
-mes:executesOrder a owl:ObjectProperty ;
-    rdfs:domain mes:Equipment ;
-    rdfs:range mes:ProductionOrder ;
+:executesOrder a owl:ObjectProperty ;
+    rdfs:domain :Equipment ;
+    rdfs:range :ProductionOrder ;
     rdfs:label "executesOrder" .
 
-mes:hasDowntimeReason a owl:ObjectProperty ;
-    rdfs:domain mes:DowntimeLog ;
-    rdfs:range mes:DowntimeReason ;
+:hasDowntimeReason a owl:ObjectProperty ;
+    rdfs:domain :DowntimeLog ;
+    rdfs:range :DowntimeReason ;
     rdfs:label "hasDowntimeReason" .
 
-mes:hasEquipment a owl:ObjectProperty ;
-    rdfs:domain mes:ProductionLine ;
-    rdfs:range mes:Equipment ;
+:hasEquipment a owl:ObjectProperty ;
+    rdfs:domain :ProductionLine ;
+    rdfs:range :Equipment ;
     rdfs:label "hasEquipment" .
 
-mes:isDownstreamOf a owl:ObjectProperty ;
-    rdfs:domain mes:Equipment ;
-    rdfs:range mes:Equipment ;
+:isDownstreamOf a owl:ObjectProperty ;
+    rdfs:domain :Equipment ;
+    rdfs:range :Equipment ;
     rdfs:label "isDownstreamOf" .
 
-mes:isUpstreamOf a owl:ObjectProperty ;
-    rdfs:domain mes:Equipment ;
-    rdfs:range mes:Equipment ;
+:isUpstreamOf a owl:ObjectProperty ;
+    rdfs:domain :Equipment ;
+    rdfs:range :Equipment ;
     rdfs:label "isUpstreamOf" .
 
-mes:logsEvent a owl:ObjectProperty ;
-    rdfs:domain mes:Equipment ;
-    rdfs:range mes:Event ;
+:logsEvent a owl:ObjectProperty ;
+    rdfs:domain :Equipment ;
+    rdfs:range :Event ;
     rdfs:label "logsEvent" .
 
-mes:producesProduct a owl:ObjectProperty ;
-    rdfs:domain mes:ProductionOrder ;
-    rdfs:range mes:Product ;
+:producesProduct a owl:ObjectProperty ;
+    rdfs:domain :ProductionOrder ;
+    rdfs:range :Product ;
     rdfs:label "producesProduct" .
 
 
@@ -204,225 +204,225 @@ mes:producesProduct a owl:ObjectProperty ;
 # DATA PROPERTIES - Metrics and attributes
 #############################################################################
 
-mes:hasAvailabilityScore a owl:DatatypeProperty ;
-    rdfs:domain mes:Event ;
+:hasAvailabilityScore a owl:DatatypeProperty ;
+    rdfs:domain :Event ;
     rdfs:range xsd:float ;
     rdfs:label "hasAvailabilityScore" ;
-    mes:mapsToColumn "Availability_Score" ;
-    mes:dataContext "Equipment availability percentage (0-100)" ;
-    mes:typicalValue "85-95% for world-class operations" .
+    :mapsToColumn "Availability_Score" ;
+    :dataContext "Equipment availability percentage (0-100)" ;
+    :typicalValue "85-95% for world-class operations" .
 
-mes:hasDowntimeReasonCode a owl:DatatypeProperty ;
-    rdfs:domain mes:DowntimeLog ;
+:hasDowntimeReasonCode a owl:DatatypeProperty ;
+    rdfs:domain :DowntimeLog ;
     rdfs:range xsd:string ;
     rdfs:label "hasDowntimeReasonCode" ;
-    mes:mapsToColumn "DowntimeReason" ;
-    mes:dataContext "Reason code for equipment stoppage" .
+    :mapsToColumn "DowntimeReason" ;
+    :dataContext "Reason code for equipment stoppage" .
 
-mes:hasEquipmentID a owl:DatatypeProperty ;
-    rdfs:domain mes:Equipment ;
+:hasEquipmentID a owl:DatatypeProperty ;
+    rdfs:domain :Equipment ;
     rdfs:range xsd:string ;
     rdfs:label "hasEquipmentID" ;
-    mes:mapsToColumn "EquipmentID" ;
-    mes:dataContext "Unique equipment identifier (e.g., LINE1-FIL)" ;
-    mes:exampleValue "LINE1-FIL" .
+    :mapsToColumn "EquipmentID" ;
+    :dataContext "Unique equipment identifier (e.g., LINE1-FIL)" ;
+    :exampleValue "LINE1-FIL" .
 
-mes:hasEquipmentType a owl:DatatypeProperty ;
-    rdfs:domain mes:Equipment ;
+:hasEquipmentType a owl:DatatypeProperty ;
+    rdfs:domain :Equipment ;
     rdfs:range xsd:string ;
     rdfs:label "hasEquipmentType" ;
-    mes:mapsToColumn "EquipmentType" ;
-    mes:dataContext "Type of equipment (Filler, Packer, Palletizer)" .
+    :mapsToColumn "EquipmentType" ;
+    :dataContext "Type of equipment (Filler, Packer, Palletizer)" .
 
-mes:hasGoodUnits a owl:DatatypeProperty ;
-    rdfs:domain mes:ProductionLog ;
+:hasGoodUnits a owl:DatatypeProperty ;
+    rdfs:domain :ProductionLog ;
     rdfs:range xsd:integer ;
     rdfs:label "hasGoodUnits" ;
-    mes:mapsToColumn "GoodUnitsProduced" ;
-    mes:dataContext "Count of sellable units produced in 5-min interval" .
+    :mapsToColumn "GoodUnitsProduced" ;
+    :dataContext "Count of sellable units produced in 5-min interval" .
 
-mes:hasLineID a owl:DatatypeProperty ;
-    rdfs:domain mes:ProductionLine ;
+:hasLineID a owl:DatatypeProperty ;
+    rdfs:domain :ProductionLine ;
     rdfs:range xsd:integer ;
     rdfs:label "hasLineID" ;
-    mes:mapsToColumn "LineID" ;
-    mes:dataContext "Production line identifier (1-3)" .
+    :mapsToColumn "LineID" ;
+    :dataContext "Production line identifier (1-3)" .
 
-mes:hasMachineStatus a owl:DatatypeProperty ;
-    rdfs:domain mes:Event ;
+:hasMachineStatus a owl:DatatypeProperty ;
+    rdfs:domain :Event ;
     rdfs:range xsd:string ;
     rdfs:label "hasMachineStatus" ;
-    mes:mapsToColumn "MachineStatus" ;
-    mes:dataContext "Current equipment state (Running/Stopped)" .
+    :mapsToColumn "MachineStatus" ;
+    :dataContext "Current equipment state (Running/Stopped)" .
 
-mes:hasOEEScore a owl:DatatypeProperty ;
-    rdfs:domain mes:Event ;
+:hasOEEScore a owl:DatatypeProperty ;
+    rdfs:domain :Event ;
     rdfs:range xsd:float ;
     rdfs:label "hasOEEScore" ;
-    mes:mapsToColumn "OEE_Score" ;
-    mes:dataContext "Overall Equipment Effectiveness (0-100)" ;
-    mes:typicalValue "85-95% for world-class operations" ;
-    mes:calculationMethod "Availability × Performance × Quality" .
+    :mapsToColumn "OEE_Score" ;
+    :dataContext "Overall Equipment Effectiveness (0-100)" ;
+    :typicalValue "85-95% for world-class operations" ;
+    :calculationMethod "Availability × Performance × Quality" .
 
-mes:hasOrderID a owl:DatatypeProperty ;
-    rdfs:domain mes:ProductionOrder ;
+:hasOrderID a owl:DatatypeProperty ;
+    rdfs:domain :ProductionOrder ;
     rdfs:range xsd:string ;
     rdfs:label "hasOrderID" ;
-    mes:mapsToColumn "ProductionOrderID" ;
-    mes:dataContext "Unique identifier for production order" .
+    :mapsToColumn "ProductionOrderID" ;
+    :dataContext "Unique identifier for production order" .
 
-mes:hasPerformanceScore a owl:DatatypeProperty ;
-    rdfs:domain mes:Event ;
+:hasPerformanceScore a owl:DatatypeProperty ;
+    rdfs:domain :Event ;
     rdfs:range xsd:float ;
     rdfs:label "hasPerformanceScore" ;
-    mes:mapsToColumn "Performance_Score" ;
-    mes:dataContext "Production speed efficiency (0-100)" ;
-    mes:typicalValue "85-95% for world-class operations" .
+    :mapsToColumn "Performance_Score" ;
+    :dataContext "Production speed efficiency (0-100)" ;
+    :typicalValue "85-95% for world-class operations" .
 
-mes:hasProductID a owl:DatatypeProperty ;
-    rdfs:domain mes:Product ;
+:hasProductID a owl:DatatypeProperty ;
+    rdfs:domain :Product ;
     rdfs:range xsd:string ;
     rdfs:label "hasProductID" ;
-    mes:mapsToColumn "ProductID" ;
-    mes:dataContext "Product SKU identifier" ;
-    mes:exampleValue "SKU-1001" .
+    :mapsToColumn "ProductID" ;
+    :dataContext "Product SKU identifier" ;
+    :exampleValue "SKU-1001" .
 
-mes:hasProductName a owl:DatatypeProperty ;
-    rdfs:domain mes:Product ;
+:hasProductName a owl:DatatypeProperty ;
+    rdfs:domain :Product ;
     rdfs:range xsd:string ;
     rdfs:label "hasProductName" ;
-    mes:mapsToColumn "ProductName" ;
-    mes:dataContext "Human-readable product name" .
+    :mapsToColumn "ProductName" ;
+    :dataContext "Human-readable product name" .
 
-mes:hasQualityScore a owl:DatatypeProperty ;
-    rdfs:domain mes:Event ;
+:hasQualityScore a owl:DatatypeProperty ;
+    rdfs:domain :Event ;
     rdfs:range xsd:float ;
     rdfs:label "hasQualityScore" ;
-    mes:mapsToColumn "Quality_Score" ;
-    mes:dataContext "Product quality percentage (0-100)" ;
-    mes:typicalValue "85-95% for world-class operations" .
+    :mapsToColumn "Quality_Score" ;
+    :dataContext "Product quality percentage (0-100)" ;
+    :typicalValue "85-95% for world-class operations" .
 
-mes:hasSalePrice a owl:DatatypeProperty ;
-    rdfs:domain mes:Product ;
+:hasSalePrice a owl:DatatypeProperty ;
+    rdfs:domain :Product ;
     rdfs:range xsd:float ;
     rdfs:label "hasSalePrice" ;
-    mes:mapsToColumn "SalePrice_per_unit" ;
-    mes:dataContext "Selling price per unit" .
+    :mapsToColumn "SalePrice_per_unit" ;
+    :dataContext "Selling price per unit" .
 
-mes:hasScrapUnits a owl:DatatypeProperty ;
-    rdfs:domain mes:ProductionLog ;
+:hasScrapUnits a owl:DatatypeProperty ;
+    rdfs:domain :ProductionLog ;
     rdfs:range xsd:integer ;
     rdfs:label "hasScrapUnits" ;
-    mes:mapsToColumn "ScrapUnitsProduced" ;
-    mes:dataContext "Count of defective units in 5-min interval" .
+    :mapsToColumn "ScrapUnitsProduced" ;
+    :dataContext "Count of defective units in 5-min interval" .
 
-mes:hasStandardCost a owl:DatatypeProperty ;
-    rdfs:domain mes:Product ;
+:hasStandardCost a owl:DatatypeProperty ;
+    rdfs:domain :Product ;
     rdfs:range xsd:float ;
     rdfs:label "hasStandardCost" ;
-    mes:mapsToColumn "StandardCost_per_unit" ;
-    mes:dataContext "Manufacturing cost per unit" .
+    :mapsToColumn "StandardCost_per_unit" ;
+    :dataContext "Manufacturing cost per unit" .
 
-mes:hasTargetRate a owl:DatatypeProperty ;
-    rdfs:domain mes:Product ;
+:hasTargetRate a owl:DatatypeProperty ;
+    rdfs:domain :Product ;
     rdfs:range xsd:float ;
     rdfs:label "hasTargetRate" ;
-    mes:mapsToColumn "TargetRate_units_per_5min" ;
-    mes:dataContext "Expected production rate per 5-minute interval" .
+    :mapsToColumn "TargetRate_units_per_5min" ;
+    :dataContext "Expected production rate per 5-minute interval" .
 
-mes:hasTimestamp a owl:DatatypeProperty ;
-    rdfs:domain mes:Event ;
+:hasTimestamp a owl:DatatypeProperty ;
+    rdfs:domain :Event ;
     rdfs:range xsd:string ;
     rdfs:label "hasTimestamp" ;
-    mes:mapsToColumn "Timestamp" ;
-    mes:dataContext "5-minute interval timestamp for production events" ;
-    mes:exampleValue "2025-06-01 00:00:00" .
+    :mapsToColumn "Timestamp" ;
+    :dataContext "5-minute interval timestamp for production events" ;
+    :exampleValue "2025-06-01 00:00:00" .
 
 
 #############################################################################
 # EXAMPLE INDIVIDUALS - Real instances from the factory
 #############################################################################
 
-mes:LINE1-FIL a mes:Filler ;
+:LINE1-FIL a :Filler ;
     rdfs:label "LINE1-FIL" ;
-    mes:isUpstreamOf mes:LINE1-PCK ;
-    mes:executesOrder mes:ORD-1000 ;
-    mes:executesOrder mes:ORD-1001 ;
-    mes:executesOrder mes:ORD-1002 ;
-    mes:logsEvent mes:EVENT-LINE1-FIL-2025-06-01T00-00-00 ;
-    mes:logsEvent mes:EVENT-LINE1-FIL-2025-06-01T00-05-00 ;
-    mes:logsEvent mes:EVENT-LINE1-FIL-2025-06-01T00-10-00 ;
-    mes:belongsToLine mes:LINE1 .
+    :isUpstreamOf :LINE1-PCK ;
+    :executesOrder :ORD-1000 ;
+    :executesOrder :ORD-1001 ;
+    :executesOrder :ORD-1002 ;
+    :logsEvent :EVENT-LINE1-FIL-2025-06-01T00-00-00 ;
+    :logsEvent :EVENT-LINE1-FIL-2025-06-01T00-05-00 ;
+    :logsEvent :EVENT-LINE1-FIL-2025-06-01T00-10-00 ;
+    :belongsToLine :LINE1 .
 
-mes:LINE1-PCK a mes:Packer ;
+:LINE1-PCK a :Packer ;
     rdfs:label "LINE1-PCK" ;
-    mes:isUpstreamOf mes:LINE1-PAL ;
-    mes:isDownstreamOf mes:LINE1-FIL ;
-    mes:executesOrder mes:ORD-1000 ;
-    mes:executesOrder mes:ORD-1001 ;
-    mes:executesOrder mes:ORD-1002 ;
-    mes:logsEvent mes:EVENT-LINE1-PCK-2025-06-01T00-00-00 ;
-    mes:logsEvent mes:EVENT-LINE1-PCK-2025-06-01T00-05-00 ;
-    mes:logsEvent mes:EVENT-LINE1-PCK-2025-06-01T00-10-00 ;
-    mes:belongsToLine mes:LINE1 .
+    :isUpstreamOf :LINE1-PAL ;
+    :executesOrder :ORD-1000 ;
+    :executesOrder :ORD-1001 ;
+    :executesOrder :ORD-1002 ;
+    :logsEvent :EVENT-LINE1-PCK-2025-06-01T00-00-00 ;
+    :logsEvent :EVENT-LINE1-PCK-2025-06-01T00-05-00 ;
+    :logsEvent :EVENT-LINE1-PCK-2025-06-01T00-10-00 ;
+    :belongsToLine :LINE1 ;
+    :isDownstreamOf :LINE1-FIL .
 
-mes:LINE2-PCK a mes:Packer ;
+:LINE2-PCK a :Packer ;
     rdfs:label "LINE2-PCK" ;
-    mes:isUpstreamOf mes:LINE2-PAL ;
-    mes:isDownstreamOf mes:LINE2-FIL ;
-    mes:executesOrder mes:ORD-1028 ;
-    mes:executesOrder mes:ORD-1029 ;
-    mes:executesOrder mes:ORD-1030 ;
-    mes:logsEvent mes:EVENT-LINE2-PCK-2025-06-01T00-00-00 ;
-    mes:logsEvent mes:EVENT-LINE2-PCK-2025-06-01T00-05-00 ;
-    mes:logsEvent mes:EVENT-LINE2-PCK-2025-06-01T00-10-00 ;
-    mes:belongsToLine mes:LINE2 .
+    :isUpstreamOf :LINE2-PAL ;
+    :executesOrder :ORD-1026 ;
+    :executesOrder :ORD-1027 ;
+    :executesOrder :ORD-1028 ;
+    :logsEvent :EVENT-LINE2-PCK-2025-06-01T00-00-00 ;
+    :logsEvent :EVENT-LINE2-PCK-2025-06-01T00-05-00 ;
+    :logsEvent :EVENT-LINE2-PCK-2025-06-01T00-10-00 ;
+    :belongsToLine :LINE2 ;
+    :isDownstreamOf :LINE2-FIL .
 
-mes:LINE3-FIL a mes:Filler ;
+:LINE3-FIL a :Filler ;
     rdfs:label "LINE3-FIL" ;
-    mes:isUpstreamOf mes:LINE3-PCK ;
-    mes:executesOrder mes:ORD-1056 ;
-    mes:executesOrder mes:ORD-1057 ;
-    mes:executesOrder mes:ORD-1058 ;
-    mes:logsEvent mes:EVENT-LINE3-FIL-2025-06-01T00-00-00 ;
-    mes:logsEvent mes:EVENT-LINE3-FIL-2025-06-01T00-05-00 ;
-    mes:logsEvent mes:EVENT-LINE3-FIL-2025-06-01T00-10-00 ;
-    mes:belongsToLine mes:LINE3 .
+    :isUpstreamOf :LINE3-PCK ;
+    :executesOrder :ORD-1054 ;
+    :executesOrder :ORD-1055 ;
+    :executesOrder :ORD-1056 ;
+    :logsEvent :EVENT-LINE3-FIL-2025-06-01T00-00-00 ;
+    :logsEvent :EVENT-LINE3-FIL-2025-06-01T00-05-00 ;
+    :logsEvent :EVENT-LINE3-FIL-2025-06-01T00-10-00 ;
+    :belongsToLine :LINE3 .
 
-mes:SKU-1001 a mes:Product ;
+:SKU-1001 a :Product ;
     rdfs:label "12oz Sparkling Water" ;
-    mes:targetRate 500 ;
-    mes:standardCost 0.15 ;
-    mes:salePrice 0.5 ;
-    mes:profitMargin "70.0%" .
+    :targetRate 500 ;
+    :standardCost 0.15 ;
+    :salePrice 0.5 ;
+    :profitMargin "70.0%" .
 
-mes:SKU-1002 a mes:Product ;
+:SKU-1002 a :Product ;
     rdfs:label "32oz Premium Juice" ;
-    mes:targetRate 350 ;
-    mes:standardCost 0.45 ;
-    mes:salePrice 1.5 ;
-    mes:profitMargin "70.0%" .
+    :targetRate 350 ;
+    :standardCost 0.45 ;
+    :salePrice 1.5 ;
+    :profitMargin "70.0%" .
 
-mes:SKU-2001 a mes:Product ;
+:SKU-2001 a :Product ;
     rdfs:label "12oz Soda" ;
-    mes:targetRate 475 ;
-    mes:standardCost 0.2 ;
-    mes:salePrice 0.65 ;
-    mes:profitMargin "69.2%" .
+    :targetRate 475 ;
+    :standardCost 0.2 ;
+    :salePrice 0.65 ;
+    :profitMargin "69.2%" .
 
-mes:SKU-2002 a mes:Product ;
+:SKU-2002 a :Product ;
     rdfs:label "16oz Energy Drink" ;
-    mes:targetRate 450 ;
-    mes:standardCost 0.55 ;
-    mes:salePrice 1.75 ;
-    mes:profitMargin "68.6%" .
+    :targetRate 450 ;
+    :standardCost 0.55 ;
+    :salePrice 1.75 ;
+    :profitMargin "68.6%" .
 
-mes:SKU-3001 a mes:Product ;
+:SKU-3001 a :Product ;
     rdfs:label "8oz Kids Drink" ;
-    mes:targetRate 550 ;
-    mes:standardCost 0.25 ;
-    mes:salePrice 0.75 ;
-    mes:profitMargin "66.7%" .
+    :targetRate 550 ;
+    :standardCost 0.25 ;
+    :salePrice 0.75 ;
+    :profitMargin "66.7%" .
 
 
 #############################################################################
