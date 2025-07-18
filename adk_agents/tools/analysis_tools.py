@@ -1,364 +1,338 @@
-"""
-Data Analysis Tools for Google ADK - pattern detection and financial modeling.
-"""
+"""Analysis tools for pattern detection and ROI calculation."""
 import pandas as pd
 import numpy as np
-from typing import Dict, List, Optional, Any, Union
+from typing import Dict, List, Any, Optional, Tuple
 from datetime import datetime, timedelta
-from google.adk.tools import FunctionTool
-from pydantic import BaseModel, Field
+import logging
+from google.genai import types
 
-from ..config.settings import DEFAULT_OEE_BENCHMARK, DEFAULT_ANALYSIS_WINDOW_DAYS
+from ..config.settings import OEE_BENCHMARK, ANALYSIS_WINDOW_DAYS
 
+logger = logging.getLogger(__name__)
 
-class TemporalAnalysisParams(BaseModel):
-    """Parameters for temporal pattern analysis."""
-    data: List[Dict] = Field(..., description="Time series data to analyze")
-    time_column: str = Field("timestamp", description="Name of timestamp column")
-    value_columns: List[str] = Field(..., description="Columns to analyze")
-    group_by: Optional[List[str]] = Field(None, description="Columns to group by")
-    aggregation: str = Field("mean", description="Aggregation method: mean, sum, count")
-
-
-class FinancialImpactParams(BaseModel):
-    """Parameters for financial impact calculation."""
-    metric_data: List[Dict] = Field(..., description="Performance metric data")
-    benchmark: float = Field(DEFAULT_OEE_BENCHMARK, description="Performance benchmark")
-    volume_column: str = Field("units_produced", description="Production volume column")
-    margin_column: str = Field("unit_margin", description="Profit margin column")
-    time_period_days: int = Field(365, description="Time period for annualization")
-
-
-class AnomalyDetectionParams(BaseModel):
-    """Parameters for anomaly detection."""
-    data: List[Dict] = Field(..., description="Data to analyze for anomalies")
-    method: str = Field("statistical", description="Detection method: statistical, clustering")
-    sensitivity: float = Field(2.0, description="Sensitivity threshold (std deviations)")
-
-
-async def analyze_temporal_patterns(
-    params: TemporalAnalysisParams
-) -> Dict[str, Any]:
-    """
-    Analyze temporal patterns in time series data.
+def analyze_patterns(data: Dict[str, Any], analysis_type: str, tool_context: types.ToolContext) -> Dict[str, Any]:
+    """Perform pattern analysis on query results.
     
-    Identifies:
-    - Hourly/daily/weekly patterns
-    - Peak periods
-    - Trend analysis
-    - Clustering of events
-    """
-    # Extract parameters from Pydantic model
-    data = params.data
-    time_column = params.time_column
-    value_columns = params.value_columns
-    group_by = params.group_by
-    aggregation = params.aggregation
-    
-    try:
-        # Convert to DataFrame
-        df = pd.DataFrame(data)
-        
-        if df.empty:
-            return {
-                'success': False,
-                'error': 'No data provided'
-            }
-        
-        # Convert timestamp column
-        if time_column in df.columns:
-            df[time_column] = pd.to_datetime(df[time_column])
-        else:
-            return {
-                'success': False,
-                'error': f'Time column {time_column} not found'
-            }
-        
-        # Extract time components
-        df['hour'] = df[time_column].dt.hour
-        df['day_of_week'] = df[time_column].dt.dayofweek
-        df['day_name'] = df[time_column].dt.day_name()
-        df['date'] = df[time_column].dt.date
-        
-        results = {
-            'success': True,
-            'patterns': {},
-            'insights': []
-        }
-        
-        # Analyze each value column
-        if not value_columns:
-            value_columns = [col for col in df.columns 
-                           if col not in [time_column, 'hour', 'day_of_week', 'day_name', 'date']]
-        
-        for col in value_columns:
-            if col not in df.columns:
-                continue
-            
-            # Hourly patterns
-            hourly = df.groupby('hour')[col].agg(aggregation).round(2)
-            peak_hour = hourly.idxmax()
-            low_hour = hourly.idxmin()
-            
-            # Daily patterns
-            daily = df.groupby('day_name')[col].agg(aggregation).round(2)
-            
-            # Trend over time
-            daily_trend = df.groupby('date')[col].agg(aggregation)
-            
-            results['patterns'][col] = {
-                'hourly': {
-                    'values': hourly.to_dict(),
-                    'peak_hour': int(peak_hour),
-                    'low_hour': int(low_hour),
-                    'peak_value': float(hourly[peak_hour]),
-                    'low_value': float(hourly[low_hour])
-                },
-                'daily': daily.to_dict(),
-                'trend_direction': 'increasing' if daily_trend.iloc[-1] > daily_trend.iloc[0] else 'decreasing'
-            }
-            
-            # Generate insights
-            if hourly[peak_hour] > hourly.mean() * 1.5:
-                results['insights'].append(
-                    f"{col} shows significant peak at hour {peak_hour} "
-                    f"({hourly[peak_hour]:.1f} vs avg {hourly.mean():.1f})"
-                )
-        
-        # Event clustering analysis
-        if 'event' in [col.lower() for col in df.columns]:
-            results['clustering'] = _analyze_event_clustering(df, time_column)
-        
-        return results
-        
-    except Exception as e:
-        return {
-            'success': False,
-            'error': f'Temporal analysis failed: {str(e)}'
-        }
-
-
-async def calculate_financial_impact(
-    params: FinancialImpactParams
-) -> Dict[str, Any]:
-    """
-    Calculate financial impact of performance gaps.
+    Args:
+        data: Query results from SPARQL
+        analysis_type: Type of analysis to perform
+        tool_context: ADK tool context
     
     Returns:
-    - Current performance value
-    - Improvement opportunity
-    - Annual financial impact
-    - ROI scenarios
+        Analysis results with insights
     """
-    # Extract parameters from Pydantic model
-    metric_data = params.metric_data
-    benchmark = params.benchmark
-    volume_column = params.volume_column
-    margin_column = params.margin_column
-    time_period_days = params.time_period_days
+    if "error" in data:
+        return {"error": "Cannot analyze failed query results"}
     
-    try:
-        df = pd.DataFrame(metric_data)
-        
-        if df.empty:
-            return {
-                'success': False,
-                'error': 'No data provided'
-            }
-        
-        results = {
-            'success': True,
-            'current_performance': {},
-            'improvement_opportunity': {},
-            'financial_impact': {},
-            'roi_scenarios': []
-        }
-        
-        # Calculate current performance
-        if 'oee_score' in df.columns:
-            current_oee = df['oee_score'].mean()
-            oee_gap = benchmark - current_oee
-            
-            results['current_performance']['oee'] = round(current_oee, 1)
-            results['current_performance']['benchmark'] = benchmark
-            results['current_performance']['gap'] = round(oee_gap, 1)
-            
-            # Calculate volume impact
-            if volume_column in df.columns and margin_column in df.columns:
-                current_volume = df[volume_column].sum()
-                avg_margin = df[margin_column].mean()
-                
-                # Calculate potential volume increase
-                potential_increase_pct = oee_gap / 100  # OEE gap as percentage
-                volume_opportunity = current_volume * potential_increase_pct
-                
-                # Annualize based on data period
-                data_days = (df['timestamp'].max() - df['timestamp'].min()).days if 'timestamp' in df.columns else 1
-                annualization_factor = time_period_days / max(data_days, 1)
-                
-                annual_volume_opportunity = volume_opportunity * annualization_factor
-                annual_financial_impact = annual_volume_opportunity * avg_margin
-                
-                results['improvement_opportunity'] = {
-                    'volume_increase': round(annual_volume_opportunity, 0),
-                    'percentage_increase': round(potential_increase_pct * 100, 1)
-                }
-                
-                results['financial_impact'] = {
-                    'annual_value': round(annual_financial_impact, 0),
-                    'monthly_value': round(annual_financial_impact / 12, 0),
-                    'daily_value': round(annual_financial_impact / 365, 0)
-                }
-                
-                # ROI scenarios
-                for improvement_pct in [0.1, 0.25, 0.5, 0.75, 1.0]:
-                    scenario_impact = annual_financial_impact * improvement_pct
-                    results['roi_scenarios'].append({
-                        'improvement_achieved': f"{int(improvement_pct * 100)}%",
-                        'oee_improvement': round(oee_gap * improvement_pct, 1),
-                        'annual_value': round(scenario_impact, 0),
-                        'investment_payback_months': _estimate_payback_months(scenario_impact)
-                    })
-        
-        # Quality impact analysis
-        if 'scrap_units' in df.columns and 'good_units' in df.columns:
-            total_scrap = df['scrap_units'].sum()
-            total_good = df['good_units'].sum()
-            scrap_rate = total_scrap / (total_scrap + total_good)
-            
-            if margin_column in df.columns:
-                scrap_cost = total_scrap * df[margin_column].mean() * annualization_factor
-                results['financial_impact']['quality_loss'] = round(scrap_cost, 0)
-                results['current_performance']['scrap_rate'] = round(scrap_rate * 100, 2)
-        
-        return results
-        
-    except Exception as e:
-        return {
-            'success': False,
-            'error': f'Financial calculation failed: {str(e)}'
-        }
+    if "results" not in data or not data["results"].get("bindings"):
+        return {"error": "No data to analyze"}
+    
+    # Convert to DataFrame for easier analysis
+    bindings = data["results"]["bindings"]
+    df_data = []
+    
+    for binding in bindings:
+        row = {}
+        for var, value in binding.items():
+            row[var] = value.get("value", "")
+        df_data.append(row)
+    
+    df = pd.DataFrame(df_data)
+    
+    # Perform analysis based on type
+    if analysis_type == "temporal":
+        return analyze_temporal_patterns(df)
+    elif analysis_type == "capacity":
+        return analyze_capacity_patterns(df)
+    elif analysis_type == "quality":
+        return analyze_quality_patterns(df)
+    else:
+        return analyze_general_patterns(df)
 
-
-async def detect_anomalies(
-    params: AnomalyDetectionParams
-) -> Dict[str, Any]:
-    """
-    Detect anomalies in operational data.
+def analyze_temporal_patterns(df: pd.DataFrame) -> Dict[str, Any]:
+    """Analyze temporal patterns in data."""
+    insights = []
     
-    Methods:
-    - Statistical: Based on standard deviation
-    - Clustering: Based on density
-    """
-    # Extract parameters from Pydantic model
-    data = params.data
-    method = params.method
-    sensitivity = params.sensitivity
+    # Look for date/time columns
+    date_columns = [col for col in df.columns if any(term in col.lower() for term in ["date", "time", "timestamp"])]
     
-    try:
-        df = pd.DataFrame(data)
-        
-        if df.empty:
-            return {
-                'success': False,
-                'error': 'No data provided'
-            }
-        
-        results = {
-            'success': True,
-            'anomalies': [],
-            'summary': {}
-        }
-        
-        # Get numeric columns
-        numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
-        
-        if method == "statistical":
-            for col in numeric_cols:
-                if col in df.columns:
-                    mean = df[col].mean()
-                    std = df[col].std()
-                    
-                    # Find anomalies
-                    lower_bound = mean - (sensitivity * std)
-                    upper_bound = mean + (sensitivity * std)
-                    
-                    anomalies = df[(df[col] < lower_bound) | (df[col] > upper_bound)]
-                    
-                    if not anomalies.empty:
-                        results['anomalies'].extend([
-                            {
-                                'column': col,
-                                'index': idx,
-                                'value': row[col],
-                                'deviation': abs(row[col] - mean) / std,
-                                'type': 'high' if row[col] > upper_bound else 'low',
-                                'details': row.to_dict()
-                            }
-                            for idx, row in anomalies.iterrows()
-                        ])
-            
-            results['summary'] = {
-                'total_anomalies': len(results['anomalies']),
-                'method': method,
-                'sensitivity': sensitivity,
-                'columns_analyzed': numeric_cols
-            }
-        
-        # Sort anomalies by deviation
-        results['anomalies'] = sorted(
-            results['anomalies'], 
-            key=lambda x: x['deviation'], 
-            reverse=True
-        )[:20]  # Top 20 anomalies
-        
-        return results
-        
-    except Exception as e:
-        return {
-            'success': False,
-            'error': f'Anomaly detection failed: {str(e)}'
-        }
-
-
-def _analyze_event_clustering(df: pd.DataFrame, time_column: str) -> Dict[str, Any]:
-    """Analyze clustering of events in time."""
-    df_sorted = df.sort_values(time_column)
+    if date_columns:
+        for col in date_columns:
+            try:
+                df[col] = pd.to_datetime(df[col])
+                
+                # Calculate time range
+                time_range = df[col].max() - df[col].min()
+                insights.append(f"Data spans {time_range.days} days")
+                
+                # Check for gaps
+                df_sorted = df.sort_values(col)
+                time_diffs = df_sorted[col].diff()
+                avg_gap = time_diffs.mean()
+                max_gap = time_diffs.max()
+                
+                if max_gap > avg_gap * 3:
+                    insights.append(f"Significant data gap detected: {max_gap}")
+                
+            except Exception as e:
+                logger.warning(f"Failed to parse date column {col}: {e}")
     
-    # Calculate time differences
-    df_sorted['time_diff'] = df_sorted[time_column].diff()
+    # Look for numeric trends
+    numeric_columns = df.select_dtypes(include=[np.number]).columns
     
-    # Find clusters (events within 15 minutes)
-    cluster_threshold = pd.Timedelta(minutes=15)
-    df_sorted['cluster_id'] = (df_sorted['time_diff'] > cluster_threshold).cumsum()
-    
-    # Analyze clusters
-    cluster_sizes = df_sorted.groupby('cluster_id').size()
+    for col in numeric_columns:
+        if len(df) > 10:  # Need enough data for trend
+            values = df[col].dropna()
+            if len(values) > 0:
+                # Simple linear trend
+                x = np.arange(len(values))
+                slope, _ = np.polyfit(x, values, 1)
+                
+                if abs(slope) > 0.01 * values.mean():
+                    direction = "increasing" if slope > 0 else "decreasing"
+                    insights.append(f"{col} shows {direction} trend")
     
     return {
-        'total_clusters': len(cluster_sizes),
-        'avg_cluster_size': round(cluster_sizes.mean(), 1),
-        'max_cluster_size': int(cluster_sizes.max()),
-        'events_in_clusters': int(cluster_sizes[cluster_sizes > 1].sum()),
-        'clustering_rate': round(cluster_sizes[cluster_sizes > 1].sum() / len(df) * 100, 1)
+        "pattern_type": "temporal",
+        "insights": insights,
+        "data_points": len(df),
+        "columns_analyzed": list(df.columns)
     }
 
+def analyze_capacity_patterns(df: pd.DataFrame) -> Dict[str, Any]:
+    """Analyze capacity-related patterns (OEE, performance, etc.)."""
+    insights = []
+    metrics = {}
+    
+    # Look for OEE-related columns
+    oee_columns = [col for col in df.columns if any(term in col.lower() for term in ["oee", "availability", "performance", "quality"])]
+    
+    for col in oee_columns:
+        try:
+            values = pd.to_numeric(df[col], errors='coerce').dropna()
+            if len(values) > 0:
+                metrics[col] = {
+                    "mean": float(values.mean()),
+                    "min": float(values.min()),
+                    "max": float(values.max()),
+                    "std": float(values.std())
+                }
+                
+                # Compare to benchmark
+                if "oee" in col.lower():
+                    below_benchmark = (values < OEE_BENCHMARK).sum()
+                    pct_below = (below_benchmark / len(values)) * 100
+                    
+                    if pct_below > 20:
+                        insights.append(f"{pct_below:.1f}% of OEE values below {OEE_BENCHMARK}% benchmark")
+                    
+                    # Find worst performers
+                    if "line" in df.columns or "equipment" in df.columns:
+                        group_col = "line" if "line" in df.columns else "equipment"
+                        worst = df.groupby(group_col)[col].mean().sort_values().head(3)
+                        
+                        for equip, value in worst.items():
+                            insights.append(f"{equip} has low average {col}: {value:.1f}%")
+                
+        except Exception as e:
+            logger.warning(f"Failed to analyze column {col}: {e}")
+    
+    return {
+        "pattern_type": "capacity",
+        "insights": insights,
+        "metrics": metrics,
+        "benchmark_used": OEE_BENCHMARK
+    }
 
-def _estimate_payback_months(annual_value: float) -> int:
-    """Estimate investment payback period based on value."""
-    # Rough estimates based on typical improvement costs
-    if annual_value < 50000:
-        return 3  # Small improvements
-    elif annual_value < 200000:
-        return 6  # Medium improvements
-    else:
-        return 12  # Major improvements
+def analyze_quality_patterns(df: pd.DataFrame) -> Dict[str, Any]:
+    """Analyze quality-related patterns."""
+    insights = []
+    metrics = {}
+    
+    # Look for quality-related columns
+    quality_columns = [col for col in df.columns if any(term in col.lower() for term in ["quality", "defect", "reject", "scrap"])]
+    
+    for col in quality_columns:
+        try:
+            values = pd.to_numeric(df[col], errors='coerce').dropna()
+            if len(values) > 0:
+                metrics[col] = {
+                    "total": float(values.sum()),
+                    "mean": float(values.mean()),
+                    "max": float(values.max())
+                }
+                
+                # Check for high defect rates
+                if "rate" in col.lower() or "percent" in col.lower():
+                    high_defect = (values > 5).sum()  # 5% threshold
+                    if high_defect > 0:
+                        insights.append(f"{high_defect} instances of high {col} (>5%)")
+                
+        except Exception as e:
+            logger.warning(f"Failed to analyze column {col}: {e}")
+    
+    # Look for patterns by product/line
+    if "product" in df.columns:
+        for col in quality_columns:
+            try:
+                product_quality = df.groupby("product")[col].mean().sort_values(ascending=False).head(3)
+                for product, value in product_quality.items():
+                    insights.append(f"{product} has high {col}: {value:.2f}")
+            except:
+                pass
+    
+    return {
+        "pattern_type": "quality",
+        "insights": insights,
+        "metrics": metrics
+    }
 
+def analyze_general_patterns(df: pd.DataFrame) -> Dict[str, Any]:
+    """General pattern analysis for unclassified data."""
+    insights = []
+    
+    # Basic statistics
+    insights.append(f"Dataset contains {len(df)} records with {len(df.columns)} columns")
+    
+    # Check for missing data
+    missing = df.isnull().sum()
+    high_missing = missing[missing > len(df) * 0.1]
+    if len(high_missing) > 0:
+        for col, count in high_missing.items():
+            pct = (count / len(df)) * 100
+            insights.append(f"{col} has {pct:.1f}% missing values")
+    
+    # Find categorical patterns
+    for col in df.columns:
+        if df[col].dtype == 'object':
+            unique_count = df[col].nunique()
+            if unique_count < 20:  # Likely categorical
+                value_counts = df[col].value_counts().head(3)
+                for value, count in value_counts.items():
+                    pct = (count / len(df)) * 100
+                    if pct > 20:
+                        insights.append(f"{col}='{value}' appears in {pct:.1f}% of records")
+    
+    return {
+        "pattern_type": "general",
+        "insights": insights,
+        "shape": {"rows": len(df), "columns": len(df.columns)},
+        "columns": list(df.columns)
+    }
 
-# Create ADK tools
-# FunctionTool automatically extracts metadata from the function's docstring
-temporal_analysis_tool = FunctionTool(analyze_temporal_patterns)
+def calculate_roi(
+    current_performance: float,
+    target_performance: float,
+    annual_volume: float,
+    unit_value: float,
+    tool_context: types.ToolContext
+) -> Dict[str, Any]:
+    """Calculate financial impact and ROI.
+    
+    Args:
+        current_performance: Current performance percentage
+        target_performance: Target performance percentage
+        annual_volume: Annual production volume
+        unit_value: Value per unit produced
+        tool_context: ADK tool context
+    
+    Returns:
+        ROI calculation results
+    """
+    # Calculate improvement
+    improvement = target_performance - current_performance
+    
+    if improvement <= 0:
+        return {
+            "error": "Target performance must be higher than current performance",
+            "current": current_performance,
+            "target": target_performance
+        }
+    
+    # Calculate additional output
+    current_output = annual_volume * (current_performance / 100)
+    target_output = annual_volume * (target_performance / 100)
+    additional_output = target_output - current_output
+    
+    # Calculate financial impact
+    annual_benefit = additional_output * unit_value
+    
+    # Estimate implementation cost (rough estimate - 10% of annual benefit)
+    estimated_cost = annual_benefit * 0.1
+    
+    # Calculate ROI
+    roi_percent = ((annual_benefit - estimated_cost) / estimated_cost) * 100
+    payback_months = (estimated_cost / annual_benefit) * 12
+    
+    # 5-year projection
+    five_year_benefit = annual_benefit * 5
+    five_year_roi = ((five_year_benefit - estimated_cost) / estimated_cost) * 100
+    
+    return {
+        "current_performance": current_performance,
+        "target_performance": target_performance,
+        "improvement_percentage": improvement,
+        "current_annual_output": int(current_output),
+        "target_annual_output": int(target_output),
+        "additional_annual_output": int(additional_output),
+        "unit_value": unit_value,
+        "annual_benefit": round(annual_benefit, 2),
+        "estimated_implementation_cost": round(estimated_cost, 2),
+        "roi_percentage": round(roi_percent, 1),
+        "payback_months": round(payback_months, 1),
+        "five_year_benefit": round(five_year_benefit, 2),
+        "five_year_roi": round(five_year_roi, 1),
+        "assumptions": [
+            "Implementation cost estimated at 10% of annual benefit",
+            "Benefits assumed constant over 5 years",
+            "No inflation or discounting applied"
+        ]
+    }
 
-financial_modeling_tool = FunctionTool(calculate_financial_impact)
-
-anomaly_detection_tool = FunctionTool(detect_anomalies)
+def find_optimization_opportunities(df: pd.DataFrame, metric_column: str, threshold: float) -> List[Dict[str, Any]]:
+    """Find specific optimization opportunities in the data."""
+    opportunities = []
+    
+    try:
+        # Convert metric to numeric
+        df[metric_column] = pd.to_numeric(df[metric_column], errors='coerce')
+        
+        # Find underperformers
+        below_threshold = df[df[metric_column] < threshold]
+        
+        # Group by equipment/line if available
+        group_columns = [col for col in df.columns if col.lower() in ["line", "equipment", "machine", "station"]]
+        
+        if group_columns and len(below_threshold) > 0:
+            group_col = group_columns[0]
+            
+            for equipment in below_threshold[group_col].unique():
+                equip_data = below_threshold[below_threshold[group_col] == equipment]
+                
+                opportunity = {
+                    "equipment": equipment,
+                    "current_performance": float(equip_data[metric_column].mean()),
+                    "gap_to_threshold": float(threshold - equip_data[metric_column].mean()),
+                    "frequency": len(equip_data),
+                    "potential_improvement": f"{threshold - equip_data[metric_column].mean():.1f}%"
+                }
+                
+                # Add time context if available
+                date_columns = [col for col in df.columns if "date" in col.lower() or "time" in col.lower()]
+                if date_columns:
+                    try:
+                        dates = pd.to_datetime(equip_data[date_columns[0]])
+                        opportunity["last_occurrence"] = dates.max().strftime("%Y-%m-%d")
+                        opportunity["first_occurrence"] = dates.min().strftime("%Y-%m-%d")
+                    except:
+                        pass
+                
+                opportunities.append(opportunity)
+        
+        # Sort by potential impact
+        opportunities.sort(key=lambda x: x["gap_to_threshold"], reverse=True)
+        
+    except Exception as e:
+        logger.error(f"Failed to find opportunities: {e}")
+    
+    return opportunities[:10]  # Return top 10 opportunities
