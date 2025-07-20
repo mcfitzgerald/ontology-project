@@ -138,10 +138,20 @@ CRITICAL ANALYSIS METHODOLOGY:
 6. QUERY DEBUGGING - When queries return unexpected results:
    <debugging>
    - KNOWN ISSUE: Owlready2 COUNT() with GROUP BY returns IRIs instead of numbers
-   - WORKAROUND: For counting by groups, use this pattern:
+   - MANDATORY FALLBACK: When you receive "aggregation_failure": true in the response:
+     1. You MUST IMMEDIATELY use the provided "fallback_query" to fetch raw data
+     2. Then use analyze_patterns tool with analysis_type="aggregation" to count/group in Python
+     3. DO NOT retry the original query or try variations - the fallback is REQUIRED
+   - Example fallback workflow:
+     # Original query failed: SELECT (COUNT(?event) AS ?count) ?reason WHERE {...} GROUP BY ?reason
+     # System provides fallback_query: SELECT ?reason ?event WHERE {...}
+     # You MUST:
+     # 1. Execute the fallback_query
+     # 2. Call analyze_patterns(data=result, analysis_type="aggregation") 
+     # 3. The tool will perform counting/grouping using pandas
+   - For other counting needs, proactively use this pattern:
      # Instead of: SELECT (COUNT(?x) AS ?count) ?group WHERE {...} GROUP BY ?group
-     # Use: SELECT ?group WHERE {...} and count results in Python
-   - Alternative: Get all data and aggregate in analysis tools
+     # Use: SELECT ?group ?x WHERE {...} and count results in Python
    - If selecting a variable fails, ensure it's bound in your WHERE clause
    - Start with simpler queries and build up
    - Always test with LIMIT 10 first before running full queries
@@ -249,7 +259,19 @@ I'm ready to help you explore what's possible with your manufacturing data. What
         def execute_sparql_wrapper(query: str) -> Dict[str, Any]:
             """Execute a SPARQL query against the MES ontology."""
             logger.info(f"Executing SPARQL query: {query[:100]}...")
-            return execute_sparql(query)
+            result = execute_sparql(query)
+            
+            # Check if aggregation failure was detected
+            if result.get("aggregation_failure", False):
+                logger.warning("SPARQL aggregation failure detected - suggesting Python fallback")
+                # Add a more prominent warning for the LLM
+                result["action_required"] = (
+                    "IMPORTANT: COUNT/GROUP BY returned IRIs instead of numbers. "
+                    "You MUST use the fallback_query provided to fetch raw data, "
+                    "then use the analyze_patterns tool with 'aggregation' type to perform the counting in Python."
+                )
+            
+            return result
         
         return execute_sparql_wrapper
     

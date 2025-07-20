@@ -1,11 +1,12 @@
 """SPARQL execution tool with caching and pattern learning."""
 import json
 import requests
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 from datetime import datetime
 import hashlib
 from pathlib import Path
 import logging
+import re
 
 from ..config.settings import (
     SPARQL_ENDPOINT, SPARQL_TIMEOUT, SPARQL_MAX_RESULTS,
@@ -14,6 +15,69 @@ from ..config.settings import (
 from .result_cache import cache_query_result, estimate_result_tokens
 
 logger = logging.getLogger(__name__)
+
+def detect_aggregation_failure(query: str, result: Dict[str, Any]) -> bool:
+    """Detect if query failed due to COUNT/GROUP BY returning IRIs instead of numbers.
+    
+    Args:
+        query: The SPARQL query that was executed
+        result: The query result
+        
+    Returns:
+        True if aggregation failure detected, False otherwise
+    """
+    # Check if query contains COUNT with GROUP BY
+    query_upper = query.upper()
+    has_count = "COUNT(" in query_upper
+    has_group_by = "GROUP BY" in query_upper
+    
+    if not (has_count and has_group_by):
+        return False
+    
+    # Check if result has the expected structure
+    if "status" not in result or result["status"] != "success":
+        return False
+    
+    if "data" not in result or "results" not in result["data"]:
+        return False
+    
+    results = result["data"]["results"]
+    if not results:
+        return False
+    
+    # Check if any COUNT column contains an IRI instead of a number
+    for row in results:
+        for value in row:
+            # Look for values that should be numbers but are IRIs
+            if isinstance(value, str) and value.startswith("http"):
+                # This is likely a COUNT that returned an IRI
+                return True
+    
+    return False
+
+def rewrite_for_python_aggregation(query: str) -> str:
+    """Rewrite a COUNT/GROUP BY query to fetch raw data for Python aggregation.
+    
+    Args:
+        query: The original SPARQL query with COUNT/GROUP BY
+        
+    Returns:
+        Simplified query that fetches raw data
+    """
+    # Remove COUNT() and keep the variable being counted
+    # Pattern: COUNT(DISTINCT ?var) AS ?count -> ?var
+    query = re.sub(r'COUNT\s*\(\s*(?:DISTINCT\s+)?(\?[\w]+)\s*\)\s*(?:AS\s+\?[\w]+)?', r'\1', query, flags=re.IGNORECASE)
+    
+    # Remove GROUP BY clause
+    query = re.sub(r'GROUP\s+BY\s+[^)]+?(?=ORDER|LIMIT|$)', '', query, flags=re.IGNORECASE | re.MULTILINE | re.DOTALL)
+    
+    # Remove aggregation aliases in SELECT
+    query = re.sub(r'\(\s*(\?[\w]+)\s+AS\s+\?[\w]+\s*\)', r'\1', query, flags=re.IGNORECASE)
+    
+    # Clean up any duplicate spaces
+    query = re.sub(r'\s+', ' ', query)
+    
+    return query.strip()
 
 class SPARQLExecutor:
     """Handles SPARQL query execution with caching."""
@@ -152,6 +216,20 @@ def execute_sparql(query: str) -> Dict[str, Any]:
     
     # Handle all successful results by caching them
     if "status" in result and result["status"] == "success":
+        # Check for aggregation failure (COUNT/GROUP BY returning IRIs)
+        if detect_aggregation_failure(query, result):
+            logger.warning("Detected COUNT/GROUP BY aggregation failure - IRIs returned instead of numbers")
+            
+            # Rewrite query for Python aggregation
+            rewritten_query = rewrite_for_python_aggregation(query)
+            
+            result["aggregation_failure"] = True
+            result["fallback_query"] = rewritten_query
+            result["fallback_suggestion"] = (
+                "The SPARQL engine returned IRIs instead of numbers for COUNT/GROUP BY. "
+                "Use the fallback_query to fetch raw data and aggregate with Python using analyze_patterns tool."
+            )
+        
         # Estimate tokens to decide if we need to return summary
         estimated_tokens = estimate_result_tokens(result)
         

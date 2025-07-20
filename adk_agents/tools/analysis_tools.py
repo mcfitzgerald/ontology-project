@@ -22,18 +22,47 @@ def analyze_patterns(data: Dict[str, Any], analysis_type: str) -> Dict[str, Any]
     if "error" in data:
         return {"error": "Cannot analyze failed query results"}
     
-    if "results" not in data or not data["results"].get("bindings"):
+    # Check for data in various formats
+    has_data = False
+    if "results" in data and data["results"].get("bindings"):
+        has_data = True
+    elif "data" in data and "results" in data["data"]:
+        has_data = True
+    
+    if not has_data:
         return {"error": "No data to analyze"}
     
     # Convert to DataFrame for easier analysis
-    bindings = data["results"]["bindings"]
+    # Handle both formats: direct results or nested in data
+    if "results" in data and "bindings" in data["results"]:
+        bindings = data["results"]["bindings"]
+    elif "data" in data and "results" in data["data"]:
+        # Handle the wrapped format from execute_sparql
+        bindings = data["data"]["results"]
+    else:
+        bindings = []
+    
     df_data = []
     
-    for binding in bindings:
-        row = {}
-        for var, value in binding.items():
-            row[var] = value.get("value", "")
-        df_data.append(row)
+    # Handle different result formats
+    if isinstance(bindings, list) and bindings and isinstance(bindings[0], dict):
+        # Standard SPARQL bindings format
+        for binding in bindings:
+            row = {}
+            for var, value in binding.items():
+                if isinstance(value, dict) and "value" in value:
+                    row[var] = value.get("value", "")
+                else:
+                    row[var] = value
+            df_data.append(row)
+    elif isinstance(bindings, list) and bindings:
+        # Simple list format (from our API)
+        # Assume columns are provided
+        if "columns" in data.get("data", data):
+            columns = data.get("data", data)["columns"]
+            for result_row in bindings:
+                row = dict(zip(columns, result_row))
+                df_data.append(row)
     
     df = pd.DataFrame(df_data)
     
@@ -44,6 +73,8 @@ def analyze_patterns(data: Dict[str, Any], analysis_type: str) -> Dict[str, Any]
         return analyze_capacity_patterns(df)
     elif analysis_type == "quality":
         return analyze_quality_patterns(df)
+    elif analysis_type == "aggregation":
+        return analyze_aggregation_patterns(df)
     else:
         return analyze_general_patterns(df)
 
@@ -183,6 +214,71 @@ def analyze_quality_patterns(df: pd.DataFrame) -> Dict[str, Any]:
         "pattern_type": "quality",
         "insights": insights,
         "metrics": metrics
+    }
+
+def analyze_aggregation_patterns(df: pd.DataFrame) -> Dict[str, Any]:
+    """Perform aggregation analysis (COUNT, GROUP BY) using pandas.
+    
+    This is used as a fallback when SPARQL COUNT/GROUP BY returns IRIs instead of numbers.
+    """
+    insights = []
+    results = {}
+    
+    # Detect grouping columns (columns with repeated values)
+    grouping_candidates = []
+    for col in df.columns:
+        # A column is a grouping candidate if it has fewer unique values than total rows
+        # and has at least some repeated values
+        unique_ratio = df[col].nunique() / len(df)
+        if unique_ratio < 0.9:  # Column has repeated values (at least 10% repetition)
+            grouping_candidates.append(col)
+    
+    if not grouping_candidates:
+        # No obvious grouping columns, just count total rows
+        results["total_count"] = len(df)
+        insights.append(f"Total records: {len(df)}")
+    else:
+        # Perform GROUP BY counting on the most likely grouping column
+        # (the one with the fewest unique values)
+        primary_group = min(grouping_candidates, key=lambda x: df[x].nunique())
+        
+        # Count by primary grouping column
+        grouped_counts = df.groupby(primary_group).size().to_dict()
+        results["counts_by_" + primary_group] = grouped_counts
+        
+        # Sort by count descending
+        sorted_counts = sorted(grouped_counts.items(), key=lambda x: x[1], reverse=True)
+        
+        # Add insights
+        insights.append(f"Grouped by {primary_group}: {len(grouped_counts)} unique values")
+        insights.append(f"Top 3 {primary_group} by count:")
+        for value, count in sorted_counts[:3]:
+            insights.append(f"  - {value}: {count} records")
+        
+        # If there are multiple grouping candidates, do multi-level grouping
+        if len(grouping_candidates) > 1:
+            secondary_group = [g for g in grouping_candidates if g != primary_group][0]
+            multi_grouped = df.groupby([primary_group, secondary_group]).size()
+            
+            # Find interesting patterns
+            max_combo = multi_grouped.idxmax()
+            max_count = multi_grouped.max()
+            insights.append(f"Most common combination: {primary_group}={max_combo[0]}, {secondary_group}={max_combo[1]} ({max_count} records)")
+    
+    # Calculate percentages
+    total = len(df)
+    if grouping_candidates and "counts_by_" + primary_group in results:
+        percentages = {}
+        for key, count in results["counts_by_" + primary_group].items():
+            percentages[key] = round((count / total) * 100, 2)
+        results["percentages_by_" + primary_group] = percentages
+    
+    return {
+        "pattern_type": "aggregation",
+        "insights": insights,
+        "results": results,
+        "total_records": len(df),
+        "grouping_columns": grouping_candidates
     }
 
 def analyze_general_patterns(df: pd.DataFrame) -> Dict[str, Any]:
