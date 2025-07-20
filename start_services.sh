@@ -30,7 +30,8 @@ wait_for_service() {
     
     echo -n "Waiting for $service_name to be ready"
     while [ $attempt -le $max_attempts ]; do
-        if curl -s -o /dev/null -w "%{http_code}" "$url" | grep -q "200\|302"; then
+        # Use -L to follow redirects, check for 200 status code
+        if curl -sL -o /dev/null -w "%{http_code}" "$url" | grep -q "200"; then
             echo -e " ${GREEN}✓${NC}"
             return 0
         fi
@@ -106,7 +107,8 @@ fi
 
 if [ $ADK_READY -eq 0 ]; then
     echo -e "ADK Web UI: ${GREEN}✓ Running${NC}"
-    echo "  └─ URL: http://localhost:8001"
+    echo "  └─ URL: http://localhost:8001/dev-ui/"
+    echo "  └─ Note: Redirects from http://localhost:8001/"
 else
     echo -e "ADK Web UI: ${RED}✗ Failed to start${NC}"
     echo "  └─ Check adk_web.log for errors"
@@ -126,7 +128,7 @@ echo "To stop services: ./stop_services.sh"
 # Final status
 if [ $SPARQL_READY -eq 0 ] && [ $ADK_READY -eq 0 ]; then
     echo -e "\n${GREEN}✓ All services started successfully!${NC}"
-    echo -e "\n${BLUE}You can now access the ADK Web UI at: http://localhost:8001${NC}"
+    echo -e "\n${BLUE}You can now access the ADK Web UI at: http://localhost:8001/dev-ui/${NC}"
     exit 0
 else
     echo -e "\n${RED}✗ Some services failed to start${NC}"

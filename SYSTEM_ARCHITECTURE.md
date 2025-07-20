@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-The ADK Manufacturing Analytics System is a sophisticated conversational AI platform built on Google's Agent Development Kit (ADK) that bridges semantic web technologies with modern LLMs to unlock hidden value in operational data. While initially demonstrated in manufacturing analytics where it discovered $2.5M+ in optimization opportunities, the system's architecture is designed to be domain-agnostic and applicable to any industry with structured operational data.
+The Ontology-Augmented Manufacturing Analytics System is a sophisticated conversational AI platform built on Google's Agent Development Kit (ADK) that bridges MES data with modern LLMs using an ontology as a semantc layer to unlock hidden value in operational data. While initially demonstrated in manufacturing analytics where it discovered $2.5M+ in optimization opportunities, the system's architecture is designed to be domain-agnostic and applicable to any industry with structured operational data.
 
 ## Proven Business Methodology
 
@@ -89,9 +89,11 @@ Features:
 - **Result Optimization**: Automatically caches ALL results and returns summaries for large datasets
 - **Token Estimation**: Uses heuristics (1 token ≈ 4 characters) to prevent LLM token overflow
 - **Smart Truncation**: Returns summaries with cache IDs for results >10k tokens
+- **Aggregation Failure Detection**: Automatically detects when COUNT/GROUP BY queries fail due to Owlready2 limitations
+- **Fallback Query Generation**: Provides alternative queries for Python-based aggregation when SPARQL aggregation fails
 
 Key methods:
-- `execute()`: Main query execution with caching
+- `execute()`: Main query execution with caching and aggregation failure detection
 - `learn_pattern()`: Extracts patterns from successful queries
 - `get_query_hash()`: Generates cache keys
 - `get_cached_query_result()`: Retrieves full cached results by ID
@@ -139,11 +141,11 @@ Chart Types:
 
 Key features:
 - `create_visualization()`: Main chart creation function supporting cached results
-- `create_multi_chart_visualization()`: Multi-panel visualizations
 - Matplotlib-based rendering with pandas data processing
 - ADK artifact system integration (saves charts as artifacts in Web UI)
 - Base64 encoding fallback for CLI implementation
 - **Cached Result Support**: Can visualize from summaries or retrieve full data via cache_id
+- **Automatic Data Type Detection**: Intelligently selects appropriate chart type based on data characteristics
 
 ### 6. Agent Implementations
 
@@ -156,6 +158,8 @@ Key features:
 - Improved IRI handling and collaborative interaction patterns
 - **Token-Safe Queries**: Guidance for aggregation and sampling to prevent overflow
 - **Cache Integration**: Tools to retrieve full cached results when needed
+- **Proactive Query Execution**: Executes queries immediately for better UX
+- **Aggregation Failure Handling**: Automatic detection and fallback for Owlready2 limitations
 
 #### ADK Agent (`manufacturing_agent/agent.py`)
 - Implements Google ADK's LlmAgent interface
@@ -165,6 +169,8 @@ Key features:
 - Synchronized with CLI agent's enhanced methodology
 - **Large Result Handling**: Automatic detection and summary generation
 - **Cached Result Retrieval**: Function to access full data by cache ID
+- **Proactive Query Execution**: Executes queries immediately for better UX
+- **Aggregation Failure Handling**: Automatic detection and fallback for Owlready2 limitations
 
 ### 7. Configuration System (`config/settings.py`)
 
@@ -174,6 +180,9 @@ Centralized configuration management supporting:
 - Model parameters (temperature, token limits)
 - SPARQL endpoint configuration
 - Cache and rate limiting settings
+- Maximum SPARQL results configuration
+- Analysis window configuration
+- Ontology namespace settings
 
 ## Control and Information Flow
 
@@ -198,12 +207,13 @@ graph TB
     end
     
     subgraph "Tools"
-        SPARQLTOOL[SPARQL Tool<br/>Execute & Cache]
+        SPARQLTOOL[SPARQL Tool<br/>Execute & Cache<br/>Aggregation Fallback]
         RESULTCACHE[Result Cache<br/>Token Safety]
         ANALYSIS[Analysis Tools<br/>Pattern Detection]
         ROI[ROI Calculator]
         VIZ[Visualization Tool<br/>Chart Generation]
         CACHE[Query Cache]
+        CACHEMANAGER[Cache Manager<br/>Pattern Learning]
     end
     
     subgraph "External Systems"
@@ -248,6 +258,11 @@ graph TB
     SPARQLTOOL -->|Store| CACHE
     SPARQLTOOL -->|Large Results| RESULTCACHE
     RESULTCACHE -->|Summary| SPARQLTOOL
+    SPARQLTOOL -->|Learn Pattern| CACHEMANAGER
+    
+    %% Aggregation fallback
+    SPARQLTOOL -->|Aggregation Fail| SPARQLTOOL
+    Note over SPARQLTOOL: Fallback to raw data query
     
     %% Analysis flow
     SPARQLTOOL -->|Results| ANALYSIS
@@ -272,6 +287,8 @@ graph TB
     style ANALYSIS fill:#f3e5f5
     style ROI fill:#f3e5f5
     style VIZ fill:#f3e5f5
+    style CACHE fill:#f3e5f5
+    style CACHEMANAGER fill:#f3e5f5
     style GEMINI fill:#e8f5e9
     style SPARQLAPI fill:#ffebee
     style DB fill:#ffebee
@@ -346,10 +363,20 @@ The system has been enhanced with improved conversational patterns and query bui
 - Collaborative exploration of possibilities before diving into technical queries
 - Focus on understanding user goals and priorities first
 
+### Proactive Query Execution
+- Agents execute queries immediately without waiting for confirmation
+- Improves user experience by reducing back-and-forth
+- Maintains focus on delivering insights quickly
+
 ### Improved IRI Handling
 - Critical understanding that line/equipment names are IRIs, not string literals
 - Proper use of FILTER with IRIs: `FILTER (?line = mes_ontology_populated:LINE2)`
 - Alternative string matching when needed: `FILTER (STRENDS(STR(?line), "LINE2"))`
+
+### Aggregation Failure Handling
+- Automatic detection when COUNT/GROUP BY queries fail due to Owlready2 limitations
+- Provides fallback queries to retrieve raw data for Python-based aggregation
+- Ensures users always get results even with backend limitations
 
 ### Visualization Integration
 - Agents now offer to create visualizations when patterns or trends are discovered
@@ -441,10 +468,15 @@ MODEL_TEMPERATURE=0.1
 # SPARQL Configuration  
 SPARQL_ENDPOINT=http://localhost:8000/sparql/query
 SPARQL_TIMEOUT=30
+SPARQL_MAX_RESULTS=10000
 
 # Cache Configuration
 CACHE_ENABLED=true
 CACHE_TTL=3600
+
+# Analysis Configuration
+ANALYSIS_WINDOW_DAYS=30
+ONTOLOGY_NAMESPACE=mes_ontology_populated
 ```
 
 ### Starting the System
