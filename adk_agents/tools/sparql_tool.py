@@ -6,12 +6,12 @@ from datetime import datetime
 import hashlib
 from pathlib import Path
 import logging
-from google.genai import types
 
 from ..config.settings import (
     SPARQL_ENDPOINT, SPARQL_TIMEOUT, SPARQL_MAX_RESULTS,
     CACHE_DIR, CACHE_ENABLED, get_sparql_config
 )
+from .result_cache import cache_query_result, estimate_result_tokens
 
 logger = logging.getLogger(__name__)
 
@@ -75,8 +75,12 @@ class SPARQLExecutor:
         try:
             response = requests.post(
                 self.config["endpoint"],
-                data={"query": query},
-                headers={"Content-Type": "application/x-www-form-urlencoded"},
+                json={
+                    "query": query,
+                    "use_names": True,
+                    "timeout": self.config["timeout"]
+                },
+                headers={"Content-Type": "application/json"},
                 timeout=self.config["timeout"]
             )
             
@@ -133,12 +137,11 @@ class SPARQLExecutor:
 # Create singleton instance
 executor = SPARQLExecutor()
 
-def execute_sparql(query: str, tool_context: types.ToolContext) -> Dict[str, Any]:
+def execute_sparql(query: str) -> Dict[str, Any]:
     """Execute SPARQL query with caching and learning.
     
     Args:
         query: SPARQL query to execute
-        tool_context: ADK tool context
     
     Returns:
         Query results or error information
@@ -147,24 +150,51 @@ def execute_sparql(query: str, tool_context: types.ToolContext) -> Dict[str, Any
     
     result = executor.execute(query)
     
-    # Handle large results
-    if "results" in result and len(str(result)) > 50000:
-        # Create artifact for large results
-        bindings = result["results"]["bindings"]
-        summary = {
-            "status": "success",
-            "result_count": len(bindings),
-            "variables": result["head"]["vars"],
-            "sample_results": bindings[:10],
-            "note": "Full results saved as artifact due to size"
-        }
+    # Handle all successful results by caching them
+    if "status" in result and result["status"] == "success":
+        # Estimate tokens to decide if we need to return summary
+        estimated_tokens = estimate_result_tokens(result)
         
-        # In real implementation, would create artifact here
-        # For now, just return summary
-        return summary
+        # Always cache the result
+        cache_id, summary = cache_query_result(query, result)
+        
+        # If result is large (>10k tokens), return summary instead of full result
+        if estimated_tokens > 10000:
+            logger.info(f"Large result ({estimated_tokens} tokens) cached as {cache_id}")
+            return {
+                "status": "success",
+                "summary": summary,
+                "warning": f"Result contains ~{estimated_tokens} tokens. Returning summary to prevent token overflow.",
+                "cache_id": cache_id,
+                "full_result_available": True
+            }
+        else:
+            # For smaller results, still cache but return full data
+            result["cache_id"] = cache_id
+            return result
     
     return result
 
 def get_successful_patterns() -> list:
     """Get list of successful query patterns for learning."""
     return executor.successful_patterns
+
+def get_cached_query_result(cache_id: str) -> Dict[str, Any]:
+    """Retrieve full cached query result by ID.
+    
+    Args:
+        cache_id: The cache ID returned from a previous query
+        
+    Returns:
+        Full query result or error if not found
+    """
+    from .result_cache import get_cached_result
+    
+    result = get_cached_result(cache_id)
+    if result:
+        return result
+    else:
+        return {
+            "status": "error",
+            "error": f"No cached result found for ID: {cache_id}"
+        }

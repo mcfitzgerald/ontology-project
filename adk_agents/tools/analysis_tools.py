@@ -4,19 +4,17 @@ import numpy as np
 from typing import Dict, List, Any, Optional, Tuple
 from datetime import datetime, timedelta
 import logging
-from google.genai import types
 
 from ..config.settings import OEE_BENCHMARK, ANALYSIS_WINDOW_DAYS
 
 logger = logging.getLogger(__name__)
 
-def analyze_patterns(data: Dict[str, Any], analysis_type: str, tool_context: types.ToolContext) -> Dict[str, Any]:
+def analyze_patterns(data: Dict[str, Any], analysis_type: str) -> Dict[str, Any]:
     """Perform pattern analysis on query results.
     
     Args:
         data: Query results from SPARQL
         analysis_type: Type of analysis to perform
-        tool_context: ADK tool context
     
     Returns:
         Analysis results with insights
@@ -224,8 +222,7 @@ def calculate_roi(
     current_performance: float,
     target_performance: float,
     annual_volume: float,
-    unit_value: float,
-    tool_context: types.ToolContext
+    unit_value: float
 ) -> Dict[str, Any]:
     """Calculate financial impact and ROI.
     
@@ -234,7 +231,6 @@ def calculate_roi(
         target_performance: Target performance percentage
         annual_volume: Annual production volume
         unit_value: Value per unit produced
-        tool_context: ADK tool context
     
     Returns:
         ROI calculation results

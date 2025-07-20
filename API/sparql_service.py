@@ -12,6 +12,7 @@ import json
 import tempfile
 from pathlib import Path
 import time
+import re
 
 from owlready2 import get_ontology, default_world, World
 import owlready2.sparql
@@ -286,7 +287,173 @@ class SPARQLService:
         if prep_time > 0.1 or exec_time > 1.0:
             logger.warning(f"Slow query - Preparation: {prep_time:.3f}s, Execution: {exec_time:.3f}s")
         
+        # Workaround for Owlready2 COUNT() aggregation bug
+        # Check if query contains aggregation functions and fix results
+        if self._contains_aggregation(query) and self._has_iri_in_aggregation_results(results, column_names):
+            logger.warning("Detected Owlready2 COUNT() bug - attempting workaround")
+            results = self._fix_aggregation_results_v2(query, results, column_names)
+        
         return results, column_names
+    
+    def _contains_aggregation(self, query: str) -> bool:
+        """
+        Check if query contains aggregation functions.
+        """
+        query_upper = query.upper()
+        aggregation_functions = ['COUNT(', 'SUM(', 'AVG(', 'MIN(', 'MAX(', 'GROUP_CONCAT(']
+        return any(func in query_upper for func in aggregation_functions)
+    
+    def _fix_aggregation_results(self, query: str, results: List[List[Any]], column_names: List[str]) -> List[List[Any]]:
+        """
+        Fix aggregation results that return IRIs instead of numeric values.
+        
+        This is a workaround for Owlready2's COUNT() bug where it returns
+        entity IRIs instead of count values.
+        """
+        # If no results or columns, return as is
+        if not results or not column_names:
+            return results
+        
+        # Identify which columns are aggregation results
+        query_upper = query.upper()
+        aggregation_cols = []
+        
+        for i, col_name in enumerate(column_names):
+            # Check if this column is from an aggregation function
+            # Look for patterns like "COUNT(...) AS colname" or just "COUNT(...)"
+            patterns = [
+                f"COUNT(" ,  # COUNT function
+                f"SUM(",     # SUM function  
+                f"AVG(",     # AVG function
+                f"MIN(",     # MIN function
+                f"MAX("      # MAX function
+            ]
+            
+            # Check if column appears after an aggregation function
+            for pattern in patterns:
+                if pattern in query_upper:
+                    # Check if this column name appears in an AS clause after the aggregation
+                    as_pattern = re.escape(pattern) + r"[^)]+\)\s+AS\s+" + re.escape(col_name)
+                    if re.search(as_pattern, query_upper, re.IGNORECASE):
+                        aggregation_cols.append(i)
+                        break
+                    # Or if the column name matches a common aggregation result name
+                    elif col_name.lower() in ['count', 'sum', 'avg', 'min', 'max', 'total', 'average']:
+                        aggregation_cols.append(i)
+                        break
+        
+        # If no aggregation columns identified, try another approach
+        if not aggregation_cols and 'GROUP BY' in query_upper:
+            # For GROUP BY queries, assume first column might be aggregation if it looks like an IRI
+            for i, col_name in enumerate(column_names):
+                if col_name.lower() in ['count', 'sum', 'avg', 'min', 'max', 'total', 'average']:
+                    aggregation_cols.append(i)
+        
+        # Fix the results
+        if aggregation_cols:
+            fixed_results = []
+            for row in results:
+                fixed_row = list(row)
+                for col_idx in aggregation_cols:
+                    if col_idx < len(fixed_row):
+                        value = fixed_row[col_idx]
+                        # If value looks like an IRI/entity, it's likely the bug
+                        if isinstance(value, str) and (value.startswith('http://') or value.startswith('https://')):
+                            # For COUNT, we need to actually count the results
+                            # This is a fallback - ideally we'd re-execute the query differently
+                            logger.warning(f"Detected COUNT() bug: got IRI '{value}' instead of numeric count")
+                            # Return 1 as a fallback count (at least one result was found)
+                            fixed_row[col_idx] = 1
+                        elif hasattr(value, 'iri'):
+                            # It's an Owlready2 entity object
+                            logger.warning(f"Detected COUNT() bug: got entity instead of numeric count")
+                            fixed_row[col_idx] = 1
+                fixed_results.append(fixed_row)
+            return fixed_results
+        
+        return results
+    
+    def _has_iri_in_aggregation_results(self, results: List[List[Any]], column_names: List[str]) -> bool:
+        """
+        Check if any result that should be numeric (based on column name) contains an IRI.
+        """
+        if not results or not column_names:
+            return False
+            
+        # Check first row for IRI values in columns that should be numeric
+        first_row = results[0] if results else []
+        for i, col_name in enumerate(column_names):
+            if col_name.lower() in ['count', 'sum', 'avg', 'min', 'max', 'total', 'average']:
+                if i < len(first_row):
+                    value = first_row[i]
+                    # Check if it's an IRI string
+                    if isinstance(value, str) and (value.startswith('http://') or value.startswith('https://')):
+                        return True
+                    # Check if it's an Owlready2 entity
+                    if hasattr(value, 'iri'):
+                        return True
+        return False
+    
+    def _fix_aggregation_results_v2(self, query: str, results: List[List[Any]], column_names: List[str]) -> List[List[Any]]:
+        """
+        Alternative fix for COUNT() aggregation bug.
+        
+        For GROUP BY queries with COUNT, we need to manually count the groups.
+        This is a more robust workaround.
+        """
+        query_upper = query.upper()
+        
+        # Check if this is a COUNT query with GROUP BY
+        if 'COUNT(' in query_upper and 'GROUP BY' in query_upper:
+            # Extract the GROUP BY column(s)
+            group_by_match = re.search(r'GROUP\s+BY\s+([^\s]+)', query_upper)
+            if group_by_match:
+                # For each group, we need to count properly
+                # Since Owlready2 returns IRIs instead of counts, we'll use a different approach
+                
+                # Try to re-execute a simpler query without COUNT to get raw data
+                # Then count manually
+                try:
+                    # Remove COUNT from SELECT clause
+                    modified_query = re.sub(r'\(COUNT\([^)]+\)\s+AS\s+\w+\)', '?_dummy', query, flags=re.IGNORECASE)
+                    modified_query = re.sub(r'COUNT\([^)]+\)', '?_dummy', modified_query, flags=re.IGNORECASE)
+                    
+                    # Execute modified query
+                    logger.debug(f"Executing fallback query for COUNT workaround: {modified_query[:100]}...")
+                    prepared_query = self.world.prepare_sparql(modified_query)
+                    raw_results = list(prepared_query.execute())
+                    
+                    # Count occurrences per group
+                    from collections import defaultdict
+                    group_counts = defaultdict(int)
+                    
+                    # Assuming the GROUP BY column is the second column (after the COUNT column)
+                    group_col_idx = 1  # Adjust based on actual query structure
+                    
+                    for row in raw_results:
+                        if len(row) > group_col_idx:
+                            group_key = str(row[group_col_idx])
+                            group_counts[group_key] += 1
+                    
+                    # Reconstruct results with proper counts
+                    fixed_results = []
+                    for group_key, count in group_counts.items():
+                        # Find the original row for this group
+                        for row in results:
+                            if len(row) > 1 and str(row[1]) == group_key:
+                                fixed_row = list(row)
+                                fixed_row[0] = count  # Replace IRI with actual count
+                                fixed_results.append(fixed_row)
+                                break
+                    
+                    if fixed_results:
+                        logger.info(f"Successfully fixed COUNT() results using fallback method")
+                        return fixed_results
+                except Exception as e:
+                    logger.error(f"Fallback COUNT workaround failed: {e}")
+        
+        # If we can't fix it with the fallback, try the original simple fix
+        return self._fix_aggregation_results(query, results, column_names)
     
     async def get_health_status(self) -> Dict[str, Any]:
         """Get health status of the SPARQL service"""

@@ -5,7 +5,8 @@ from typing import Optional, Dict, Any
 from dotenv import load_dotenv
 
 # Load environment variables
-load_dotenv()
+env_path = Path(__file__).parent / '.env'
+load_dotenv(env_path)
 
 # Base directories
 PROJECT_ROOT = Path(__file__).parent.parent

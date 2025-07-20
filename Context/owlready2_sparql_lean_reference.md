@@ -30,6 +30,27 @@ mes_ontology_populated:hasOEEScore  # Correct for mes_ontology_populated.owl
 
 ## Essential Query Patterns
 
+### 0. Discovery Pattern (ALWAYS START HERE!)
+```sparql
+# First discover what lines exist
+SELECT DISTINCT ?line WHERE { 
+    ?equipment mes_ontology_populated:belongsToLine ?line 
+}
+
+# First discover what equipment exists
+SELECT DISTINCT ?equipment WHERE {
+    { ?equipment a mes_ontology_populated:Filler } UNION
+    { ?equipment a mes_ontology_populated:Packer } UNION
+    { ?equipment a mes_ontology_populated:Palletizer }
+}
+
+# First discover what types exist
+SELECT DISTINCT ?type WHERE { 
+    ?entity a ?type .
+    FILTER(ISIRI(?type))
+}
+```
+
 ### 1. Query Equipment (Concrete Types)
 ```sparql
 # Equipment is abstract - query its concrete subclasses
@@ -159,6 +180,34 @@ SELECT ?filler ?packer ?palletizer WHERE {
 LIMIT 20
 ```
 
+### 13. IRI Filtering Patterns (CRITICAL!)
+```sparql
+# WRONG - Treating IRI as string
+FILTER (?line = "LINE2")  # This will NEVER match!
+
+# CORRECT - Using full IRI
+FILTER (?line = mes_ontology_populated:LINE2)
+
+# CORRECT - String matching on IRI ending
+FILTER (STRENDS(STR(?line), "LINE2"))
+
+# Example: Get OEE for specific line
+# Step 1: Discover lines
+SELECT DISTINCT ?line WHERE { 
+    ?equipment mes_ontology_populated:belongsToLine ?line 
+}
+
+# Step 2: Use discovered IRI in filter
+SELECT ?equipment (AVG(?oee) AS ?avgOEE) WHERE {
+    ?equipment mes_ontology_populated:belongsToLine ?line .
+    ?equipment mes_ontology_populated:logsEvent ?event .
+    ?event mes_ontology_populated:hasOEEScore ?oee .
+    FILTER (?line = mes_ontology_populated:LINE2)  # Use actual IRI!
+    FILTER(ISIRI(?equipment))
+}
+GROUP BY ?equipment
+```
+
 ## Troubleshooting
 
 ### Empty Results
@@ -172,6 +221,55 @@ LIMIT 20
 2. Replace <URI> with prefixed names
 3. Remove regex(), str(), or BIND() functions
 4. Simplify complex expressions
+
+### Common Query Debugging Patterns
+
+#### Problem: COUNT returns IRI instead of number
+```sparql
+# WRONG - May return IRI in some contexts
+SELECT (COUNT(?event) AS ?count) WHERE { ... }
+
+# CORRECT - Ensure proper aggregation
+SELECT (COUNT(DISTINCT ?event) AS ?count) WHERE { ... }
+```
+
+#### Problem: Variable not found error
+```sparql
+# WRONG - ?timestamp not bound in WHERE clause
+SELECT ?timestamp WHERE {
+    ?equipment mes_ontology_populated:logsEvent ?event .
+}
+
+# CORRECT - Bind the variable in WHERE clause
+SELECT ?timestamp WHERE {
+    ?equipment mes_ontology_populated:logsEvent ?event .
+    ?event mes_ontology_populated:hasTimestamp ?timestamp .
+}
+```
+
+#### Problem: Complex queries failing
+```sparql
+# Start simple and test incrementally
+# Step 1: Test basic pattern
+SELECT * WHERE {
+    ?equipment a mes_ontology_populated:Filler .
+} LIMIT 10
+
+# Step 2: Add relationships
+SELECT * WHERE {
+    ?equipment a mes_ontology_populated:Filler .
+    ?equipment mes_ontology_populated:belongsToLine ?line .
+} LIMIT 10
+
+# Step 3: Add filters and aggregations only after basic pattern works
+```
+
+#### Debugging Strategy
+1. Always test with LIMIT 10 first
+2. Use SELECT * to see all variables before narrowing
+3. Build queries incrementally
+4. Check each variable is properly bound
+5. Verify IRIs match exactly (case-sensitive)
 
 ## Key Points
 

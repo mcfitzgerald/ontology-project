@@ -12,30 +12,31 @@ class ContextLoader:
     """Loads and formats context for the Manufacturing Analyst Agent."""
     
     def __init__(self):
-        self.ontology_path = PROJECT_ROOT.parent / "Ontology" / "mes_ontology_populated.owl"
         self.context_dir = PROJECT_ROOT.parent / "Context"
+        self.mindmap_path = self.context_dir / "mes_ontology_mindmap.ttl"
+        self.sparql_ref_path = self.context_dir / "owlready2_sparql_lean_reference.md"
+        self.data_catalogue_path = self.context_dir / "mes_data_catalogue.json"
         self.cache_dir = PROJECT_ROOT / "cache"
         
-    def load_ontology_context(self, char_limit: int = 5000) -> str:
-        """Load first N characters of ontology for context."""
+    def load_ontology_context(self) -> str:
+        """Load complete ontology mindmap for context."""
         try:
-            if self.ontology_path.exists():
-                with open(self.ontology_path, 'r', encoding='utf-8') as f:
-                    content = f.read(char_limit)
-                return f"### Ontology (first {char_limit} chars):\n{content}\n"
+            if self.mindmap_path.exists():
+                with open(self.mindmap_path, 'r', encoding='utf-8') as f:
+                    content = f.read()  # Read entire file
+                return f"### Ontology Structure:\n{content}\n"
             else:
-                logger.warning(f"Ontology file not found at {self.ontology_path}")
-                return "### Ontology: Not found\n"
+                logger.warning(f"Ontology mindmap not found at {self.mindmap_path}")
+                return "### Ontology Structure: Not found\n"
         except Exception as e:
-            logger.error(f"Failed to load ontology: {e}")
-            return f"### Ontology: Error loading - {e}\n"
+            logger.error(f"Failed to load ontology mindmap: {e}")
+            return f"### Ontology Structure: Error loading - {e}\n"
     
     def load_sparql_reference(self) -> str:
         """Load SPARQL reference guide for Owlready2."""
-        ref_path = self.context_dir / "owlready2_sparql_lean_reference.md"
         try:
-            if ref_path.exists():
-                with open(ref_path, 'r', encoding='utf-8') as f:
+            if self.sparql_ref_path.exists():
+                with open(self.sparql_ref_path, 'r', encoding='utf-8') as f:
                     content = f.read()
                 return f"### SPARQL Reference:\n{content}\n"
             else:
@@ -107,6 +108,26 @@ CRITICAL RULES for Owlready2 SPARQL:
     FILTER(ISIRI(?equipment))
     FILTER(ISIRI(?event))
 } GROUP BY ?product"""
+                },
+                {
+                    "purpose": "Get downtime events with reasons (avoid COUNT with GROUP BY)",
+                    "query": """SELECT ?equipment ?reason WHERE {
+    ?equipment mes_ontology_populated:logsEvent ?event .
+    ?event a mes_ontology_populated:DowntimeLog .
+    ?event mes_ontology_populated:hasDowntimeReasonCode ?reason .
+    FILTER(ISIRI(?equipment))
+    FILTER(ISIRI(?event))
+}"""
+                },
+                {
+                    "purpose": "Average OEE by equipment (aggregation without COUNT)",
+                    "query": """SELECT ?equipment (AVG(?oee) AS ?avg_oee) WHERE {
+    ?equipment mes_ontology_populated:logsEvent ?event .
+    ?event mes_ontology_populated:hasOEEScore ?oee .
+    FILTER(ISIRI(?equipment))
+}
+GROUP BY ?equipment
+ORDER BY ?avg_oee"""
                 }
             ]
         
@@ -119,38 +140,53 @@ CRITICAL RULES for Owlready2 SPARQL:
     
     def load_data_catalogue(self) -> str:
         """Load MES data catalogue information."""
-        catalogue_path = self.context_dir / "mes_data_catalogue.json"
         try:
-            if catalogue_path.exists():
-                with open(catalogue_path, 'r') as f:
+            if self.data_catalogue_path.exists():
+                with open(self.data_catalogue_path, 'r') as f:
                     catalogue = json.load(f)
                 
                 info = "### Data Catalogue:\n"
                 
-                # Equipment summary
-                if "equipment_catalog" in catalogue:
-                    equipment = catalogue["equipment_catalog"]
-                    info += f"- Equipment: {len(equipment)} items\n"
-                    # Group by type
-                    by_type = {}
-                    for eq in equipment:
-                        eq_type = eq.get("type", "Unknown")
-                        if eq_type not in by_type:
-                            by_type[eq_type] = []
-                        by_type[eq_type].append(eq.get("id", ""))
-                    
-                    for eq_type, ids in by_type.items():
-                        info += f"  - {eq_type}: {', '.join(ids)}\n"
+                # Metadata summary
+                if "metadata" in catalogue:
+                    meta = catalogue["metadata"]
+                    info += f"- Data range: {meta['data_range']['start']} to {meta['data_range']['end']} ({meta['data_range']['days_covered']} days)\n"
+                    info += f"- Total records: {meta['total_records']:,}\n"
+                    info += f"- Update frequency: {meta['update_frequency']}\n\n"
                 
-                # Schema summary
-                if "data_schema" in catalogue:
-                    schema = catalogue["data_schema"]
-                    info += f"\n- Data Schema: {len(schema)} columns\n"
-                    # Key columns
-                    key_cols = ["timestamp", "equipment_id", "oee_score", "good_units", "scrap_units"]
-                    for col_info in schema:
-                        if col_info.get("column") in key_cols:
-                            info += f"  - {col_info['column']}: {col_info.get('description', '')}\n"
+                # Equipment summary
+                if "equipment" in catalogue:
+                    equipment = catalogue["equipment"]
+                    info += f"- Equipment: {equipment['count']} units\n"
+                    # Group by type
+                    for eq_type, items in equipment.get("by_type", {}).items():
+                        ids = [item["id"] for item in items]
+                        info += f"  - {eq_type}: {', '.join(ids)}\n"
+                    info += "\n"
+                
+                # Products summary
+                if "products" in catalogue:
+                    products = catalogue["products"]
+                    info += f"- Products: {products['count']} SKUs\n"
+                    for prod in products.get("catalog", [])[:5]:  # First 5 products
+                        info += f"  - {prod['id']}: {prod['name']} (margin: {prod['margin_percent']}%)\n"
+                    info += "\n"
+                
+                # Metrics summary
+                if "metrics" in catalogue:
+                    info += "- Key Metrics:\n"
+                    for metric, values in catalogue["metrics"].items():
+                        info += f"  - {metric}: mean={values['mean']}, typical={values['typical_range']}, benchmark={values['world_class']}\n"
+                    info += "\n"
+                
+                # Downtime summary
+                if "downtime_reasons" in catalogue:
+                    downtime = catalogue["downtime_reasons"]
+                    info += f"- Total downtime: {downtime['total_downtime_hours']} hours\n"
+                    if downtime.get("unplanned"):
+                        info += "  - Top unplanned reasons:\n"
+                        for reason in downtime["unplanned"][:3]:
+                            info += f"    - {reason['code']}: {reason['total_hours']} hours\n"
                 
                 return info
             else:
@@ -170,7 +206,7 @@ CRITICAL RULES for Owlready2 SPARQL:
             "3. Identify patterns and optimization opportunities",
             "4. Calculate financial impact and ROI\n",
             "\n### Domain Knowledge:",
-            "- OEE = Availability × Performance × Quality",
+            "- OEE = Availability ï¿½ Performance ï¿½ Quality",
             "- Standard OEE benchmark: 85%",
             "- Equipment types: Filler, Packer, Palletizer",
             "- Key metrics: OEE, production volume, quality rate, downtime\n",
@@ -193,8 +229,8 @@ CRITICAL RULES for Owlready2 SPARQL:
             "6. Provide actionable insights\n"
         ]
         
-        # Add ontology snippet at the end
-        context_parts.append("\n" + self.load_ontology_context(3000))
+        # Add ontology structure
+        context_parts.append("\n" + self.load_ontology_context())
         
         return "\n".join(context_parts)
     

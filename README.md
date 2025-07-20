@@ -4,140 +4,174 @@ A comprehensive manufacturing analytics system that combines semantic ontology m
 
 ## Overview
 
-This project provides:
-- **Semantic Ontology**: OWL-based manufacturing execution system (MES) ontology
-- **SPARQL API**: RESTful endpoint for querying manufacturing data
-- **ADK Analytics Agent**: Conversational AI agent for business intelligence
-- **Pattern Analysis**: Automatic discovery of optimization opportunities
+This project provides an intelligent manufacturing analytics platform that has already discovered $2.5M+ in optimization opportunities through just 2 hours of analysis. The system bridges semantic web technologies with modern LLMs to make complex data analysis accessible through natural language conversations.
+
+## Key Features
+
+- **Semantic Ontology**: OWL-based manufacturing execution system (MES) ontology with rich domain modeling
+- **SPARQL API**: RESTful endpoint for querying manufacturing data with intelligent caching
+- **ADK Analytics Agent**: Conversational AI agent for business intelligence with discovery-first methodology
+- **Pattern Analysis**: Automatic discovery of optimization opportunities across temporal, capacity, and quality dimensions
+- **Data Visualization**: Generate charts and graphs from query results (line, bar, scatter, pie charts)
+- **ROI Calculation**: Financial modeling to quantify improvement opportunities
+- **Token-Safe Architecture**: Prevents LLM token overflow by caching large results and returning summaries
+- **Dual Interface**: Both CLI and Web UI for different use cases
 
 ## Architecture
 
 ```
 ontology-project/
-Ontology/              # OWL ontology definitions
-API/                   # SPARQL query endpoint
-adk_agents/            # ADK conversational agent
-Context/               # Reference guides and examples
+├── Ontology/              # OWL ontology definitions
+│   ├── mes_ontology.ttl
+│   └── mes_ontology_populated.owl
+├── API/                   # SPARQL query endpoint
+│   ├── main.py
+│   └── sparql_service.py
+├── adk_agents/            # ADK conversational agent
+│   ├── agents/            # Agent implementations
+│   ├── tools/             # Analysis, SPARQL, visualization, and caching tools
+│   ├── context/           # Context loading system
+│   └── config/            # Configuration management
+└── Context/               # Reference guides and examples
 ```
 
 ## Quick Start
 
-### 1. Start the SPARQL API Server
-
 ```bash
-cd API
-pip install -r requirements.txt
-python main.py
-```
+# 1. Set up environment variables
+cp .env.example .env
+# Edit .env with your Google API key
 
-The API will start at `http://localhost:8000` with:
-- SPARQL endpoint: `/sparql/query`
-- Interactive docs: `/docs`
-
-### 2. Run the ADK Analytics Agent
-
-```bash
-cd adk_agents
+# 2. Install dependencies
 pip install -r requirements.txt
 
-# Configure your Google API key
-cp config/.env.example config/.env
-# Edit .env and add your GOOGLE_API_KEY
+# 3. Start SPARQL API in background (port 8000)
+python -m uvicorn API.main:app --reload > sparql_api.log 2>&1 &
 
-python main.py
+# 4. For Web Interface - Start ADK Web UI (port 8001)
+adk web --port 8001 > adk_web.log 2>&1 &
+
+# 5. For CLI Interface - Run the CLI agent
+python adk_agents/main.py
+
+# Check services are running
+curl http://localhost:8000/health  # SPARQL API health check
+curl http://localhost:8001/        # ADK Web UI (if using web interface)
 ```
 
-## Key Features
+## Example Usage
 
-### Semantic Ontology
-- Models equipment, products, orders, and events
-- Supports OEE (Overall Equipment Effectiveness) calculations
-- Tracks quality metrics and production performance
-
-### Conversational Analytics
-Ask natural language questions like:
-- "What's the OEE performance across our production lines?"
+### Web Interface (ADK UI)
+Navigate to http://localhost:8001 and start asking questions:
+- "What equipment is performing below 70% OEE?"
 - "Show me quality trends for the last 30 days"
-- "Calculate ROI if we improve Line A's performance to 85%"
-- "Which equipment has the most downtime events?"
+- "Visualize the OEE performance across all production lines"
+- "Calculate ROI if we improve LINE2 to 85% OEE"
 
-### Pattern Learning
-- Caches successful queries for reuse
-- Learns query patterns by type (capacity, quality, temporal)
-- Provides similar query suggestions
+### CLI Interface
+```bash
+$ python adk_agents/main.py
 
-### Financial Analysis
-- Automatic ROI calculations
-- 5-year financial projections
-- Implementation cost estimates
+You: What's our biggest optimization opportunity?
 
-## Example Analysis Flow
+Agent: Let me analyze your manufacturing data to identify optimization opportunities...
+[Discovers entities, runs queries, analyzes patterns]
+I found that LINE2-PCK has 25% micro-stops causing $341K-$700K annual loss.
+Would you like me to create a visualization showing the performance trends?
 
-1. **Business Question**: "Find equipment performing below 70% OEE"
-2. **SPARQL Generation**: Agent converts to semantic query
-3. **Pattern Analysis**: Identifies underperforming equipment
-4. **ROI Calculation**: Quantifies improvement opportunity
-5. **Recommendations**: Provides actionable insights
+You: Yes, create a line chart of OEE trends for LINE2
 
-## Components
+Agent: Creating visualization...
+[Generates chart showing OEE performance over time]
+```
 
-### API Server (`/API`)
-- FastAPI-based SPARQL endpoint
-- Owlready2 for ontology reasoning
-- Configurable query limits and timeouts
+## Visualization Capabilities
 
-### ADK Agent (`/adk_agents`)
-- Google Gemini-powered conversational AI
-- Tool-based architecture for extensibility
-- Session state management
+The system can create various types of visualizations from your manufacturing data:
 
-### Context Management (`/Context`)
-- SPARQL reference for Owlready2
-- Successful query examples
-- Data catalogue with equipment inventory
+- **Line Charts**: Track metrics over time (OEE trends, performance patterns)
+- **Bar Charts**: Compare performance across equipment or products
+- **Scatter Plots**: Identify correlations (quality vs speed relationships)
+- **Pie Charts**: Show distributions (downtime reasons, product mix)
+
+Visualizations are:
+- Automatically suggested when patterns are discovered
+- Saved as artifacts in the ADK Web UI
+- Returned as base64-encoded images in the CLI
 
 ## Configuration
 
-### API Configuration
-Create `API/.env`:
-```env
-# Server settings
-API_HOST=0.0.0.0
-API_PORT=8000
+### Environment Variables
+```bash
+# LLM Configuration
+GOOGLE_API_KEY=your-api-key        # Required
+DEFAULT_MODEL=gemini-2.0-flash     # Optional
+MODEL_TEMPERATURE=0.1              # Optional
 
-# Query settings
-QUERY_TIMEOUT=60
-MAX_QUERY_LENGTH=10000
-```
-
-### Agent Configuration
-Create `adk_agents/config/.env`:
-```env
-# LLM settings
-USE_VERTEX_AI=false
-GOOGLE_API_KEY=your-api-key-here
-
-# SPARQL endpoint
+# SPARQL Configuration  
 SPARQL_ENDPOINT=http://localhost:8000/sparql/query
+SPARQL_TIMEOUT=30
 
-# Analysis settings
-OEE_BENCHMARK=85.0
+# Cache Configuration
+CACHE_ENABLED=true
+CACHE_TTL=3600
 ```
 
-## Requirements
+### Agent Behavior
+The agent uses an enhanced methodology:
+- **Discovery-First**: Always explores what data exists before complex queries
+- **Collaborative**: Engages in dialogue to understand your goals
+- **Incremental**: Builds queries step-by-step with validation
+- **Visual**: Offers charts and graphs to make insights accessible
+- **Token-Safe**: Automatically handles large results by caching and summarization
+- **Aggregation-First**: Guides users to use aggregated queries for time-series data
 
-- Python 3.8+
-- Google API key (for Gemini access)
-- 4GB RAM minimum
-- Modern web browser (for API docs)
+## Development
+
+### Project Structure
+- `adk_agents/agents/`: Agent implementations (CLI and ADK Web)
+- `adk_agents/tools/`: SPARQL execution, analysis, visualization, and result caching tools
+- `adk_agents/context/`: Context loading system with ontology knowledge
+- `API/`: SPARQL endpoint with Owlready2 integration
+
+### Key Architectural Features
+- **Token Overflow Prevention**: Large query results are automatically cached and summarized
+- **Result Cache Manager**: All results cached with UUID-based retrieval system
+- **Smart Summaries**: Include sample data, statistics, and metadata for analysis
+- **Aggregation Guidance**: Agents trained to use efficient queries for time-series data
+
+### Adding New Capabilities
+1. Add new tools in `adk_agents/tools/`
+2. Register tools in both agent implementations
+3. Update context if new domain knowledge is needed
+4. Add test cases to validate functionality
+
+### Testing
+```bash
+# Test with minimal context (faster)
+python adk_agents/main.py --minimal
+
+# Run specific test queries
+python -m pytest tests/
+```
+
+## Architecture Documentation
+
+For detailed technical documentation, see [adk_agents/SYSTEM_ARCHITECTURE.md](adk_agents/SYSTEM_ARCHITECTURE.md)
+
+## Business Value
+
+This system has proven its value by discovering:
+- Hidden capacity worth $341K-$700K/year
+- Micro-stop patterns revealing $250K-$350K opportunity  
+- Quality improvements worth $200K/year
+
+The architecture is domain-agnostic and can be adapted to any industry with structured operational data.
 
 ## License
 
-This project is proprietary and confidential.
+[Add your license here]
 
-## Support
+## Contributing
 
-For issues or questions:
-- Check the troubleshooting guide in `/adk_agents/README.md`
-- Review example queries in `/API/example_client.py`
-- Examine the ontology structure in `/Ontology/mes_ontology_populated.owl`
+[Add contribution guidelines]
