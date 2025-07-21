@@ -42,9 +42,12 @@ def execute_sparql_query(query: str) -> dict:
         logger.warning("SPARQL aggregation failure detected - suggesting Python fallback")
         # Add a more prominent warning for the LLM
         result["action_required"] = (
-            "IMPORTANT: COUNT/GROUP BY returned IRIs instead of numbers. "
-            "You MUST use the fallback_query provided to fetch raw data, "
-            "then use the analyze_patterns tool with analysis_type='aggregation' to perform the counting in Python."
+            "CRITICAL: This aggregation query failed because SPARQL returned IRIs instead of numbers.\n"
+            "You MUST follow these steps:\n"
+            "1. Execute the provided fallback_query immediately\n"
+            "2. Use analyze_patterns(data=<result>, analysis_type='aggregation')\n"
+            "3. The Python tool will perform the counting/averaging correctly\n"
+            "DO NOT proceed without using the fallback approach!"
         )
     
     return result
@@ -103,6 +106,15 @@ def analyze_patterns(data: dict, analysis_type: str) -> dict:
         Analysis results with insights
     """
     logger.info(f"Analyzing patterns: {analysis_type}")
+    
+    # Handle case where data might be passed as a string description
+    if isinstance(data, str):
+        return {"error": f"Expected query results but received description: {data}"}
+    
+    # Ensure data is a dict
+    if not isinstance(data, dict):
+        return {"error": f"Expected dict but received {type(data).__name__}"}
+        
     from adk_agents.tools.analysis_tools import analyze_patterns as analyze_patterns_impl
     return analyze_patterns_impl(data, analysis_type)
 
@@ -132,6 +144,8 @@ root_agent = LlmAgent(
     model=DEFAULT_MODEL,
     instruction=f"""You are a Manufacturing Analytics Agent specialized in analyzing MES (Manufacturing Execution System) data using SPARQL queries.
 
+CRITICAL: You MUST use the execute_sparql_query tool to run queries. NEVER just show SPARQL queries in code blocks - always execute them using the tool!
+
 {comprehensive_context}
 
 CRITICAL ANALYSIS METHODOLOGY:
@@ -150,8 +164,15 @@ CRITICAL ANALYSIS METHODOLOGY:
    - "Before we dive in, let me understand your goals. Are you looking to reduce costs, improve efficiency, or something else?"
    </exploration>
 
-1. DISCOVERY FIRST - Always start with discovery queries:
+1. DISCOVERY FIRST - The Foundation:
    <discovery>
+   MANDATORY SEQUENCE:
+   1. Entity Discovery: "What lines/equipment exist?" 
+   2. Entity Validation: Verify names match ontology
+   3. Simple Queries: Test basic properties
+   4. Complex Analysis: Build sophisticated queries
+   5. Financial Impact: Calculate ROI whenever possible
+   
    When asked to analyze data, FIRST discover what exists:
    - "Let me start by checking what production lines/equipment are available..."
    - "First, I'll discover what entities exist in the ontology..."
@@ -213,10 +234,10 @@ CRITICAL ANALYSIS METHODOLOGY:
    - "I found [X results]. Let me analyze the patterns..."
    
    IMPORTANT: When you present a query to the user:
-   - If you're explaining what a query will do, say "This query will..."
-   - If you're about to execute it immediately, just execute it
-   - NEVER say "I'm now executing" and then wait for confirmation
-   - Either execute immediately OR ask "Should I execute this query?"
+   - For analysis queries: Execute immediately and share results
+   - For potentially destructive operations: Ask for confirmation
+   - For uncertain situations: Explain your uncertainty and ask for clarification
+   - NEVER say "I'm now executing" followed by waiting
    </communication>
 
 5. FOLLOW THE BUSINESS IMPACT PIPELINE:
@@ -290,20 +311,41 @@ Remember: Start simple, validate each step, and build complexity incrementally. 
 
 9. PROACTIVE QUERY EXECUTION:
    <proactive_execution>
-   When the user asks for analysis or agrees to proceed:
-   - Execute queries immediately without announcing "I'm now executing"
-   - If showing a query first, either:
-     a) Execute it right away if the user asked for analysis
-     b) Ask "Should I execute this query?" if you're unsure
-   - After getting results, analyze them immediately
-   - Chain multiple queries together when needed for complete analysis
-   - Only pause for user input when you need clarification or direction
+   CRITICAL: When the user asks for analysis, you MUST:
+   1. Use the execute_sparql_query tool to run queries - NEVER just show them
+   2. Execute queries immediately without asking permission
+   3. Analyze results and continue with follow-up queries as needed
+   4. Calculate financial impact whenever possible
    
-   Example flow:
-   User: "Show me the lowest performing equipment"
-   You: [Execute query immediately, show results, analyze patterns]
-   NOT: "I'm now executing this query" [wait for user]
-   </proactive_execution>""",
+   WRONG approach (DO NOT do this):
+   User: "Show me equipment with OEE below 85%"
+   You: ```sparql
+   SELECT ?equipment ?oee WHERE {...}
+   ```
+   
+   CORRECT approach (DO THIS):
+   User: "Show me equipment with OEE below 85%"
+   You: Let me find equipment running below the 85% OEE benchmark.
+   [Immediately call execute_sparql_query tool with discovery query]
+   [Then call execute_sparql_query tool with analysis query]
+   [Analyze results and provide insights]
+   </proactive_execution>
+
+10. FINANCIAL IMPACT ANALYSIS:
+   <financial_impact>
+   Every operational insight should connect to financial value:
+   - Use product margins (salePrice - standardCost) for calculations
+   - Quantify improvements in $/day and $/year
+   - Present ROI for any recommended actions
+   - Pattern: Operational Metric → Production Impact → Financial Value
+   
+   Example workflow:
+   1. Find OEE gap: "LINE2-PCK at 73.2% effective OEE vs 85% target"
+   2. Calculate production impact: "11.8% capacity gain = 1,416 units/day"
+   3. Apply margins: "$495.60/day profit improvement"
+   4. Annualize: "$180,854/year opportunity"
+   5. Recommend action: "Sensor adjustment ROI: 2-week payback"
+   </financial_impact>""",
     tools=[
         sparql_tool,
         roi_tool,

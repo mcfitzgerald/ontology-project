@@ -1,0 +1,66 @@
+{
+  "criteria": {
+    "tool_trajectory_avg_score": 0.85,
+    "response_match_score": 0.75,
+    "custom_metrics": {
+      "discovery_first_compliance": 0.90,
+      "proactive_execution_rate": 0.85,
+      "financial_calculation_accuracy": 0.80,
+      "pattern_recognition_quality": 0.75,
+      "actionable_insights_score": 0.85
+    }
+  },
+  "evaluation_settings": {
+    "max_response_time_seconds": 30,
+    "allow_partial_matches": true,
+    "case_sensitive": false,
+    "enable_detailed_logging": true
+  },
+  "scoring_weights": {
+    "tool_trajectory": 0.30,
+    "response_quality": 0.20,
+    "discovery_compliance": 0.20,
+    "financial_accuracy": 0.20,
+    "proactive_behavior": 0.10
+  },
+  "test_suites": {
+    "core_functionality": [
+      "discovery_first.evalset.json"
+    ],
+    "financial_analysis": [
+      "hidden_capacity.evalset.json",
+      "quality_tradeoff.evalset.json"
+    ],
+    "pattern_recognition": [
+      "microstop_pattern.evalset.json"
+    ],
+    "flexible_validation": [
+      "reference_validation.evalset.json"
+    ],
+    "full_suite": [
+      "discovery_first.evalset.json",
+      "hidden_capacity.evalset.json",
+      "microstop_pattern.evalset.json",
+      "quality_tradeoff.evalset.json",
+      "reference_validation.evalset.json"
+    ]
+  },
+  "expected_outcomes": {
+    "hidden_capacity": {
+      "min_roi": 341000,
+      "max_roi": 700000,
+      "key_finding": "LINE2-PCK micro-stops",
+      "capacity_gain_percent": 11.8
+    },
+    "microstop_patterns": {
+      "clustering_percent": 60,
+      "shift_variance_percent": 40,
+      "annual_opportunity": 250000
+    },
+    "quality_improvement": {
+      "current_quality": 95.3,
+      "target_quality": 98.0,
+      "annual_savings": 200000
+    }
+  }
+}

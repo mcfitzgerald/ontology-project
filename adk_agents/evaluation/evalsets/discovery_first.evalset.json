@@ -1,0 +1,105 @@
+{
+  "eval_set_id": "discovery_first_compliance",
+  "name": "Discovery-First Pattern Test",
+  "description": "Tests that the agent follows the mandatory sequence: entity discovery before complex queries",
+  "eval_cases": [
+    {
+      "eval_id": "discover_before_analysis",
+      "conversation": [
+        {
+          "invocation_id": "df-001",
+          "user_content": {
+            "parts": [
+              {
+                "text": "Analyze downtime trends across lines"
+              }
+            ],
+            "role": "user"
+          },
+          "final_response": {
+            "parts": [
+              {
+                "text": "I'll analyze downtime trends across your production lines. Let me start by discovering what lines and equipment exist in the system, then analyze their downtime patterns."
+              }
+            ],
+            "role": "model"
+          },
+          "intermediate_data": {
+            "tool_uses": [
+              {
+                "name": "execute_sparql_query",
+                "args": {
+                  "query": "SELECT DISTINCT ?line WHERE { ?line a mes_ontology_populated:Line } ORDER BY ?line"
+                }
+              },
+              {
+                "name": "execute_sparql_query",
+                "args": {
+                  "query": "SELECT ?equipment ?line WHERE { ?equipment mes_ontology_populated:belongsToLine ?line . FILTER(ISIRI(?equipment) && ISIRI(?line)) } ORDER BY ?line ?equipment"
+                }
+              },
+              {
+                "name": "execute_sparql_query",
+                "args": {
+                  "query": "SELECT ?equipment ?line ?event ?timestamp WHERE { ?equipment mes_ontology_populated:belongsToLine ?line . ?equipment mes_ontology_populated:logsEvent ?event . ?event a mes_ontology_populated:DowntimeLog . ?event mes_ontology_populated:hasTimestamp ?timestamp . FILTER(ISIRI(?equipment) && ISIRI(?line)) } ORDER BY ?line ?timestamp LIMIT 50"
+                }
+              }
+            ],
+            "intermediate_responses": []
+          }
+        }
+      ],
+      "session_input": {
+        "app_name": "manufacturing_analyst",
+        "user_id": "eval_user",
+        "state": {}
+      }
+    },
+    {
+      "eval_id": "proactive_execution",
+      "conversation": [
+        {
+          "invocation_id": "df-002",
+          "user_content": {
+            "parts": [
+              {
+                "text": "Show me equipment with OEE below 85%"
+              }
+            ],
+            "role": "user"
+          },
+          "final_response": {
+            "parts": [
+              {
+                "text": "I'll find all equipment running below the world-class OEE benchmark of 85%. Let me check what equipment exists and analyze their OEE scores."
+              }
+            ],
+            "role": "model"
+          },
+          "intermediate_data": {
+            "tool_uses": [
+              {
+                "name": "execute_sparql_query",
+                "args": {
+                  "query": "SELECT DISTINCT ?equipment ?line WHERE { ?equipment mes_ontology_populated:belongsToLine ?line . FILTER(ISIRI(?equipment)) } ORDER BY ?line ?equipment"
+                }
+              },
+              {
+                "name": "execute_sparql_query",
+                "args": {
+                  "query": "SELECT ?equipment ?line ?oee ?timestamp WHERE { ?equipment mes_ontology_populated:belongsToLine ?line . ?equipment mes_ontology_populated:logsEvent ?event . ?event mes_ontology_populated:hasOEEScore ?oee . ?event mes_ontology_populated:hasTimestamp ?timestamp . FILTER(?oee < 85.0) FILTER(ISIRI(?equipment)) } ORDER BY ?oee LIMIT 200"
+                }
+              }
+            ],
+            "intermediate_responses": []
+          }
+        }
+      ],
+      "session_input": {
+        "app_name": "manufacturing_analyst",
+        "user_id": "eval_user",
+        "state": {}
+      }
+    }
+  ]
+}

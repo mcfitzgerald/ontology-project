@@ -1,0 +1,147 @@
+{
+  "eval_set_id": "hidden_capacity_analysis",
+  "name": "Hidden Capacity Analysis Test",
+  "description": "Tests agent's ability to discover equipment with poor OEE and calculate financial impact ($341K-$700K opportunity)",
+  "eval_cases": [
+    {
+      "eval_id": "find_hidden_capacity",
+      "conversation": [
+        {
+          "invocation_id": "hc-001",
+          "user_content": {
+            "parts": [
+              {
+                "text": "Find hidden capacity opportunities in our production lines"
+              }
+            ],
+            "role": "user"
+          },
+          "final_response": {
+            "parts": [
+              {
+                "text": "I'll analyze your production lines to find hidden capacity opportunities by examining OEE performance and calculating the financial impact of improvements. Let me start by discovering your equipment and analyzing their performance metrics."
+              }
+            ],
+            "role": "model"
+          },
+          "flexible_validation": {
+            "required_insights": [
+              "equipment_with_low_oee",
+              "capacity_gap_percentage",
+              "financial_impact_range"
+            ],
+            "acceptable_oee_threshold": 75.0,
+            "acceptable_roi_range": [300000, 800000]
+          },
+          "intermediate_data": {
+            "tool_uses": [
+              {
+                "name": "execute_sparql_query",
+                "args": {
+                  "query": "SELECT DISTINCT ?equipment ?line WHERE { ?equipment mes_ontology_populated:belongsToLine ?line . FILTER(ISIRI(?equipment)) } ORDER BY ?line"
+                }
+              },
+              {
+                "name": "execute_sparql_query",
+                "args": {
+                  "query": "SELECT ?equipment ?line (AVG(?oee) AS ?avgOEE) (MIN(?oee) AS ?minOEE) (MAX(?oee) AS ?maxOEE) WHERE { ?equipment mes_ontology_populated:belongsToLine ?line . ?equipment mes_ontology_populated:logsEvent ?event . ?event a mes_ontology_populated:ProductionLog . ?event mes_ontology_populated:hasOEEScore ?oee . FILTER(?oee > 0.0) FILTER(ISIRI(?equipment)) } GROUP BY ?equipment ?line ORDER BY ?avgOEE"
+                }
+              },
+              {
+                "name": "execute_sparql_query",
+                "args": {
+                  "query": "SELECT ?equipment ?line (MIN(?timestamp) AS ?firstDowntime) (MAX(?timestamp) AS ?lastDowntime) WHERE { ?equipment mes_ontology_populated:belongsToLine ?line . ?equipment mes_ontology_populated:logsEvent ?event . ?event a mes_ontology_populated:DowntimeLog . ?event mes_ontology_populated:hasTimestamp ?timestamp . FILTER(ISIRI(?equipment) && ISIRI(?line)) } GROUP BY ?equipment ?line ORDER BY ?line"
+                }
+              },
+              {
+                "name": "analyze_patterns",
+                "args": {
+                  "data": "LINE2-PCK downtime data",
+                  "analysis_type": "capacity_optimization"
+                }
+              },
+              {
+                "name": "calculate_improvement_roi",
+                "args": {
+                  "current_performance": 73.2,
+                  "target_performance": 85.0,
+                  "production_value_per_day": 28500,
+                  "improvement_type": "oee_improvement"
+                }
+              }
+            ],
+            "intermediate_responses": []
+          }
+        }
+      ],
+      "session_input": {
+        "app_name": "manufacturing_analyst",
+        "user_id": "eval_user",
+        "state": {}
+      }
+    },
+    {
+      "eval_id": "quantify_line2_pck_impact",
+      "conversation": [
+        {
+          "invocation_id": "hc-002",
+          "user_content": {
+            "parts": [
+              {
+                "text": "What's the financial impact of LINE2-PCK's micro-stops?"
+              }
+            ],
+            "role": "user"
+          },
+          "final_response": {
+            "parts": [
+              {
+                "text": "Based on my analysis, LINE2-PCK is experiencing chronic micro-stops that create a significant hidden capacity opportunity. With approximately 25% downtime from material jams, the effective OEE is 73.2% versus a world-class target of 85%. This 11.8% capacity gap represents $341K-$700K in annual lost margin opportunity, depending on product mix. A sensor adjustment or mechanical realignment could provide a 2-week ROI."
+              }
+            ],
+            "role": "model"
+          },
+          "intermediate_data": {
+            "tool_uses": [
+              {
+                "name": "execute_sparql_query",
+                "args": {
+                  "query": "SELECT ?equipment ?timestamp ?reason WHERE { ?equipment mes_ontology_populated:logsEvent ?event . ?event a mes_ontology_populated:DowntimeLog . ?event mes_ontology_populated:hasTimestamp ?timestamp . ?event mes_ontology_populated:hasDowntimeReason ?reason . ?equipment mes_ontology_populated:belongsToLine mes_ontology_populated:LINE2 . FILTER(ISIRI(?equipment)) } ORDER BY ?timestamp LIMIT 500"
+                }
+              },
+              {
+                "name": "execute_sparql_query",
+                "args": {
+                  "query": "SELECT DISTINCT ?product ?productName ?targetRate ?salePrice ?standardCost WHERE { ?product a mes_ontology_populated:Product . ?product mes_ontology_populated:hasProductName ?productName . ?product mes_ontology_populated:hasTargetRate ?targetRate . ?product mes_ontology_populated:hasSalePrice ?salePrice . ?product mes_ontology_populated:hasStandardCost ?standardCost . } ORDER BY ?product"
+                }
+              },
+              {
+                "name": "analyze_patterns",
+                "args": {
+                  "data": "LINE2-PCK micro-stop events",
+                  "analysis_type": "temporal_clustering"
+                }
+              },
+              {
+                "name": "calculate_improvement_roi",
+                "args": {
+                  "current_performance": 73.2,
+                  "target_performance": 85.0,
+                  "production_value_per_day": 4449.69,
+                  "improvement_type": "downtime_reduction",
+                  "units_per_hour": 475
+                }
+              }
+            ],
+            "intermediate_responses": []
+          }
+        }
+      ],
+      "session_input": {
+        "app_name": "manufacturing_analyst",
+        "user_id": "eval_user",
+        "state": {}
+      }
+    }
+  ]
+}

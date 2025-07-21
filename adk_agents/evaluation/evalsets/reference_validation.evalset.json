@@ -1,0 +1,138 @@
+{
+  "eval_set_id": "reference_validation_suite",
+  "name": "Reference Validation Tests",
+  "description": "Flexible validation tests that check if agent can find insights similar to manual prototype",
+  "eval_cases": [
+    {
+      "eval_id": "find_capacity_opportunities",
+      "conversation": [
+        {
+          "invocation_id": "rv-001",
+          "user_content": {
+            "parts": [
+              {
+                "text": "Find equipment with significant capacity improvement opportunities"
+              }
+            ],
+            "role": "user"
+          },
+          "validation_criteria": {
+            "type": "capacity_analysis",
+            "required_findings": {
+              "low_oee_equipment": {
+                "description": "Must find equipment with effective OEE below 75%",
+                "threshold": 75.0
+              },
+              "capacity_gap": {
+                "description": "Must identify capacity gap of at least 10%",
+                "min_gap": 10.0
+              },
+              "financial_impact": {
+                "description": "Must calculate ROI between $300K-$800K annually",
+                "min_roi": 300000,
+                "max_roi": 800000
+              }
+            },
+            "partial_credit": {
+              "found_low_oee": 0.4,
+              "calculated_gap": 0.3,
+              "quantified_roi": 0.3
+            }
+          }
+        }
+      ],
+      "session_input": {
+        "app_name": "manufacturing_analyst",
+        "user_id": "eval_user",
+        "state": {}
+      }
+    },
+    {
+      "eval_id": "find_temporal_patterns",
+      "conversation": [
+        {
+          "invocation_id": "rv-002",
+          "user_content": {
+            "parts": [
+              {
+                "text": "Analyze downtime patterns and find any clustering or shift-based trends"
+              }
+            ],
+            "role": "user"
+          },
+          "validation_criteria": {
+            "type": "pattern_analysis",
+            "required_findings": {
+              "temporal_pattern": {
+                "description": "Must identify some form of temporal clustering",
+                "examples": ["within 10 minutes", "hourly patterns", "shift patterns"]
+              },
+              "shift_variance": {
+                "description": "Must identify differences between shifts if present",
+                "acceptable_findings": ["night shift variance", "shift performance differences"]
+              },
+              "financial_impact": {
+                "description": "Should quantify impact if possible",
+                "min_roi": 200000,
+                "optional": true
+              }
+            },
+            "partial_credit": {
+              "found_any_pattern": 0.5,
+              "identified_shift_differences": 0.3,
+              "quantified_impact": 0.2
+            }
+          }
+        }
+      ],
+      "session_input": {
+        "app_name": "manufacturing_analyst",
+        "user_id": "eval_user",
+        "state": {}
+      }
+    },
+    {
+      "eval_id": "find_quality_opportunities",
+      "conversation": [
+        {
+          "invocation_id": "rv-003",
+          "user_content": {
+            "parts": [
+              {
+                "text": "Where can we reduce scrap costs and improve quality?"
+              }
+            ],
+            "role": "user"
+          },
+          "validation_criteria": {
+            "type": "quality_analysis",
+            "required_findings": {
+              "quality_gap": {
+                "description": "Must identify quality below 98% target",
+                "max_acceptable_quality": 98.0
+              },
+              "scrap_cost": {
+                "description": "Must calculate annual scrap cost impact",
+                "min_annual_cost": 100000
+              },
+              "improvement_recommendation": {
+                "description": "Must provide specific improvement recommendations",
+                "must_include": ["roi", "action", "investment"]
+              }
+            },
+            "partial_credit": {
+              "identified_quality_gap": 0.3,
+              "calculated_scrap_cost": 0.4,
+              "provided_recommendations": 0.3
+            }
+          }
+        }
+      ],
+      "session_input": {
+        "app_name": "manufacturing_analyst",
+        "user_id": "eval_user",
+        "state": {}
+      }
+    }
+  ]
+}

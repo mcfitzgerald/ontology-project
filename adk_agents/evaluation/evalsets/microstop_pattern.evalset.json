@@ -1,0 +1,145 @@
+{
+  "eval_set_id": "microstop_pattern_recognition",
+  "name": "Micro-Stop Pattern Recognition Test",
+  "description": "Tests agent's ability to identify temporal patterns in micro-stops (60% occur within 10 minutes, night shift 40% worse)",
+  "eval_cases": [
+    {
+      "eval_id": "analyze_microstop_patterns",
+      "conversation": [
+        {
+          "invocation_id": "mp-001",
+          "user_content": {
+            "parts": [
+              {
+                "text": "Analyze the pattern of micro-stops on LINE2-PCK"
+              }
+            ],
+            "role": "user"
+          },
+          "final_response": {
+            "parts": [
+              {
+                "text": "I'll analyze the micro-stop patterns on LINE2-PCK to identify temporal clustering and shift-based variations. Let me examine the downtime events and their timing."
+              }
+            ],
+            "role": "model"
+          },
+          "intermediate_data": {
+            "tool_uses": [
+              {
+                "name": "execute_sparql_query",
+                "args": {
+                  "query": "SELECT ?equipment ?timestamp ?reason WHERE { ?equipment mes_ontology_populated:logsEvent ?event . ?event a mes_ontology_populated:DowntimeLog . ?event mes_ontology_populated:hasTimestamp ?timestamp . ?event mes_ontology_populated:hasDowntimeReason ?reason . ?equipment mes_ontology_populated:belongsToLine mes_ontology_populated:LINE2 . FILTER(ISIRI(?equipment)) } ORDER BY ?timestamp LIMIT 500"
+                }
+              },
+              {
+                "name": "analyze_patterns",
+                "args": {
+                  "data": "LINE2-PCK downtime events with timestamps",
+                  "analysis_type": "temporal_clustering"
+                }
+              }
+            ],
+            "intermediate_responses": []
+          }
+        },
+        {
+          "invocation_id": "mp-002",
+          "user_content": {
+            "parts": [
+              {
+                "text": "What predictive patterns did you find?"
+              }
+            ],
+            "role": "user"
+          },
+          "final_response": {
+            "parts": [
+              {
+                "text": "Based on the temporal analysis, I found several predictive patterns:\n\n1. **Clustering Pattern**: 60% of jams occur within 10 minutes of a previous jam, indicating cascade failures\n2. **Shift Variation**: Night shift (23:00-07:00) experiences 40% more micro-stops than day shift\n3. **Peak Hours**: Problems cluster at 01:00-04:00 and around shift changes (07:00, 15:00)\n4. **Predictive Trigger**: After a jam at XX:X5, there's a 60% probability of another within 10 minutes\n\nFinancial Impact: These patterns suggest $250K-$350K annual opportunity through predictive intervention."
+              }
+            ],
+            "role": "model"
+          },
+          "intermediate_data": {
+            "tool_uses": [
+              {
+                "name": "calculate_improvement_roi",
+                "args": {
+                  "current_performance": 456,
+                  "target_performance": 228,
+                  "production_value_per_day": 1095.89,
+                  "improvement_type": "predictive_maintenance",
+                  "description": "50% reduction in cascading jams"
+                }
+              }
+            ],
+            "intermediate_responses": []
+          }
+        }
+      ],
+      "session_input": {
+        "app_name": "manufacturing_analyst",
+        "user_id": "eval_user",
+        "state": {}
+      }
+    },
+    {
+      "eval_id": "shift_based_analysis",
+      "conversation": [
+        {
+          "invocation_id": "mp-003",
+          "user_content": {
+            "parts": [
+              {
+                "text": "Compare downtime patterns between shifts"
+              }
+            ],
+            "role": "user"
+          },
+          "final_response": {
+            "parts": [
+              {
+                "text": "I'll compare downtime patterns across different shifts to identify variations in performance. Let me analyze the temporal distribution of downtime events."
+              }
+            ],
+            "role": "model"
+          },
+          "intermediate_data": {
+            "tool_uses": [
+              {
+                "name": "execute_sparql_query",
+                "args": {
+                  "query": "SELECT ?equipment ?line ?timestamp WHERE { ?equipment mes_ontology_populated:belongsToLine ?line . ?equipment mes_ontology_populated:logsEvent ?event . ?event a mes_ontology_populated:DowntimeLog . ?event mes_ontology_populated:hasTimestamp ?timestamp . FILTER(ISIRI(?equipment)) } ORDER BY ?timestamp"
+                }
+              },
+              {
+                "name": "analyze_patterns",
+                "args": {
+                  "data": "All downtime events with timestamps",
+                  "analysis_type": "shift_performance"
+                }
+              },
+              {
+                "name": "create_visualization",
+                "args": {
+                  "data": "Shift-based downtime analysis",
+                  "chart_type": "bar",
+                  "title": "Downtime Events by Shift",
+                  "x_label": "Shift",
+                  "y_label": "Number of Events"
+                }
+              }
+            ],
+            "intermediate_responses": []
+          }
+        }
+      ],
+      "session_input": {
+        "app_name": "manufacturing_analyst",
+        "user_id": "eval_user",
+        "state": {}
+      }
+    }
+  ]
+}
