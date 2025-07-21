@@ -1,0 +1,89 @@
+{
+  "timestamp": "2025-07-21T14:58:06.701648",
+  "summary": {
+    "total_cases": 4,
+    "passed": 0,
+    "average_score": 0.15,
+    "total_value_found": 0
+  },
+  "results": [
+    {
+      "prompt": "Find equipment with significant capacity improvement opportunities",
+      "response": "Okay, I will identify equipment with significant capacity improvement opportunities. I'll start by looking for equipment with the lowest performance scores, as those would represent the best opportunities for improvement.\n\n```sparql\nSELECT ?equipment (AVG(?performance) AS ?avg_performance) WHERE {\n    ?equipment mes_ontology_populated:logsEvent ?event .\n    ?event mes_ontology_populated:hasPerformanceScore ?performance .\n    FILTER(ISIRI(?equipment))\n}\nGROUP BY ?equipment\nORDER BY ?avg_performance\nLIMIT 10\n```",
+      "score": 0.44999999999999996,
+      "details": {
+        "target_validation": true,
+        "expected_reference": "",
+        "findings": {
+          "found_insights": [],
+          "total_value_found": 0,
+          "within_target_range": false,
+          "key_insights_covered": 3
+        },
+        "score": 0.44999999999999996,
+        "passed": false
+      },
+      "tool_uses_count": 0
+    },
+    {
+      "prompt": "Analyze downtime patterns and find any clustering or shift-based trends",
+      "response": "",
+      "score": 0.0,
+      "details": {
+        "target_validation": true,
+        "expected_reference": "",
+        "findings": {
+          "found_insights": [],
+          "total_value_found": 0,
+          "within_target_range": false,
+          "key_insights_covered": 0
+        },
+        "score": 0.0,
+        "passed": false
+      },
+      "tool_uses_count": 3
+    },
+    {
+      "prompt": "Where can we reduce scrap costs and improve quality?",
+      "response": "",
+      "score": 0.0,
+      "details": {
+        "target_validation": true,
+        "expected_reference": "",
+        "findings": {
+          "found_insights": [],
+          "total_value_found": 0,
+          "within_target_range": false,
+          "key_insights_covered": 0
+        },
+        "score": 0.0,
+        "passed": false
+      },
+      "tool_uses_count": 11
+    },
+    {
+      "prompt": "What are the biggest opportunities to improve our manufacturing operations?",
+      "response": "Okay, let's identify the biggest opportunities to improve manufacturing operations. I'll start by examining the downtime data to see where we're losing the most time. Then, I'll look at OEE to pinpoint underperforming equipment.\n\n```sparql\nSELECT ?equipment (SUM(?duration) AS ?totalDowntime) WHERE {\n  ?equipment mes_ontology_populated:logsEvent ?event .\n  ?event a mes_ontology_populated:DowntimeLog .\n  ?event mes_ontology_populated:hasDowntimeReasonCode ?reason .\n  ?event mes_ontology_populated:hasTimestamp ?start .\n  ?event mes_ontology_populated:hasEndTimestamp ?end .\n  BIND((xsd:dateTime(?end) - xsd:dateTime(?start)) AS ?duration)\n  FILTER(ISIRI(?equipment))\n}\nGROUP BY ?equipment\nORDER BY DESC(?totalDowntime)\n```",
+      "score": 0.15,
+      "details": {
+        "target_validation": true,
+        "expected_reference": "",
+        "findings": {
+          "found_insights": [],
+          "total_value_found": 0,
+          "within_target_range": false,
+          "key_insights_covered": 1
+        },
+        "score": 0.15,
+        "passed": false
+      },
+      "tool_uses_count": 0
+    }
+  ],
+  "manual_prototype_reference": {
+    "capacity": "$341K-$700K/year",
+    "patterns": "$250K-$350K/year",
+    "quality": "$200K/year",
+    "total": "$2.5M+"
+  }
+}

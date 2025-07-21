@@ -37,12 +37,16 @@
     "flexible_validation": [
       "reference_validation.evalset.json"
     ],
+    "manual_prototype_validation": [
+      "manual_prototype_targets.evalset.json"
+    ],
     "full_suite": [
       "discovery_first.evalset.json",
       "hidden_capacity.evalset.json",
       "microstop_pattern.evalset.json",
       "quality_tradeoff.evalset.json",
-      "reference_validation.evalset.json"
+      "reference_validation.evalset.json",
+      "manual_prototype_targets.evalset.json"
     ]
   },
   "expected_outcomes": {

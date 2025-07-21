@@ -237,6 +237,100 @@ class FlexibleValidator:
         return score, findings
 
 
+    @staticmethod
+    def validate_target_findings(
+        response_text: str,
+        tool_uses: List[Dict[str, Any]],
+        target_findings: Dict[str, Any]
+    ) -> Tuple[float, Dict[str, Any]]:
+        """
+        Validate if agent found insights similar to manual prototype targets.
+        
+        Args:
+            response_text: Agent's response
+            tool_uses: Tools used by agent
+            target_findings: Expected findings from manual prototype
+            
+        Returns:
+            score: 0.0 to 1.0
+            details: Dictionary with validation details
+        """
+        findings = {
+            "found_insights": [],
+            "total_value_found": 0,
+            "within_target_range": False,
+            "key_insights_covered": 0
+        }
+        
+        # Extract all monetary values from response
+        money_patterns = [
+            r'\$(\d+)K',
+            r'\$(\d+),?(\d+)',
+            r'\$(\d+\.?\d*)M',
+            r'(\d+)K/year',
+            r'(\d+)K\s*(?:annual|per\s*year)'
+        ]
+        
+        found_values = []
+        for pattern in money_patterns:
+            matches = re.findall(pattern, response_text)
+            for match in matches:
+                if isinstance(match, tuple):
+                    value = int(''.join(match))
+                elif 'M' in pattern:
+                    value = int(float(match) * 1000000)
+                else:
+                    value = int(match) * 1000 if 'K' in pattern else int(match)
+                found_values.append(value)
+                findings["found_insights"].append(f"${value:,}")
+        
+        # Calculate total value found
+        if found_values:
+            findings["total_value_found"] = sum(found_values)
+            
+            # Check if within expected magnitude
+            expected_mag = target_findings.get("expected_magnitude", {})
+            if "min_annual_value" in expected_mag and "max_annual_value" in expected_mag:
+                # For individual opportunities
+                for value in found_values:
+                    if expected_mag["min_annual_value"] <= value <= expected_mag["max_annual_value"]:
+                        findings["within_target_range"] = True
+                        break
+            elif "min_total_value" in expected_mag and "max_total_value" in expected_mag:
+                # For total opportunities
+                total = findings["total_value_found"]
+                if expected_mag["min_total_value"] <= total <= expected_mag["max_total_value"]:
+                    findings["within_target_range"] = True
+        
+        # Check key insights coverage
+        key_insights = target_findings.get("key_insights", [])
+        for insight in key_insights:
+            # Flexible pattern matching for key concepts
+            insight_lower = insight.lower()
+            if any(keyword in response_text.lower() for keyword in insight_lower.split()):
+                findings["key_insights_covered"] += 1
+        
+        # Calculate score
+        score = 0.0
+        
+        # Value discovery (40%)
+        if findings["total_value_found"] > 0:
+            score += 0.2
+            if findings["within_target_range"]:
+                score += 0.2
+        
+        # Key insights coverage (60%)
+        if key_insights:
+            insight_ratio = findings["key_insights_covered"] / len(key_insights)
+            score += insight_ratio * 0.6
+        else:
+            # If no key insights specified, give full credit if value found
+            if findings["total_value_found"] > 0:
+                score += 0.6
+        
+        return score, findings
+
+
 def validate_response(
     validation_type: str,
     response_text: str,
@@ -273,4 +367,33 @@ def validate_response(
         "findings": findings,
         "score": score,
         "passed": score >= 0.7  # 70% threshold for passing
+    }
+
+
+def validate_target_based_response(
+    response_text: str,
+    tool_uses: List[Dict[str, Any]],
+    target_findings: Dict[str, Any]
+) -> Tuple[float, Dict[str, Any]]:
+    """
+    Validate response against manual prototype target findings.
+    
+    Args:
+        response_text: Agent's response
+        tool_uses: Tools used by agent
+        target_findings: Expected findings from manual prototype
+        
+    Returns:
+        score: 0.0 to 1.0
+        details: Dictionary with validation details
+    """
+    validator = FlexibleValidator()
+    score, findings = validator.validate_target_findings(response_text, tool_uses, target_findings)
+    
+    return score, {
+        "target_validation": True,
+        "expected_reference": target_findings.get("reference", ""),
+        "findings": findings,
+        "score": score,
+        "passed": score >= 0.6  # 60% threshold for target-based validation
     }

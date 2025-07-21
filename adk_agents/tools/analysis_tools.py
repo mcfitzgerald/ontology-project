@@ -24,9 +24,13 @@ def analyze_patterns(data: Dict[str, Any], analysis_type: str) -> Dict[str, Any]
     
     # Check for data in various formats
     has_data = False
-    if "results" in data and data["results"].get("bindings"):
-        has_data = True
-    elif "data" in data and "results" in data["data"]:
+    if isinstance(data, dict):
+        if "results" in data and isinstance(data["results"], dict) and data["results"].get("bindings"):
+            has_data = True
+        elif "data" in data and isinstance(data["data"], dict) and "results" in data["data"]:
+            has_data = True
+    elif isinstance(data, list) and data:
+        # If data is already a list, we can analyze it directly
         has_data = True
     
     if not has_data:
@@ -34,11 +38,17 @@ def analyze_patterns(data: Dict[str, Any], analysis_type: str) -> Dict[str, Any]
     
     # Convert to DataFrame for easier analysis
     # Handle both formats: direct results or nested in data
-    if "results" in data and "bindings" in data["results"]:
-        bindings = data["results"]["bindings"]
-    elif "data" in data and "results" in data["data"]:
-        # Handle the wrapped format from execute_sparql
-        bindings = data["data"]["results"]
+    if isinstance(data, list):
+        # Data is already a list (e.g., from cached results)
+        bindings = data
+    elif isinstance(data, dict):
+        if "results" in data and "bindings" in data["results"]:
+            bindings = data["results"]["bindings"]
+        elif "data" in data and "results" in data["data"]:
+            # Handle the wrapped format from execute_sparql
+            bindings = data["data"]["results"]
+        else:
+            bindings = []
     else:
         bindings = []
     

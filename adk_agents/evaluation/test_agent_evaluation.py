@@ -11,6 +11,12 @@ from pathlib import Path
 from datetime import datetime
 from typing import Dict, List, Any, Tuple
 import pytest
+import sys
+import os
+
+# Add parent directory to path for imports
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from google.adk.evaluation.agent_evaluator import AgentEvaluator
 
 
@@ -227,9 +233,10 @@ class ManufacturingAgentEvaluator:
         for test_file in test_files:
             test_path = evalset_dir / test_file
             
-            # Run ADK evaluation
+            # Run ADK evaluation with the root_agent attribute
+            # ADK expects module.agent.root_agent, so we need to adjust
             await AgentEvaluator.evaluate(
-                agent_module=agent_module,
+                agent_module=agent_module.replace('.agent', ''),  # Remove .agent from path
                 eval_dataset_file_path_or_dir=str(test_path),
             )
             
@@ -253,10 +260,24 @@ class ManufacturingAgentEvaluator:
         
         for eval_case in test_data.get('eval_cases', []):
             for conversation in eval_case.get('conversation', []):
+                # Check if we have target findings (manual prototype validation)
+                if 'target_findings' in conversation:
+                    # Use target-based validation
+                    from flexible_validators import validate_target_based_response
+                    
+                    response_text = conversation.get('final_response', {}).get('parts', [{}])[0].get('text', '')
+                    tool_uses = conversation.get('intermediate_data', {}).get('tool_uses', [])
+                    target_findings = conversation['target_findings']
+                    
+                    score, details = validate_target_based_response(
+                        response_text, tool_uses, target_findings
+                    )
+                    
+                    scores.update(details)
                 # Check if we have flexible validation criteria
-                if 'validation_criteria' in conversation:
+                elif 'validation_criteria' in conversation:
                     # Use flexible validators
-                    from .flexible_validators import validate_response
+                    from flexible_validators import validate_response
                     
                     validation_type = conversation['validation_criteria']['type']
                     response_text = conversation.get('final_response', {}).get('parts', [{}])[0].get('text', '')
@@ -331,6 +352,12 @@ class ManufacturingAgentEvaluator:
     
     def _check_pass_criteria(self, scores: Dict[str, float]) -> bool:
         """Check if scores meet passing criteria"""
+        # Check if this is target validation (manual prototype)
+        if 'target_validation' in scores and scores.get('target_validation'):
+            # For target validation, use the passed flag from validation
+            return scores.get('passed', False)
+        
+        # For other validations, use configured criteria
         criteria = self.config['criteria']['custom_metrics']
         
         for metric, min_score in criteria.items():

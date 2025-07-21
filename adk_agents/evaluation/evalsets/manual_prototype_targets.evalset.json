@@ -1,0 +1,147 @@
+{
+  "eval_set_id": "manual_prototype_targets",
+  "name": "Manual Prototype Target Findings",
+  "description": "Test cases based on the $2.5M+ discoveries from manual prototype, allowing emergent discovery",
+  "eval_cases": [
+    {
+      "eval_id": "discover_capacity_opportunities",
+      "conversation": [
+        {
+          "invocation_id": "mpt-001",
+          "user_content": {
+            "parts": [
+              {
+                "text": "Find equipment with significant capacity improvement opportunities"
+              }
+            ],
+            "role": "user"
+          },
+          "target_findings": {
+            "description": "Should discover hidden capacity opportunity similar to manual prototype",
+            "expected_magnitude": {
+              "min_annual_value": 300000,
+              "max_annual_value": 800000,
+              "reference": "$341K-$700K/year from LINE2-PCK at 73.2% effective OEE"
+            },
+            "key_insights": [
+              "Equipment running below 75-80% OEE",
+              "Quantified capacity gap (10-15%)",
+              "Financial impact calculation",
+              "Specific improvement recommendations"
+            ]
+          }
+        }
+      ],
+      "session_input": {
+        "app_name": "manufacturing_analyst",
+        "user_id": "eval_user",
+        "state": {}
+      }
+    },
+    {
+      "eval_id": "analyze_downtime_patterns",
+      "conversation": [
+        {
+          "invocation_id": "mpt-002",
+          "user_content": {
+            "parts": [
+              {
+                "text": "Analyze downtime patterns and find any clustering or shift-based trends"
+              }
+            ],
+            "role": "user"
+          },
+          "target_findings": {
+            "description": "Should discover temporal and shift patterns similar to manual prototype",
+            "expected_magnitude": {
+              "min_annual_value": 200000,
+              "max_annual_value": 400000,
+              "reference": "$250K-$350K/year from 60% clustering within 10 min, 40% night shift variance"
+            },
+            "key_insights": [
+              "Temporal clustering of events (50-70% within short windows)",
+              "Shift-based performance differences (30-50% variance)",
+              "Predictive patterns for proactive maintenance",
+              "Financial quantification of pattern-based improvements"
+            ]
+          }
+        }
+      ],
+      "session_input": {
+        "app_name": "manufacturing_analyst",
+        "user_id": "eval_user",
+        "state": {}
+      }
+    },
+    {
+      "eval_id": "reduce_scrap_costs",
+      "conversation": [
+        {
+          "invocation_id": "mpt-003",
+          "user_content": {
+            "parts": [
+              {
+                "text": "Where can we reduce scrap costs and improve quality?"
+              }
+            ],
+            "role": "user"
+          },
+          "target_findings": {
+            "description": "Should discover quality improvement opportunity similar to manual prototype",
+            "expected_magnitude": {
+              "min_annual_value": 150000,
+              "max_annual_value": 300000,
+              "reference": "$200K/year from improving 95.3% quality to 98% target"
+            },
+            "key_insights": [
+              "Current quality below target (94-96% vs 98%)",
+              "Scrap cost quantification by product/line",
+              "Improvement approach with ROI calculation",
+              "Phased implementation recommendations"
+            ]
+          }
+        }
+      ],
+      "session_input": {
+        "app_name": "manufacturing_analyst",
+        "user_id": "eval_user",
+        "state": {}
+      }
+    },
+    {
+      "eval_id": "comprehensive_analysis",
+      "conversation": [
+        {
+          "invocation_id": "mpt-004",
+          "user_content": {
+            "parts": [
+              {
+                "text": "What are the biggest opportunities to improve our manufacturing operations?"
+              }
+            ],
+            "role": "user"
+          },
+          "target_findings": {
+            "description": "Should discover multiple opportunities totaling significant value",
+            "expected_magnitude": {
+              "min_total_value": 800000,
+              "max_total_value": 3000000,
+              "reference": "$2.5M+ total from capacity, patterns, and quality combined"
+            },
+            "key_insights": [
+              "Multiple improvement areas identified",
+              "Prioritized by ROI or ease of implementation",
+              "Each opportunity quantified financially",
+              "Specific action plans provided"
+            ]
+          }
+        }
+      ],
+      "session_input": {
+        "app_name": "manufacturing_analyst",
+        "user_id": "eval_user",
+        "state": {}
+      }
+    }
+  ]
+}

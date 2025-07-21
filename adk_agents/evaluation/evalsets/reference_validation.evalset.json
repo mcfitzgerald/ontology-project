@@ -16,28 +16,31 @@
             ],
             "role": "user"
           },
-          "validation_criteria": {
-            "type": "capacity_analysis",
-            "required_findings": {
-              "low_oee_equipment": {
-                "description": "Must find equipment with effective OEE below 75%",
-                "threshold": 75.0
-              },
-              "capacity_gap": {
-                "description": "Must identify capacity gap of at least 10%",
-                "min_gap": 10.0
-              },
-              "financial_impact": {
-                "description": "Must calculate ROI between $300K-$800K annually",
-                "min_roi": 300000,
-                "max_roi": 800000
+          "final_response": {
+            "parts": [
+              {
+                "text": "Found LINE2-PCK with 72.72% OEE, representing a 12.28% capacity improvement opportunity worth $200K-$400K annually"
               }
-            },
-            "partial_credit": {
-              "found_low_oee": 0.4,
-              "calculated_gap": 0.3,
-              "quantified_roi": 0.3
-            }
+            ],
+            "role": "model"
+          },
+          "intermediate_data": {
+            "tool_uses": [
+              {
+                "name": "execute_sparql_query",
+                "args": {
+                  "query": "SELECT ?equipment (AVG(?oee) AS ?avg_oee) WHERE { ?equipment mes_ontology_populated:logsEvent ?event . ?event mes_ontology_populated:hasOEEScore ?oee } GROUP BY ?equipment"
+                }
+              },
+              {
+                "name": "calculate_improvement_roi",
+                "args": {
+                  "current_performance": 72.72,
+                  "target_performance": 85.0
+                }
+              }
+            ],
+            "intermediate_responses": []
           }
         }
       ],
@@ -60,28 +63,30 @@
             ],
             "role": "user"
           },
-          "validation_criteria": {
-            "type": "pattern_analysis",
-            "required_findings": {
-              "temporal_pattern": {
-                "description": "Must identify some form of temporal clustering",
-                "examples": ["within 10 minutes", "hourly patterns", "shift patterns"]
-              },
-              "shift_variance": {
-                "description": "Must identify differences between shifts if present",
-                "acceptable_findings": ["night shift variance", "shift performance differences"]
-              },
-              "financial_impact": {
-                "description": "Should quantify impact if possible",
-                "min_roi": 200000,
-                "optional": true
+          "final_response": {
+            "parts": [
+              {
+                "text": "Analysis shows 60% of downtime events cluster within 10-minute windows, and night shift experiences 40% more micro-stops than day shift. This clustering pattern suggests preventive maintenance opportunities worth $250K-$350K annually."
               }
-            },
-            "partial_credit": {
-              "found_any_pattern": 0.5,
-              "identified_shift_differences": 0.3,
-              "quantified_impact": 0.2
-            }
+            ],
+            "role": "model"
+          },
+          "intermediate_data": {
+            "tool_uses": [
+              {
+                "name": "execute_sparql_query",
+                "args": {
+                  "query": "SELECT ?equipment ?timestamp ?reason WHERE { ?equipment mes_ontology_populated:logsEvent ?event . ?event a mes_ontology_populated:DowntimeLog }"
+                }
+              },
+              {
+                "name": "analyze_patterns",
+                "args": {
+                  "analysis_type": "temporal_clustering"
+                }
+              }
+            ],
+            "intermediate_responses": []
           }
         }
       ],
@@ -104,27 +109,33 @@
             ],
             "role": "user"
           },
-          "validation_criteria": {
-            "type": "quality_analysis",
-            "required_findings": {
-              "quality_gap": {
-                "description": "Must identify quality below 98% target",
-                "max_acceptable_quality": 98.0
-              },
-              "scrap_cost": {
-                "description": "Must calculate annual scrap cost impact",
-                "min_annual_cost": 100000
-              },
-              "improvement_recommendation": {
-                "description": "Must provide specific improvement recommendations",
-                "must_include": ["roi", "action", "investment"]
+          "final_response": {
+            "parts": [
+              {
+                "text": "Current average quality is 95.3% compared to 98% target. This 2.7% gap represents $200K in annual scrap costs. A phased improvement approach focusing on top defect reasons could achieve 98% quality with $40K investment and 2.4-month payback."
               }
-            },
-            "partial_credit": {
-              "identified_quality_gap": 0.3,
-              "calculated_scrap_cost": 0.4,
-              "provided_recommendations": 0.3
-            }
+            ],
+            "role": "model"
+          },
+          "intermediate_data": {
+            "tool_uses": [
+              {
+                "name": "execute_sparql_query",
+                "args": {
+                  "query": "SELECT ?product (AVG(?quality) AS ?avg_quality) WHERE { ?event mes_ontology_populated:hasQualityScore ?quality } GROUP BY ?product"
+                }
+              },
+              {
+                "name": "calculate_improvement_roi",
+                "args": {
+                  "current_performance": 95.3,
+                  "target_performance": 98.0,
+                  "annual_volume": 10000000,
+                  "unit_value": 2.74
+                }
+              }
+            ],
+            "intermediate_responses": []
           }
         }
       ],
