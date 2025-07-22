@@ -3,8 +3,9 @@ import os
 import sys
 import json
 import logging
-from typing import Dict, Optional, Union
+from typing import Dict, Optional, Union, List
 from pathlib import Path
+from datetime import datetime
 
 # Add parent directories to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
@@ -17,6 +18,8 @@ from adk_agents.context.context_loader import context_loader
 from adk_agents.tools.sparql_tool import execute_sparql, get_cached_query_result
 from adk_agents.tools.analysis_tools import calculate_roi
 from adk_agents.tools.visualization_tool import create_visualization
+from adk_agents.tools.discovery_patterns import get_discovery_pattern, list_discovery_patterns
+from adk_agents.tools.insight_formatter import format_insight, create_executive_summary
 from adk_agents.config.settings import SPARQL_ENDPOINT, DEFAULT_MODEL
 
 logger = logging.getLogger(__name__)
@@ -24,22 +27,76 @@ logger = logging.getLogger(__name__)
 # Load comprehensive context
 comprehensive_context = context_loader.get_comprehensive_context()
 
+# Import ToolContext for state management
+from google.adk.tools.tool_context import ToolContext
+
 # Define tool functions with simple signatures
-def execute_sparql_query(query: str) -> dict:
-    """Execute a SPARQL query against the manufacturing ontology.
+def execute_sparql_query(query: str, hypothesis: Optional[str] = None, tool_context: Optional[ToolContext] = None) -> dict:
+    """Execute a SPARQL query against the manufacturing ontology with discovery tracking.
     
     Args:
         query: The SPARQL query to execute
+        hypothesis: What you're trying to discover with this query
+        tool_context: ADK tool context for state management
         
     Returns:
-        Query results with data, execution time, and metadata
+        Query results with data, execution time, metadata, and next questions
     """
     logger.info(f"Executing SPARQL query: {query[:200]}...")
+    if hypothesis:
+        logger.info(f"Testing hypothesis: {hypothesis}")
+    
     result = execute_sparql(query)
+    
+    # Track discoveries in state
+    if tool_context and hypothesis and "data" in result and result["data"].get("results"):
+        discoveries = tool_context.state.get("discoveries", [])
+        
+        # Analyze result for patterns
+        data_rows = result["data"]["results"]
+        pattern_insights = []
+        
+        # Look for anomalies or interesting patterns
+        if len(data_rows) > 0:
+            # Example pattern detection
+            if "oee" in str(data_rows[0]).lower() or "performance" in str(data_rows[0]).lower():
+                # Check for below-benchmark performance
+                for row in data_rows[:10]:  # Sample first 10
+                    if isinstance(row, list):
+                        for val in row:
+                            try:
+                                if isinstance(val, (int, float)) and 0 < val < 85:
+                                    pattern_insights.append(f"Found sub-benchmark performance: {val}%")
+                                    break
+                            except:
+                                pass
+            
+            # Track the discovery
+            discoveries.append({
+                "hypothesis": hypothesis,
+                "query": query[:200] + "..." if len(query) > 200 else query,
+                "row_count": len(data_rows),
+                "patterns": pattern_insights,
+                "timestamp": datetime.now().isoformat()
+            })
+            tool_context.state["discoveries"] = discoveries
+            
+            # Track value found
+            total_value = tool_context.state.get("total_value_found", 0)
+            tool_context.state["total_value_found"] = total_value
+    
+    # Add next questions based on results
+    result["next_questions"] = suggest_next_questions(result, hypothesis)
     
     # Check if aggregation failure was detected
     if result.get("aggregation_failure", False):
         logger.warning("SPARQL aggregation failure detected - suggesting Python fallback")
+        # Track failed pattern
+        if tool_context:
+            failed_patterns = tool_context.state.get("failed_patterns", [])
+            failed_patterns.append({"query_type": "COUNT/GROUP BY", "timestamp": datetime.now().isoformat()})
+            tool_context.state["failed_patterns"] = failed_patterns
+            
         # Add a more prominent warning for the LLM
         result["action_required"] = (
             "CRITICAL: This aggregation query failed because SPARQL returned IRIs instead of numbers.\n"
@@ -51,6 +108,44 @@ def execute_sparql_query(query: str) -> dict:
         )
     
     return result
+
+def suggest_next_questions(result: dict, hypothesis: Optional[str]) -> List[str]:
+    """Suggest follow-up questions based on query results."""
+    suggestions = []
+    
+    if "data" in result and result["data"].get("results"):
+        row_count = len(result["data"]["results"])
+        
+        # Based on result characteristics
+        if row_count == 0:
+            suggestions.append("No data found - try broadening the query or checking different time periods")
+        elif row_count == 1:
+            suggestions.append("Single result - investigate why this is unique")
+        elif row_count > 100:
+            suggestions.append("Large dataset - consider aggregating by time or category")
+            
+        # Based on hypothesis
+        if hypothesis:
+            if "downtime" in hypothesis.lower():
+                suggestions.extend([
+                    "What time patterns exist in these downtimes?",
+                    "Which equipment has the most frequent issues?",
+                    "What's the financial impact of this downtime?"
+                ])
+            elif "performance" in hypothesis.lower() or "oee" in hypothesis.lower():
+                suggestions.extend([
+                    "How does performance vary by product?",
+                    "What's the gap to world-class 85% OEE?",
+                    "Which shifts have better performance?"
+                ])
+            elif "quality" in hypothesis.lower():
+                suggestions.extend([
+                    "What's the scrap cost by product?",
+                    "Are there patterns in quality issues?",
+                    "What's the ROI of improving quality?"
+                ])
+    
+    return suggestions
 
 def calculate_improvement_roi(
     current_performance: float,
@@ -136,44 +231,81 @@ roi_tool = FunctionTool(calculate_improvement_roi)
 visualization_tool = FunctionTool(create_chart_visualization)
 analyze_tool = FunctionTool(analyze_patterns)
 cached_result_tool = FunctionTool(retrieve_cached_result)
+discovery_pattern_tool = FunctionTool(get_discovery_pattern)
+list_patterns_tool = FunctionTool(list_discovery_patterns)
+format_insight_tool = FunctionTool(format_insight)
+executive_summary_tool = FunctionTool(create_executive_summary)
 
 # Define the root agent for ADK
 root_agent = LlmAgent(
-    name="manufacturing_analyst",
-    description="Manufacturing Analytics Agent for discovering optimization opportunities",
+    name="discovery_analyst",
+    description="Discovery Agent that uncovers optimization opportunities through iterative exploration",
     model=DEFAULT_MODEL,
-    instruction=f"""You are a Manufacturing Analytics Agent specialized in analyzing MES (Manufacturing Execution System) data using SPARQL queries to discover actionable insights.
+    instruction=f"""You are a discovery agent that uncovers insights through iterative exploration of data.
 
 {comprehensive_context}
 
-Your role is to:
-1. Transform business questions into SPARQL queries using the ontology structure and data catalog
-2. Execute queries to explore the data (use the execute_sparql_query tool - never just show queries)
-3. Analyze patterns and relationships in the results
-4. Calculate financial impact when relevant
-5. Provide specific, actionable recommendations
+## Discovery Methodology
 
-When you receive a business question:
-- Review the ontology mindmap and data catalog to understand what's available
-- Develop an approach to answer the question through data exploration
-- Execute queries incrementally to build understanding
-- Look for gaps between current performance and benchmarks
-- Quantify opportunities in operational and financial terms
-- Suggest specific actions with expected ROI
+Follow this approach to uncover valuable insights:
 
-Key technical notes:
+1. **EXPLORE** - Start simple to understand the data landscape
+   - Begin with basic queries to see what data exists
+   - Check a few examples before diving deep
+   - Build mental model of relationships
+
+2. **DISCOVER** - When you find anomalies or patterns, dig deeper
+   - If you see unexpected values, investigate why
+   - Look for clustering, gaps, or outliers
+   - Compare actual performance to benchmarks (e.g., 85% OEE)
+
+3. **QUANTIFY** - Always translate findings to business impact
+   - Convert operational metrics to financial value
+   - Calculate annual impact (hourly × 24 × 365)
+   - Use actual product margins and volumes
+
+4. **RECOMMEND** - Provide specific actions with ROI
+   - Suggest concrete next steps
+   - Include implementation approach
+   - Estimate payback period
+
+## Key Behaviors
+
+- **Start with curiosity**: What patterns might exist in this data?
+- **Build incrementally**: Don't try complex queries first
+- **Learn from failures**: If COUNT returns IRIs, immediately use the fallback query
+- **Track discoveries**: Each finding guides the next question
+- **Think like a detective**: Follow clues, test hypotheses
+- **Always ask "So what?"**: Every finding must connect to value
+
+## Analysis Patterns
+
+When exploring data, consider these proven patterns:
+- **Hidden Capacity**: Gap between current and benchmark performance
+- **Temporal Patterns**: Time-based clustering of events
+- **Product Impact**: Which products affect performance most
+- **Quality Trade-offs**: Balance between quality and cost
+- **Root Causes**: Why do problems occur repeatedly
+
+## Technical Notes
+
 - Use mes_ontology_populated: prefix for all entities
-- Equipment must be queried by concrete types (Filler, Packer, Palletizer)
+- Equipment is abstract - query concrete types: Filler, Packer, Palletizer
 - Use FILTER(ISIRI(?var)) for entity variables
-- When COUNT() with GROUP BY fails (returns IRIs), use the provided fallback query and analyze_patterns tool
-- For large results, work with the summary or use retrieve_cached_result(cache_id)
+- When COUNT() with GROUP BY fails, use provided fallback query + analyze_patterns
+- For large results, use retrieve_cached_result(cache_id)
 
-Remember: Let insights emerge from the data rather than following a fixed methodology. The goal is to discover meaningful opportunities that create business value.""",
+Remember: You're not just executing queries - you're discovering opportunities worth millions.""",
     tools=[
         sparql_tool,
         roi_tool,
         visualization_tool,
         analyze_tool,
-        cached_result_tool
-    ]
+        cached_result_tool,
+        discovery_pattern_tool,
+        list_patterns_tool,
+        format_insight_tool,
+        executive_summary_tool
+    ],
+    output_key="latest_discovery"  # Auto-save insights to state
 )
