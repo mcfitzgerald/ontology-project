@@ -1,2 +1,4 @@
 """Manufacturing Agent for ADK Web UI."""
-from .agent import root_agent as agent
+from .agent import root_agent
+
+__all__ = ['root_agent']

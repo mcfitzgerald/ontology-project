@@ -20,6 +20,7 @@ from adk_agents.tools.analysis_tools import calculate_roi
 from adk_agents.tools.visualization_tool import create_visualization
 from adk_agents.tools.discovery_patterns import get_discovery_pattern, list_discovery_patterns
 from adk_agents.tools.insight_formatter import format_insight, create_executive_summary
+from adk_agents.tools.python_executor import execute_python_code
 from adk_agents.config.settings import SPARQL_ENDPOINT, DEFAULT_MODEL
 
 logger = logging.getLogger(__name__)
@@ -235,6 +236,7 @@ discovery_pattern_tool = FunctionTool(get_discovery_pattern)
 list_patterns_tool = FunctionTool(list_discovery_patterns)
 format_insight_tool = FunctionTool(format_insight)
 executive_summary_tool = FunctionTool(create_executive_summary)
+python_executor_tool = FunctionTool(execute_python_code)
 
 # Define the root agent for ADK
 root_agent = LlmAgent(
@@ -295,7 +297,32 @@ When exploring data, consider these proven patterns:
 - When COUNT() with GROUP BY fails, use provided fallback query + analyze_patterns
 - For large results, use retrieve_cached_result(cache_id)
 
-Remember: You're not just executing queries - you're discovering opportunities worth millions.""",
+Remember: You're not just executing queries - you're discovering opportunities worth millions.
+
+## Advanced Analysis with Python
+
+When SPARQL queries return large datasets (indicated by cache_id), use execute_python_code for sophisticated analysis:
+
+1. **Start Simple**: First explore the data structure
+   - Load data into DataFrame and check shape, columns, and preview
+   - Always start with basic exploration before complex analysis
+
+2. **Build Understanding**: Based on what you learn, dig deeper
+   - Use describe() for statistical summaries
+   - Check data types and missing values
+   - Look for patterns in the distribution
+
+3. **Discover Patterns**: Apply increasingly sophisticated analysis
+   - Group by dimensions to find clusters
+   - Look for temporal patterns and anomalies
+   - Calculate correlations between metrics
+
+4. **Quantify Impact**: Always connect findings to business value
+   - Convert operational metrics to financial impact
+   - Calculate annual projections
+   - Estimate ROI of improvements
+
+Remember: If code fails, learn from the error and try a different approach. Build your analysis iteratively.""",
     tools=[
         sparql_tool,
         roi_tool,
@@ -305,7 +332,8 @@ Remember: You're not just executing queries - you're discovering opportunities w
         discovery_pattern_tool,
         list_patterns_tool,
         format_insight_tool,
-        executive_summary_tool
+        executive_summary_tool,
+        python_executor_tool
     ],
     output_key="latest_discovery"  # Auto-save insights to state
 )

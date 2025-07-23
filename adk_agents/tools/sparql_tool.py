@@ -239,12 +239,25 @@ def execute_sparql(query: str) -> Dict[str, Any]:
         # If result is large (>10k tokens), return summary instead of full result
         if estimated_tokens > 10000:
             logger.info(f"Large result ({estimated_tokens} tokens) cached as {cache_id}")
+            
+            # Get data shape for Python analysis hint
+            data_shape = {}
+            if "data" in result and "results" in result["data"]:
+                results = result["data"]["results"]
+                data_shape = {
+                    "rows": len(results),
+                    "columns": list(results[0].keys()) if results and isinstance(results[0], dict) else [],
+                    "sample_values": results[0] if results and isinstance(results[0], dict) else {}
+                }
+            
             return {
                 "status": "success",
                 "summary": summary,
                 "warning": f"Result contains ~{estimated_tokens} tokens. Returning summary to prevent token overflow.",
                 "cache_id": cache_id,
-                "full_result_available": True
+                "full_result_available": True,
+                "python_analysis_hint": f"Use execute_python_code(code='...', cache_id='{cache_id}') to analyze the full dataset",
+                "data_shape": data_shape
             }
         else:
             # For smaller results, still cache but return full data
