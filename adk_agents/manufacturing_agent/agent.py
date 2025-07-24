@@ -11,220 +11,108 @@ from datetime import datetime
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from google.adk.agents import LlmAgent
+from google.adk.agents.readonly_context import ReadonlyContext
 from google.adk.tools import FunctionTool
 
 # Import our existing modules
 from adk_agents.context.context_loader import context_loader
-from adk_agents.tools.sparql_tool import execute_sparql, get_cached_query_result
-from adk_agents.tools.analysis_tools import calculate_roi
-from adk_agents.tools.visualization_tool import create_visualization
-from adk_agents.tools.discovery_patterns import get_discovery_pattern, list_discovery_patterns
-from adk_agents.tools.insight_formatter import format_insight, create_executive_summary
-from adk_agents.tools.python_executor import execute_python_code
 from adk_agents.config.settings import SPARQL_ENDPOINT, DEFAULT_MODEL
 
 logger = logging.getLogger(__name__)
 
-# Load comprehensive context
-comprehensive_context = context_loader.get_comprehensive_context()
+# Context will be loaded dynamically in the instruction to reduce token usage
 
-# Import ToolContext for state management
-from google.adk.tools.tool_context import ToolContext
+# Import wrapped tool functions
+from adk_agents.manufacturing_agent.tool_wrappers import (
+    execute_sparql_query,
+    calculate_improvement_roi,
+    create_chart_visualization,
+    analyze_patterns,
+    retrieve_cached_result,
+    get_discovery_pattern,
+    list_discovery_patterns,
+    format_insight,
+    create_executive_summary,
+    execute_python_code
+)
 
-# Define tool functions with simple signatures
-def execute_sparql_query(query: str, hypothesis: Optional[str] = None, tool_context: Optional[ToolContext] = None) -> dict:
-    """Execute a SPARQL query against the manufacturing ontology with discovery tracking.
-    
-    Args:
-        query: The SPARQL query to execute
-        hypothesis: What you're trying to discover with this query
-        tool_context: ADK tool context for state management
-        
-    Returns:
-        Query results with data, execution time, metadata, and next questions
-    """
-    logger.info(f"Executing SPARQL query: {query[:200]}...")
-    if hypothesis:
-        logger.info(f"Testing hypothesis: {hypothesis}")
-    
-    result = execute_sparql(query)
-    
-    # Track discoveries in state
-    if tool_context and hypothesis and "data" in result and result["data"].get("results"):
-        discoveries = tool_context.state.get("discoveries", [])
-        
-        # Analyze result for patterns
-        data_rows = result["data"]["results"]
-        pattern_insights = []
-        
-        # Look for anomalies or interesting patterns
-        if len(data_rows) > 0:
-            # Example pattern detection
-            if "oee" in str(data_rows[0]).lower() or "performance" in str(data_rows[0]).lower():
-                # Check for below-benchmark performance
-                for row in data_rows[:10]:  # Sample first 10
-                    if isinstance(row, list):
-                        for val in row:
-                            try:
-                                if isinstance(val, (int, float)) and 0 < val < 85:
-                                    pattern_insights.append(f"Found sub-benchmark performance: {val}%")
-                                    break
-                            except:
-                                pass
-            
-            # Track the discovery
-            discoveries.append({
-                "hypothesis": hypothesis,
-                "query": query[:200] + "..." if len(query) > 200 else query,
-                "row_count": len(data_rows),
-                "patterns": pattern_insights,
-                "timestamp": datetime.now().isoformat()
-            })
-            tool_context.state["discoveries"] = discoveries
-            
-            # Track value found
-            total_value = tool_context.state.get("total_value_found", 0)
-            tool_context.state["total_value_found"] = total_value
-    
-    # Add next questions based on results
-    result["next_questions"] = suggest_next_questions(result, hypothesis)
-    
-    # Check if aggregation failure was detected
-    if result.get("aggregation_failure", False):
-        logger.warning("SPARQL aggregation failure detected - suggesting Python fallback")
-        # Track failed pattern
-        if tool_context:
-            failed_patterns = tool_context.state.get("failed_patterns", [])
-            failed_patterns.append({"query_type": "COUNT/GROUP BY", "timestamp": datetime.now().isoformat()})
-            tool_context.state["failed_patterns"] = failed_patterns
-            
-        # Add a more prominent warning for the LLM
-        result["action_required"] = (
-            "CRITICAL: This aggregation query failed because SPARQL returned IRIs instead of numbers.\n"
-            "You MUST follow these steps:\n"
-            "1. Execute the provided fallback_query immediately\n"
-            "2. Use analyze_patterns(data=<result>, analysis_type='aggregation')\n"
-            "3. The Python tool will perform the counting/averaging correctly\n"
-            "DO NOT proceed without using the fallback approach!"
-        )
-    
-    return result
+# Define dynamic instruction provider
+def discovery_instruction_provider(context: ReadonlyContext) -> str:
+    """Dynamically provide instructions based on context to minimize token usage."""
+    # Load only essential context
+    base_instruction = """You are a discovery agent that uncovers insights through iterative exploration of data.
 
-def suggest_next_questions(result: dict, hypothesis: Optional[str]) -> List[str]:
-    """Suggest follow-up questions based on query results."""
-    suggestions = []
-    
-    if "data" in result and result["data"].get("results"):
-        row_count = len(result["data"]["results"])
-        
-        # Based on result characteristics
-        if row_count == 0:
-            suggestions.append("No data found - try broadening the query or checking different time periods")
-        elif row_count == 1:
-            suggestions.append("Single result - investigate why this is unique")
-        elif row_count > 100:
-            suggestions.append("Large dataset - consider aggregating by time or category")
-            
-        # Based on hypothesis
-        if hypothesis:
-            if "downtime" in hypothesis.lower():
-                suggestions.extend([
-                    "What time patterns exist in these downtimes?",
-                    "Which equipment has the most frequent issues?",
-                    "What's the financial impact of this downtime?"
-                ])
-            elif "performance" in hypothesis.lower() or "oee" in hypothesis.lower():
-                suggestions.extend([
-                    "How does performance vary by product?",
-                    "What's the gap to world-class 85% OEE?",
-                    "Which shifts have better performance?"
-                ])
-            elif "quality" in hypothesis.lower():
-                suggestions.extend([
-                    "What's the scrap cost by product?",
-                    "Are there patterns in quality issues?",
-                    "What's the ROI of improving quality?"
-                ])
-    
-    return suggestions
+IMPORTANT: When given ANY request, IMMEDIATELY execute queries using the execute_sparql_query tool. DO NOT just acknowledge - TAKE ACTION.
 
-def calculate_improvement_roi(
-    current_performance: float,
-    target_performance: float,
-    annual_volume: float,
-    unit_value: float
-) -> dict:
-    """Calculate ROI for performance improvements.
-    
-    Args:
-        current_performance: Current OEE or performance percentage
-        target_performance: Target OEE or performance percentage
-        annual_volume: Annual production volume in units
-        unit_value: Value per unit in dollars
-        
-    Returns:
-        ROI analysis with financial projections
-    """
-    logger.info(f"Calculating ROI: {current_performance}% -> {target_performance}%")
-    return calculate_roi(current_performance, target_performance, annual_volume, unit_value)
+## Manufacturing Analytics Context
+You are a Manufacturing Analyst specialized in analyzing MES (Manufacturing Execution System) data using SPARQL queries.
 
-async def create_chart_visualization(
-    data: dict,
-    chart_type: str,
-    title: str,
-    x_label: Optional[str] = None,
-    y_label: Optional[str] = None
-) -> dict:
-    """Create a visualization from query results.
-    
-    Args:
-        data: Query results with 'columns' and 'results' keys
-        chart_type: Type of chart - 'line', 'bar', 'scatter', or 'pie'
-        title: Chart title
-        x_label: X-axis label (optional)
-        y_label: Y-axis label (optional)
-        
-    Returns:
-        Visualization metadata and base64 encoded image
-    """
-    logger.info(f"Creating {chart_type} visualization: {title}")
-    # Note: tool_context is None for ADK Web implementation
-    return await create_visualization(data, chart_type, title, x_label, y_label, None)
+### Key Capabilities:
+1. Convert business questions to SPARQL queries
+2. Analyze OEE (Overall Equipment Effectiveness) and production metrics
+3. Identify patterns and optimization opportunities
+4. Calculate financial impact and ROI
 
-def analyze_patterns(data: dict, analysis_type: str) -> dict:
-    """Analyze patterns in query results.
-    
-    Args:
-        data: Query results from SPARQL
-        analysis_type: Type of analysis - temporal, capacity, quality, aggregation, or general
-        
-    Returns:
-        Analysis results with insights
-    """
-    logger.info(f"Analyzing patterns: {analysis_type}")
-    
-    # Handle case where data might be passed as a string description
-    if isinstance(data, str):
-        return {"error": f"Expected query results but received description: {data}"}
-    
-    # Ensure data is a dict or list
-    if not isinstance(data, (dict, list)):
-        return {"error": f"Expected dict or list but received {type(data).__name__}"}
-        
-    from adk_agents.tools.analysis_tools import analyze_patterns as analyze_patterns_impl
-    return analyze_patterns_impl(data, analysis_type)
+### Domain Knowledge:
+- OEE = Availability × Performance × Quality
+- Standard OEE benchmark: 85%
+- Equipment types: Filler, Packer, Palletizer
+- Key metrics: OEE, production volume, quality rate, downtime
 
-def retrieve_cached_result(cache_id: str) -> dict:
-    """Retrieve full cached query result by ID.
+"""
     
-    Args:
-        cache_id: The cache ID returned from a previous query
-        
-    Returns:
-        Full query result or error if not found
-    """
-    logger.info(f"Retrieving cached result: {cache_id}")
-    return get_cached_query_result(cache_id)
+    # Add essential SPARQL rules
+    base_instruction += context_loader.get_essential_sparql_rules()
+    
+    # Add discovery methodology
+    base_instruction += "\n" + context_loader.get_discovery_context()
+    
+    # Add Python analysis context
+    base_instruction += "\n" + context_loader.get_python_analysis_context()
+    
+    # Add technical notes
+    base_instruction += """
+
+## Technical Notes
+
+- Use mes_ontology_populated: prefix for all entities
+- Equipment is abstract - query concrete types: Filler, Packer, Palletizer
+- Use FILTER(ISIRI(?var)) for entity variables
+- When COUNT() with GROUP BY fails, use provided fallback query + analyze_patterns
+- For large results, use retrieve_cached_result(cache_id)
+
+## CRITICAL EXECUTION RULES
+
+1. **IMMEDIATE ACTION REQUIRED** - When given ANY request about data, equipment, OEE, or analysis:
+   - IMMEDIATELY execute a SPARQL query using execute_sparql_query tool
+   - DO NOT wait for further instructions
+   - DO NOT just acknowledge the request
+   - START by discovering entities with a query like:
+     SELECT ?equipment WHERE { ?equipment a ?type . FILTER(?type IN (mes_ontology_populated:Filler, mes_ontology_populated:Packer, mes_ontology_populated:Palletizer)) }
+
+2. **Discovery First** - For any analysis request:
+   - FIRST: Execute discovery queries to find entities
+   - SECOND: Query specific properties of discovered entities
+   - THIRD: Analyze patterns and calculate insights
+
+3. **Data Analysis Workflow**:
+   - Execute queries first, analyze results second
+   - Use Python for complex analysis on large datasets
+   - Calculate financial impact using calculate_improvement_roi
+
+4. **Expected Behavior**:
+   - User: "Find equipment with OEE below 85%"
+   - You: [IMMEDIATELY execute_sparql_query to find equipment and their OEE]
+   - You: [Analyze results and calculate improvement opportunities]
+   - You: [Present findings with financial impact]
+
+Remember: You're discovering opportunities worth millions. TAKE ACTION IMMEDIATELY."""
+    
+    return base_instruction
+
+# Create aliases for evaluation compatibility
+execute_sparql = execute_sparql_query
+calculate_roi = calculate_improvement_roi
 
 # Create FunctionTool instances
 sparql_tool = FunctionTool(execute_sparql_query)
@@ -243,86 +131,7 @@ root_agent = LlmAgent(
     name="discovery_analyst",
     description="Discovery Agent that uncovers optimization opportunities through iterative exploration",
     model=DEFAULT_MODEL,
-    instruction=f"""You are a discovery agent that uncovers insights through iterative exploration of data.
-
-{comprehensive_context}
-
-## Discovery Methodology
-
-Follow this approach to uncover valuable insights:
-
-1. **EXPLORE** - Start simple to understand the data landscape
-   - Begin with basic queries to see what data exists
-   - Check a few examples before diving deep
-   - Build mental model of relationships
-
-2. **DISCOVER** - When you find anomalies or patterns, dig deeper
-   - If you see unexpected values, investigate why
-   - Look for clustering, gaps, or outliers
-   - Compare actual performance to benchmarks (e.g., 85% OEE)
-
-3. **QUANTIFY** - Always translate findings to business impact
-   - Convert operational metrics to financial value
-   - Calculate annual impact (hourly × 24 × 365)
-   - Use actual product margins and volumes
-
-4. **RECOMMEND** - Provide specific actions with ROI
-   - Suggest concrete next steps
-   - Include implementation approach
-   - Estimate payback period
-
-## Key Behaviors
-
-- **Start with curiosity**: What patterns might exist in this data?
-- **Build incrementally**: Don't try complex queries first
-- **Learn from failures**: If COUNT returns IRIs, immediately use the fallback query
-- **Track discoveries**: Each finding guides the next question
-- **Think like a detective**: Follow clues, test hypotheses
-- **Always ask "So what?"**: Every finding must connect to value
-
-## Analysis Patterns
-
-When exploring data, consider these proven patterns:
-- **Hidden Capacity**: Gap between current and benchmark performance
-- **Temporal Patterns**: Time-based clustering of events
-- **Product Impact**: Which products affect performance most
-- **Quality Trade-offs**: Balance between quality and cost
-- **Root Causes**: Why do problems occur repeatedly
-
-## Technical Notes
-
-- Use mes_ontology_populated: prefix for all entities
-- Equipment is abstract - query concrete types: Filler, Packer, Palletizer
-- Use FILTER(ISIRI(?var)) for entity variables
-- When COUNT() with GROUP BY fails, use provided fallback query + analyze_patterns
-- For large results, use retrieve_cached_result(cache_id)
-
-Remember: You're not just executing queries - you're discovering opportunities worth millions.
-
-## Advanced Analysis with Python
-
-When SPARQL queries return large datasets (indicated by cache_id), use execute_python_code for sophisticated analysis:
-
-1. **Start Simple**: First explore the data structure
-   - Load data into DataFrame and check shape, columns, and preview
-   - Always start with basic exploration before complex analysis
-
-2. **Build Understanding**: Based on what you learn, dig deeper
-   - Use describe() for statistical summaries
-   - Check data types and missing values
-   - Look for patterns in the distribution
-
-3. **Discover Patterns**: Apply increasingly sophisticated analysis
-   - Group by dimensions to find clusters
-   - Look for temporal patterns and anomalies
-   - Calculate correlations between metrics
-
-4. **Quantify Impact**: Always connect findings to business value
-   - Convert operational metrics to financial impact
-   - Calculate annual projections
-   - Estimate ROI of improvements
-
-Remember: If code fails, learn from the error and try a different approach. Build your analysis iteratively.""",
+    instruction=discovery_instruction_provider,  # Use dynamic instruction provider
     tools=[
         sparql_tool,
         roi_tool,
@@ -337,3 +146,20 @@ Remember: If code fails, learn from the error and try a different approach. Buil
     ],
     output_key="latest_discovery"  # Auto-save insights to state
 )
+
+# Export tool functions with evaluation-compatible names
+__all__ = [
+    'root_agent',
+    'execute_sparql',
+    'execute_sparql_query',
+    'calculate_roi',
+    'calculate_improvement_roi',
+    'analyze_patterns',
+    'retrieve_cached_result',
+    'execute_python_code',
+    'create_chart_visualization',
+    'get_discovery_pattern',
+    'list_discovery_patterns',
+    'format_insight',
+    'create_executive_summary'
+]

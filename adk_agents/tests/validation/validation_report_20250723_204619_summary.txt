@@ -1,0 +1,18 @@
+MANUAL PROTOTYPE VALIDATION SUMMARY
+==================================================
+
+Overall Status: FAILED
+Achievement Rate: 272.6%
+Total Value Found: $6,815,400
+Target Value: $2,500,000
+
+Key Discoveries:
+- Equipment: LINE2-PAL, LINE3-PAL, LINE1-PCK, LINE1-FIL, LINE3-PCK, LINE1-PAL, LINE2-FIL, LINE2-PCK, LINE3-FIL
+- Products: 
+- Patterns: 1 found
+
+Validation Results:
+- total_value: PASSED
+- hidden_capacity: PASSED
+- product_oee: FAILED
+- patterns: FAILED

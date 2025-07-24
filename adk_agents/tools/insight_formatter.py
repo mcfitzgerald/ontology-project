@@ -35,7 +35,10 @@ def format_insight(
     
     # Calculate payback period (assuming 20% of impact as implementation cost)
     implementation_cost = impact * 0.2
-    payback_months = round((implementation_cost / impact) * 12, 1)
+    if impact > 0:
+        payback_months = round((implementation_cost / impact) * 12, 1)
+    else:
+        payback_months = 0
     
     insight = {
         "insight": finding,

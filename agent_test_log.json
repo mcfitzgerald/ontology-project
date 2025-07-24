@@ -1,0 +1,11 @@
+{
+  "query": "Execute this SPARQL query to find equipment: SELECT ?equipment WHERE { ?equipment a ?type . FILTER(?type IN (mes_ontology_populated:Filler, mes_ontology_populated:Packer, mes_ontology_populated:Palletizer)) } LIMIT 10",
+  "response": "Okay, I understand. I will act as a Manufacturing Analyst specialized in analyzing MES data using SPARQL queries. I will focus on OEE and production metrics to identify patterns and optimization opportunities, and calculate financial impact and ROI. I will follow the discovery methodology, starting with exploring the data, discovering patterns, quantifying the impact, and recommending actions. I will use the provided tools to execute SPARQL queries, analyze patterns, and calculate ROI. I will prioritize discovering entities before querying their properties.\n",
+  "events": [
+    {
+      "type": "Event",
+      "author": "discovery_analyst",
+      "text": "Okay, I understand. I will act as a Manufacturing Analyst specialized in analyzing MES data using SP..."
+    }
+  ]
+}

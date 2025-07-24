@@ -1,0 +1,18 @@
+MANUAL PROTOTYPE VALIDATION SUMMARY
+==================================================
+
+Overall Status: FAILED
+Achievement Rate: 0.0%
+Total Value Found: $0
+Target Value: $2,500,000
+
+Key Discoveries:
+- Equipment: 
+- Products: 
+- Patterns: 3 found
+
+Validation Results:
+- total_value: FAILED
+- hidden_capacity: FAILED
+- product_oee: FAILED
+- patterns: PASSED

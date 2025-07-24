@@ -216,6 +216,19 @@ def execute_sparql(query: str) -> Dict[str, Any]:
     
     # Handle all successful results by caching them
     if "status" in result and result["status"] == "success":
+        # Always provide a sample for LLM assessment
+        if "data" in result and "results" in result["data"]:
+            data = result["data"]
+            total_rows = len(data["results"])
+            
+            # Create sample for LLM (first 5 rows)
+            sample_size = min(5, total_rows)
+            result["data_sample"] = {
+                "columns": data.get("columns", []),
+                "rows": data["results"][:sample_size],
+                "total_rows": total_rows
+            }
+        
         # Check for aggregation failure (COUNT/GROUP BY returning IRIs)
         if detect_aggregation_failure(query, result):
             logger.warning("Detected COUNT/GROUP BY aggregation failure - IRIs returned instead of numbers")
@@ -236,28 +249,21 @@ def execute_sparql(query: str) -> Dict[str, Any]:
         # Always cache the result
         cache_id, summary = cache_query_result(query, result)
         
-        # If result is large (>10k tokens), return summary instead of full result
+        # For large results, return summary + sample
         if estimated_tokens > 10000:
             logger.info(f"Large result ({estimated_tokens} tokens) cached as {cache_id}")
             
-            # Get data shape for Python analysis hint
-            data_shape = {}
-            if "data" in result and "results" in result["data"]:
-                results = result["data"]["results"]
-                data_shape = {
-                    "rows": len(results),
-                    "columns": list(results[0].keys()) if results and isinstance(results[0], dict) else [],
-                    "sample_values": results[0] if results and isinstance(results[0], dict) else {}
-                }
-            
             return {
                 "status": "success",
-                "summary": summary,
-                "warning": f"Result contains ~{estimated_tokens} tokens. Returning summary to prevent token overflow.",
-                "cache_id": cache_id,
-                "full_result_available": True,
-                "python_analysis_hint": f"Use execute_python_code(code='...', cache_id='{cache_id}') to analyze the full dataset",
-                "data_shape": data_shape
+                "data_sample": result.get("data_sample", {}),
+                "summary": {
+                    "total_rows": total_rows,
+                    "columns": data.get("columns", []),
+                    "cache_id": cache_id,
+                    "estimated_tokens": estimated_tokens
+                },
+                "full_result_cached": True,
+                "python_hint": f"Use execute_python_code with cache_id='{cache_id}'. DataFrame 'df' will be pre-loaded with columns: {data.get('columns', [])}"
             }
         else:
             # For smaller results, still cache but return full data

@@ -150,7 +150,23 @@ Key features:
 - **Cached Result Support**: Can visualize from summaries or retrieve full data via cache_id
 - **Automatic Data Type Detection**: Intelligently selects appropriate chart type based on data characteristics
 
-### 6. Agent Implementations
+### 6. Python Executor Tool (`tools/python_executor.py`)
+
+Enables advanced data analysis using pandas and numpy on cached query results:
+
+Features:
+- **DataFrame Integration**: Automatically loads cached SPARQL results as pandas DataFrame
+- **Column Mapping**: SPARQL variables become DataFrame columns (without '?' prefix)
+- **Rich Environment**: Pre-loaded with pandas, numpy, datetime utilities
+- **Error Recovery**: Graceful error handling with detailed feedback
+- **Result Capture**: Analysis must define 'result' dict with findings
+
+Key methods:
+- `execute_python_code()`: Main execution with DataFrame loading
+- Supports iterative analysis refinement on errors
+- Integrates with cache system for large dataset handling
+
+### 7. Agent Implementations
 
 #### CLI Agent (`agents/manufacturing_analyst.py`)
 - Uses Google's generativeai library directly
@@ -166,7 +182,7 @@ Key features:
 
 #### ADK Agent (`manufacturing_agent/agent.py`)
 - Implements Google ADK's LlmAgent interface with discovery methodology
-- Enhanced with 9 specialized tools for discovery-driven analysis:
+- Enhanced with 10 specialized tools for discovery-driven analysis:
   - **execute_sparql_query**: Hypothesis-driven query execution with state tracking
   - **get_discovery_pattern**: Provides proven analysis patterns
   - **analyze_patterns**: Temporal and statistical pattern detection
@@ -176,11 +192,12 @@ Key features:
   - **retrieve_cached_result**: Large result handling
   - **format_insight**: Executive-ready insight formatting
   - **get_sparql_reference**: Query building guidance
+  - **execute_python_code**: Advanced DataFrame analysis on cached results
 - **Discovery Methodology**: Implements EXPLORE → DISCOVER → QUANTIFY → RECOMMEND flow
 - **State Management**: Uses ADK's tool_context.state for tracking discoveries
-- **Flexible Validation**: Designed for outcome-based evaluation rather than rigid trajectories
+- **Simplified Evaluation**: Removed rigid evaluation framework for more flexible testing
 
-### 7. Configuration System (`config/settings.py`)
+### 8. Configuration System (`config/settings.py`)
 
 Centralized configuration management supporting:
 - Environment variable loading via .env files
@@ -221,6 +238,7 @@ graph TB
         ROI[ROI Calculator<br/>Financial Quantification]
         VIZ[Visualization Tool<br/>Chart Generation]
         INSIGHTFORMAT[Insight Formatter<br/>Executive Ready]
+        PYTHON[Python Executor<br/>DataFrame Analysis]
         RESULTCACHE[Result Cache<br/>Token Safety]
         CACHE[Query Cache]
         STATE[State Tracker<br/>Discovery Memory]
@@ -253,12 +271,14 @@ graph TB
     CLIAGENT -->|Function Call| ANALYSIS
     CLIAGENT -->|Function Call| ROI
     CLIAGENT -->|Function Call| VIZ
+    CLIAGENT -->|Function Call| PYTHON
     ADKAGENT -->|1. Explore| DISCOVERYPATTERNS
     ADKAGENT -->|2. Discover| SPARQLTOOL
     ADKAGENT -->|3. Analyze| ANALYSIS
     ADKAGENT -->|4. Quantify| ROI
     ADKAGENT -->|5. Visualize| VIZ
     ADKAGENT -->|6. Format| INSIGHTFORMAT
+    ADKAGENT -->|7. Advanced Analysis| PYTHON
     SPARQLTOOL -->|Track| STATE
     STATE -->|Inform| ADKAGENT
     
@@ -282,12 +302,16 @@ graph TB
     %% Analysis flow
     SPARQLTOOL -->|Results| ANALYSIS
     SPARQLTOOL -->|Results| VIZ
+    RESULTCACHE -->|Cached Data| PYTHON
+    PYTHON -->|DataFrame Analysis| ANALYSIS
     ANALYSIS -->|Insights| CLIAGENT
     ANALYSIS -->|Insights| ADKAGENT
     ROI -->|Calculations| CLIAGENT
     ROI -->|Calculations| ADKAGENT
     VIZ -->|Charts| CLIAGENT
     VIZ -->|Charts| ADKAGENT
+    PYTHON -->|Results| CLIAGENT
+    PYTHON -->|Results| ADKAGENT
     
     %% Response flow
     CLIAGENT -->|Formatted Response| CLI
@@ -306,6 +330,7 @@ graph TB
     style DISCOVERYPATTERNS fill:#f3e5f5
     style INSIGHTFORMAT fill:#f3e5f5
     style STATE fill:#f3e5f5
+    style PYTHON fill:#f3e5f5
     style GEMINI fill:#e8f5e9
     style SPARQLAPI fill:#ffebee
     style DB fill:#ffebee
@@ -439,6 +464,8 @@ Implements 5 proven discovery patterns:
 
 ## Test Cases: Proven Manufacturing Examples
 
+The system now uses a simplified testing approach focused on real-world scenarios rather than rigid evaluation trajectories. Test files are located in `adk_agents/tests/` with unit, integration, and simple evaluation tests.
+
 The following real-world examples demonstrate the system's capabilities and serve as test cases:
 
 ### Test Case 1: Hidden Capacity Analysis
@@ -456,7 +483,7 @@ The following real-world examples demonstrate the system's capabilities and serv
 - **Confidence**: 95%
 - **Action**: Preventative maintenance and improved jam detection
 
-**Validation**: Flexible validators confirmed 90% score
+**Test Execution**: Run via `adk web --port 8001` or `python main.py`
 
 ### Test Case 2: Micro-Stop Pattern Recognition
 **Business Question**: "Why do small problems cascade into big ones?"
@@ -589,10 +616,10 @@ The system is designed to work with any domain that has:
 ## Future Enhancements
 
 ### Near Term
-1. **Flexible Evaluation Framework**: Replace rigid trajectory matching with outcome-based validation
-2. **Token Optimization**: Implement query pagination to handle larger datasets
-3. **Pattern Library Expansion**: Add industry-specific discovery patterns
-4. **Multi-Agent Orchestration**: Specialized agents for different discovery types
+1. **Token Optimization**: Implement query pagination to handle larger datasets
+2. **Pattern Library Expansion**: Add industry-specific discovery patterns
+3. **Multi-Agent Orchestration**: Specialized agents for different discovery types
+4. **Enhanced Python Analysis**: Expand DataFrame capabilities for complex statistical modeling
 
 ### Long Term
 1. **Self-Improving Discoveries**: Learn new patterns from successful analyses
@@ -608,7 +635,7 @@ The ADK Manufacturing Analytics System represents a sophisticated integration of
 
 The discovery-driven system has exceeded all expectations, finding $9.36M in optimization opportunities compared to the manual prototype's $2.5M target - a 374% improvement. This was achieved through the revolutionary EXPLORE → DISCOVER → QUANTIFY → RECOMMEND methodology that allows emergent discovery rather than rigid analysis paths.
 
-The system's flexible validation approach focuses on valuable outcomes rather than specific tool sequences, enabling it to find better opportunities through unexpected paths. This makes it ideal for any domain where hidden value exists in operational data.
+The system now features enhanced Python-based data analysis capabilities through the Python Executor tool, enabling sophisticated DataFrame operations on cached SPARQL results. With the removal of rigid evaluation frameworks, the system focuses on practical testing through real-world scenarios, making it more adaptable and maintainable for production use in any domain where hidden value exists in operational data.
 
 ---
 

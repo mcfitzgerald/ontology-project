@@ -18,7 +18,9 @@ def execute_python_code(
     """Execute Python code with access to cached query results.
     
     Use this tool for advanced analysis on large datasets. The code has access to:
-    - data: The cached query results as a list of dictionaries (if cache_id provided)
+    - df: A pandas DataFrame with proper column names (if cache_id provided)
+    - data: The raw query results as a list of lists (backward compatibility)
+    - columns: List of column names from the SPARQL query
     - pandas as pd, numpy as np, datetime, timedelta
     - Must define 'result' dict with analysis findings
     
@@ -39,10 +41,11 @@ def execute_python_code(
         
     Example:
         code = '''
-        df = pd.DataFrame(data)
+        # DataFrame 'df' is pre-loaded with proper column names
         print(f"Analyzing {len(df)} rows")
+        print(f"Columns: {df.columns.tolist()}")
         
-        # Your analysis here
+        # Your analysis here - access columns directly
         avg_oee = df['oee'].mean()
         
         result = {
@@ -69,9 +72,28 @@ def execute_python_code(
             from .result_cache import get_cached_result
             cached_data = get_cached_result(cache_id)
             
-            if cached_data and 'data' in cached_data and 'results' in cached_data['data']:
-                namespace['data'] = cached_data['data']['results']
-                logger.info(f"Loaded {len(namespace['data'])} rows from cache")
+            if cached_data and 'data' in cached_data:
+                data = cached_data['data']
+                
+                # Handle API response format properly
+                if 'columns' in data and 'results' in data:
+                    # Create DataFrame with proper column names
+                    columns = [col.replace('?', '') for col in data['columns']]
+                    namespace['df'] = pd.DataFrame(data['results'], columns=columns)
+                    
+                    # Also provide raw data for backward compatibility
+                    namespace['data'] = data['results']
+                    namespace['columns'] = columns
+                    
+                    logger.info(f"Loaded DataFrame with {len(namespace['df'])} rows and columns: {columns}")
+                elif 'results' in data:
+                    # Fallback for old format or data without columns
+                    namespace['data'] = data['results']
+                    logger.warning("No column information found, using raw data")
+                else:
+                    # Direct data format
+                    namespace['data'] = data
+                    logger.warning("Using direct data format")
             else:
                 return {
                     "status": "error",

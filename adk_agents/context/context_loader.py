@@ -254,6 +254,87 @@ SELECT ?equipment ?oee WHERE {
     FILTER(ISIRI(?equipment))
     FILTER(ISIRI(?event))
 }"""
+    
+    def get_essential_sparql_rules(self) -> str:
+        """Get just the essential SPARQL rules."""
+        return self.load_sparql_reference()
+    
+    def get_discovery_context(self) -> str:
+        """Get focused context for discovery methodology."""
+        return """## Discovery Methodology
+
+CRITICAL RULE: **ALWAYS perform entity discovery BEFORE complex queries**
+- When asked about equipment, FIRST discover what equipment exists
+- When asked about lines, FIRST discover what lines exist
+- Only AFTER discovering entities should you analyze their properties
+
+Follow this approach to uncover valuable insights:
+
+1. **EXPLORE** - Start simple to understand the data landscape
+   - MANDATORY: First discover entities (equipment, lines) before analyzing them
+   - Begin with basic queries to see what data exists
+   - Check a few examples before diving deep
+   - Build mental model of relationships
+
+2. **DISCOVER** - When you find anomalies or patterns, dig deeper
+   - If you see unexpected values, investigate why
+   - Look for clustering, gaps, or outliers
+   - Compare actual performance to benchmarks (e.g., 85% OEE)
+
+3. **QUANTIFY** - Always translate findings to business impact
+   - Convert operational metrics to financial value
+   - Calculate annual impact (hourly × 24 × 365)
+   - Use actual product margins and volumes
+
+4. **RECOMMEND** - Provide specific actions with ROI
+   - Suggest concrete next steps
+   - Include implementation approach
+   - Estimate payback period
+
+## Key Behaviors
+
+- **Start with curiosity**: What patterns might exist in this data?
+- **Build incrementally**: Don't try complex queries first
+- **Learn from failures**: If COUNT returns IRIs, immediately use the fallback query
+- **Track discoveries**: Each finding guides the next question
+- **Think like a detective**: Follow clues, test hypotheses
+- **Always ask "So what?"**: Every finding must connect to value
+
+## Analysis Patterns
+
+When exploring data, consider these proven patterns:
+- **Hidden Capacity**: Gap between current and benchmark performance
+- **Temporal Patterns**: Time-based clustering of events
+- **Product Impact**: Which products affect performance most
+- **Quality Trade-offs**: Balance between quality and cost
+- **Root Causes**: Why do problems occur repeatedly"""
+    
+    def get_python_analysis_context(self) -> str:
+        """Get context for Python analysis capabilities."""
+        return """## Advanced Analysis with Python
+
+When SPARQL queries return large datasets (indicated by cache_id), use execute_python_code for sophisticated analysis:
+
+1. **Start Simple**: First explore the data structure
+   - Load data into DataFrame and check shape, columns, and preview
+   - Always start with basic exploration before complex analysis
+
+2. **Build Understanding**: Based on what you learn, dig deeper
+   - Use describe() for statistical summaries
+   - Check data types and missing values
+   - Look for patterns in the distribution
+
+3. **Discover Patterns**: Apply increasingly sophisticated analysis
+   - Group by dimensions to find clusters
+   - Look for temporal patterns and anomalies
+   - Calculate correlations between metrics
+
+4. **Quantify Impact**: Always connect findings to business value
+   - Convert operational metrics to financial impact
+   - Calculate annual projections
+   - Estimate ROI of improvements
+
+Remember: If code fails, learn from the error and try a different approach. Build your analysis iteratively."""
 
 # Create singleton instance
 context_loader = ContextLoader()
