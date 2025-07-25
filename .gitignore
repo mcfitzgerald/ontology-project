@@ -210,3 +210,4 @@ __marimo__/
 #other 
 *.log
 cache/
+adk_agents/cache/
