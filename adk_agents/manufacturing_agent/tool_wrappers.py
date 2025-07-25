@@ -76,7 +76,7 @@ def calculate_improvement_roi(
     from adk_agents.tools.analysis_tools import calculate_roi
     return calculate_roi(current_performance, target_performance, annual_volume, unit_value)
 
-def create_chart_visualization(
+async def create_chart_visualization(
     data: dict,
     chart_type: str,
     title: str,
@@ -97,9 +97,8 @@ def create_chart_visualization(
     """
     logger.info(f"Creating {chart_type} visualization: {title}")
     from adk_agents.tools.visualization_tool import create_visualization
-    import asyncio
-    # Run async function in sync context
-    return asyncio.run(create_visualization(data, chart_type, title, x_label, y_label, None))
+    # Await the async function directly
+    return await create_visualization(data, chart_type, title, x_label, y_label, None)
 
 def analyze_patterns(data: dict, analysis_type: str) -> dict:
     """Analyze patterns in query results.

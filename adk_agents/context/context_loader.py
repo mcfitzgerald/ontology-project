@@ -78,56 +78,23 @@ CRITICAL RULES for Owlready2 SPARQL:
             examples = [
                 {
                     "purpose": "Get all equipment",
-                    "query": """SELECT ?equipment WHERE {
-    { ?equipment a mes_ontology_populated:Filler } UNION
-    { ?equipment a mes_ontology_populated:Packer } UNION
-    { ?equipment a mes_ontology_populated:Palletizer }
-    FILTER(ISIRI(?equipment))
-}"""
+                    "query": """SELECT ?equipment WHERE { { ?equipment a mes_ontology_populated:Filler } UNION { ?equipment a mes_ontology_populated:Packer } UNION { ?equipment a mes_ontology_populated:Palletizer } FILTER(ISIRI(?equipment)) }"""
                 },
                 {
                     "purpose": "Get OEE scores with timestamps",
-                    "query": """SELECT ?equipment ?oee ?timestamp WHERE {
-    ?equipment mes_ontology_populated:logsEvent ?event .
-    ?event mes_ontology_populated:hasOEEScore ?oee .
-    ?event mes_ontology_populated:hasTimestamp ?timestamp .
-    FILTER(ISIRI(?equipment))
-    FILTER(ISIRI(?event))
-}"""
+                    "query": """SELECT ?equipment ?oee ?timestamp WHERE { ?equipment mes_ontology_populated:logsEvent ?event . ?event mes_ontology_populated:hasOEEScore ?oee . ?event mes_ontology_populated:hasTimestamp ?timestamp . FILTER(ISIRI(?equipment)) FILTER(ISIRI(?event)) }"""
                 },
                 {
                     "purpose": "Production summary by product",
-                    "query": """SELECT ?product (SUM(?good) as ?total_good) (SUM(?scrap) as ?total_scrap) WHERE {
-    ?order mes_ontology_populated:producesProduct ?product .
-    ?equipment mes_ontology_populated:executesOrder ?order .
-    ?equipment mes_ontology_populated:logsEvent ?event .
-    ?event mes_ontology_populated:hasGoodUnits ?good .
-    ?event mes_ontology_populated:hasScrapUnits ?scrap .
-    FILTER(ISIRI(?product))
-    FILTER(ISIRI(?order))
-    FILTER(ISIRI(?equipment))
-    FILTER(ISIRI(?event))
-} GROUP BY ?product"""
+                    "query": """SELECT ?product (SUM(?good) as ?total_good) (SUM(?scrap) as ?total_scrap) WHERE { ?order mes_ontology_populated:producesProduct ?product . ?equipment mes_ontology_populated:executesOrder ?order . ?equipment mes_ontology_populated:logsEvent ?event . ?event mes_ontology_populated:hasGoodUnits ?good . ?event mes_ontology_populated:hasScrapUnits ?scrap . FILTER(ISIRI(?product)) FILTER(ISIRI(?order)) FILTER(ISIRI(?equipment)) FILTER(ISIRI(?event)) } GROUP BY ?product"""
                 },
                 {
                     "purpose": "Get downtime events with reasons (avoid COUNT with GROUP BY)",
-                    "query": """SELECT ?equipment ?reason WHERE {
-    ?equipment mes_ontology_populated:logsEvent ?event .
-    ?event a mes_ontology_populated:DowntimeLog .
-    ?event mes_ontology_populated:hasDowntimeReasonCode ?reason .
-    FILTER(ISIRI(?equipment))
-    FILTER(ISIRI(?event))
-}"""
+                    "query": """SELECT ?equipment ?reason WHERE { ?equipment mes_ontology_populated:logsEvent ?event . ?event a mes_ontology_populated:DowntimeLog . ?event mes_ontology_populated:hasDowntimeReasonCode ?reason . FILTER(ISIRI(?equipment)) FILTER(ISIRI(?event)) }"""
                 },
                 {
                     "purpose": "Average OEE by equipment (aggregation without COUNT)",
-                    "query": """SELECT ?equipment (AVG(?oee) AS ?avg_oee) WHERE {
-    ?equipment mes_ontology_populated:logsEvent ?event .
-    ?event mes_ontology_populated:hasOEEScore ?oee .
-    FILTER(ISIRI(?equipment))
-}
-GROUP BY ?equipment
-ORDER BY ?avg_oee"""
+                    "query": """SELECT ?equipment (AVG(?oee) AS ?avg_oee) WHERE { ?equipment mes_ontology_populated:logsEvent ?event . ?event mes_ontology_populated:hasOEEScore ?oee . FILTER(ISIRI(?equipment)) } GROUP BY ?equipment ORDER BY ?avg_oee"""
                 }
             ]
         
@@ -219,7 +186,8 @@ ORDER BY ?avg_oee"""
             "3. Use FILTER(ISIRI(?var)) for all entity variables",
             "4. Use UNION to query multiple equipment types",
             "5. Timestamps are in ISO format",
-            "6. For aggregations, use GROUP BY with appropriate aggregate functions\n",
+            "6. For aggregations, use GROUP BY with appropriate aggregate functions",
+            "7. **CRITICAL**: Format queries as single-line strings when executing (no newlines)\n",
             "\n### Analysis Approach:",
             "1. First understand what data is being requested",
             "2. Construct appropriate SPARQL query following the rules",
@@ -313,28 +281,40 @@ When exploring data, consider these proven patterns:
         """Get context for Python analysis capabilities."""
         return """## Advanced Analysis with Python
 
-When SPARQL queries return large datasets (indicated by cache_id), use execute_python_code for sophisticated analysis:
+When SPARQL queries return large datasets (indicated by cache_id), use execute_python_code for sophisticated analysis.
 
-1. **Start Simple**: First explore the data structure
-   - Load data into DataFrame and check shape, columns, and preview
-   - Always start with basic exploration before complex analysis
+### IMPORTANT: DataFrame Pre-Loading
+When you provide a cache_id, the DataFrame 'df' is automatically pre-loaded with proper column names.
+You do NOT need to call any API functions - just use 'df' directly.
 
-2. **Build Understanding**: Based on what you learn, dig deeper
-   - Use describe() for statistical summaries
-   - Check data types and missing values
-   - Look for patterns in the distribution
+### Example Usage:
+```python
+# DataFrame 'df' is already loaded when cache_id is provided
+print(f"Analyzing {len(df)} rows")
+print(f"Columns: {df.columns.tolist()}")
 
-3. **Discover Patterns**: Apply increasingly sophisticated analysis
-   - Group by dimensions to find clusters
-   - Look for temporal patterns and anomalies
-   - Calculate correlations between metrics
+# Direct column access - columns are named without the '?' prefix
+avg_oee = df['oee'].mean()  # NOT df['?oee']
+top_equipment = df.groupby('equipment')['oee'].mean().sort_values(ascending=False)
 
-4. **Quantify Impact**: Always connect findings to business value
-   - Convert operational metrics to financial impact
-   - Calculate annual projections
-   - Estimate ROI of improvements
+# Must define 'result' dict with findings
+result = {
+    "average_oee": avg_oee,
+    "top_performer": top_equipment.index[0],
+    "bottom_performer": top_equipment.index[-1]
+}
+```
 
-Remember: If code fails, learn from the error and try a different approach. Build your analysis iteratively."""
+### Analysis Workflow:
+1. **Explore Structure**: Check df.shape, df.columns, df.head()
+2. **Understand Data**: Use df.describe(), check for nulls
+3. **Find Patterns**: Group by dimensions, calculate statistics
+4. **Return Results**: Always define 'result' dict
+
+### Error Recovery:
+- If you get NameError about 'df': Check that cache_id was provided
+- If you get KeyError on columns: Use df.columns.tolist() to see exact names
+- Build incrementally - test simple operations before complex analysis"""
 
 # Create singleton instance
 context_loader = ContextLoader()
