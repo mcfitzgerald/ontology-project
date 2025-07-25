@@ -1,21 +1,17 @@
 """ADK Manufacturing Analytics Agent System."""
 __version__ = "0.1.0"
 
-# Import the root_agent for ADK Web UI
+# Import the root_agent for both ADK Web UI and CLI
 from .manufacturing_agent import root_agent
 
-# CLI agent imports
-from .agents.manufacturing_analyst import ManufacturingAnalystAgent, create_manufacturing_analyst
+# Tool imports
 from .tools.sparql_tool import execute_sparql
-from .tools.analysis_tools import analyze_patterns, calculate_roi
 from .tools.cache_manager import cache_manager
+from .tools.python_executor import execute_python_code
 
 __all__ = [
-    "root_agent",  # For ADK Web UI
-    "ManufacturingAnalystAgent",
-    "create_manufacturing_analyst",
+    "root_agent",  # For both ADK Web UI and CLI
     "execute_sparql", 
-    "analyze_patterns",
-    "calculate_roi",
+    "execute_python_code",
     "cache_manager"
 ]

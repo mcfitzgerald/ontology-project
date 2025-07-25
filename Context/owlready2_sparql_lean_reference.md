@@ -28,159 +28,7 @@ mes_ontology_populated:hasOEEScore  # Correct for mes_ontology_populated.owl
 - ISIRI() - Supported and recommended
 - Basic comparisons (<, >, =, !=) - Fully supported
 
-## Essential Query Patterns
-
-### 0. Discovery Pattern (ALWAYS START HERE!)
-```sparql
-# First discover what lines exist
-SELECT DISTINCT ?line WHERE { 
-    ?equipment mes_ontology_populated:belongsToLine ?line 
-}
-
-# First discover what equipment exists
-SELECT DISTINCT ?equipment WHERE {
-    { ?equipment a mes_ontology_populated:Filler } UNION
-    { ?equipment a mes_ontology_populated:Packer } UNION
-    { ?equipment a mes_ontology_populated:Palletizer }
-}
-
-# First discover what types exist
-SELECT DISTINCT ?type WHERE { 
-    ?entity a ?type .
-    FILTER(ISIRI(?type))
-}
-```
-
-### 1. Query Equipment (Concrete Types)
-```sparql
-# Equipment is abstract - query its concrete subclasses
-SELECT ?equipment WHERE {
-    { ?equipment a mes_ontology_populated:Filler } UNION
-    { ?equipment a mes_ontology_populated:Packer } UNION
-    { ?equipment a mes_ontology_populated:Palletizer }
-    FILTER(ISIRI(?equipment))
-}
-```
-
-### 2. Get Properties
-```sparql
-SELECT ?property ?value WHERE {
-    mes_ontology_populated:LINE1-FIL ?property ?value .
-    FILTER(ISIRI(?property))
-}
-```
-
-### 3. Filter Numeric Values
-```sparql
-SELECT ?equipment ?oee WHERE {
-    ?equipment mes_ontology_populated:logsEvent ?event .
-    ?event mes_ontology_populated:hasOEEScore ?oee .
-    FILTER(?oee < 85.0)
-    FILTER(ISIRI(?equipment))
-}
-```
-
-### 4. Aggregations
-```sparql
-SELECT ?equipment (AVG(?oee) AS ?avgOEE) WHERE {
-    ?equipment mes_ontology_populated:logsEvent ?event .
-    ?event mes_ontology_populated:hasOEEScore ?oee .
-    FILTER(ISIRI(?equipment))
-}
-GROUP BY ?equipment
-```
-
-### 5. Time Series
-```sparql
-SELECT ?equipment ?oee ?timestamp WHERE {
-    ?equipment mes_ontology_populated:logsEvent ?event .
-    ?event mes_ontology_populated:hasOEEScore ?oee .
-    ?event mes_ontology_populated:hasTimestamp ?timestamp .
-    FILTER(ISIRI(?equipment))
-}
-ORDER BY ?timestamp
-LIMIT 100
-```
-
-### 6. Relationships
-```sparql
-SELECT ?upstream ?downstream WHERE {
-    ?upstream mes_ontology_populated:isUpstreamOf ?downstream .
-    FILTER(ISIRI(?upstream) && ISIRI(?downstream))
-}
-```
-
-### 7. Optional Properties
-```sparql
-SELECT ?equipment ?id WHERE {
-    { ?equipment a mes_ontology_populated:Filler } UNION
-    { ?equipment a mes_ontology_populated:Packer } UNION
-    { ?equipment a mes_ontology_populated:Palletizer }
-    OPTIONAL { ?equipment mes_ontology_populated:hasEquipmentID ?id }
-    FILTER(ISIRI(?equipment))
-}
-```
-
-### 8. Count by Type
-```sparql
-SELECT ?type (COUNT(?x) AS ?count) WHERE {
-    ?x a ?type .
-    FILTER(ISIRI(?type))
-}
-GROUP BY ?type
-ORDER BY DESC(?count)
-```
-
-### 9. Product Analysis
-```sparql
-SELECT ?product ?name ?price ?cost WHERE {
-    ?product a mes_ontology_populated:Product .
-    ?product mes_ontology_populated:hasProductName ?name .
-    ?product mes_ontology_populated:hasSalePrice ?price .
-    ?product mes_ontology_populated:hasStandardCost ?cost .
-}
-```
-
-### 10. Downtime Events
-```sparql
-SELECT ?equipment ?timestamp ?reason WHERE {
-    ?equipment mes_ontology_populated:logsEvent ?event .
-    ?event a mes_ontology_populated:DowntimeLog .
-    ?event mes_ontology_populated:hasTimestamp ?timestamp .
-    OPTIONAL { ?event mes_ontology_populated:hasDowntimeReasonCode ?reason }
-    FILTER(ISIRI(?equipment))
-} 
-ORDER BY DESC(?timestamp) 
-LIMIT 100
-```
-
-### 11. Production Quality Issues
-```sparql
-SELECT ?equipment ?goodUnits ?scrapUnits ?qualityScore WHERE {
-    ?equipment mes_ontology_populated:logsEvent ?event .
-    ?event a mes_ontology_populated:ProductionLog .
-    ?event mes_ontology_populated:hasGoodUnits ?goodUnits .
-    ?event mes_ontology_populated:hasScrapUnits ?scrapUnits .
-    ?event mes_ontology_populated:hasQualityScore ?qualityScore .
-    FILTER(?qualityScore < 98.0)
-    FILTER(ISIRI(?equipment))
-} 
-LIMIT 100
-```
-
-### 12. Equipment Chain
-```sparql
-SELECT ?filler ?packer ?palletizer WHERE {
-    ?filler a mes_ontology_populated:Filler .
-    ?packer a mes_ontology_populated:Packer .
-    ?palletizer a mes_ontology_populated:Palletizer .
-    ?filler mes_ontology_populated:isUpstreamOf ?packer .
-    ?packer mes_ontology_populated:isUpstreamOf ?palletizer .
-} 
-LIMIT 20
-```
-
-### 13. IRI Filtering Patterns (CRITICAL!)
+## IRI Filtering Patterns (CRITICAL!)
 ```sparql
 # WRONG - Treating IRI as string
 FILTER (?line = "LINE2")  # This will NEVER match!
@@ -224,45 +72,11 @@ GROUP BY ?equipment
 
 ### Common Query Debugging Patterns
 
-#### Problem: COUNT returns IRI instead of number
-```sparql
-# WRONG - May return IRI in some contexts
-SELECT (COUNT(?event) AS ?count) WHERE { ... }
+**COUNT returns IRI instead of number**: When using COUNT with GROUP BY, Owlready2 may return IRIs. Use the fallback query approach - fetch raw data and aggregate with Python.
 
-# CORRECT - Ensure proper aggregation
-SELECT (COUNT(DISTINCT ?event) AS ?count) WHERE { ... }
-```
+**Variable not found**: Ensure all variables in SELECT are bound in the WHERE clause.
 
-#### Problem: Variable not found error
-```sparql
-# WRONG - ?timestamp not bound in WHERE clause
-SELECT ?timestamp WHERE {
-    ?equipment mes_ontology_populated:logsEvent ?event .
-}
-
-# CORRECT - Bind the variable in WHERE clause
-SELECT ?timestamp WHERE {
-    ?equipment mes_ontology_populated:logsEvent ?event .
-    ?event mes_ontology_populated:hasTimestamp ?timestamp .
-}
-```
-
-#### Problem: Complex queries failing
-```sparql
-# Start simple and test incrementally
-# Step 1: Test basic pattern
-SELECT * WHERE {
-    ?equipment a mes_ontology_populated:Filler .
-} LIMIT 10
-
-# Step 2: Add relationships
-SELECT * WHERE {
-    ?equipment a mes_ontology_populated:Filler .
-    ?equipment mes_ontology_populated:belongsToLine ?line .
-} LIMIT 10
-
-# Step 3: Add filters and aggregations only after basic pattern works
-```
+**Complex queries failing**: Build incrementally - start with simple patterns and add complexity step by step.
 
 #### Debugging Strategy
 1. Always test with LIMIT 10 first
@@ -289,3 +103,44 @@ SELECT * WHERE {
 - FILTER(ISIRI()) for all entities?
 - No regex(), str(), or BIND()?
 - LIMIT clause for large results?
+
+## Additional Technical Notes
+
+### Query Formatting Requirements
+- **CRITICAL**: Format queries as single-line strings when executing (no newlines)
+- Use proper spacing between clauses
+- Ensure all brackets are balanced
+- Test with simple queries before complex ones
+
+### Large Result Handling
+- Results over 10k tokens are automatically cached
+- Use `retrieve_cached_result(cache_id)` to access full data
+- Summary is provided with key statistics
+
+### Supported Functions
+**Working:**
+- Basic comparisons: <, >, =, !=
+- ISIRI()
+- String functions: STRENDS(), CONTAINS() (limited)
+- Aggregations: SUM(), AVG(), MIN(), MAX()
+- COUNT() (but may fail with GROUP BY)
+
+**Not Supported:**
+- regex()
+- str() 
+- BIND()
+- Complex datetime operations
+- IN clause for types (use UNION instead)
+
+### Performance Considerations
+- Start with LIMIT for exploration
+- Use filters to reduce result size
+- Aggregate at query level when possible
+- Cache prevents redundant executions
+
+### Common Pitfalls to Avoid
+- Don't use string matching on properties - use direct predicates
+- Don't assume reverse relationships exist in the ontology
+- Don't use complex datetime operations
+- Don't use BIND() function - not supported
+- Always include proper GROUP BY when using aggregations

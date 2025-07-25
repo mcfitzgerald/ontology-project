@@ -1,0 +1,73 @@
+{
+  "description": "Successful SPARQL query patterns for MES ontology",
+  "patterns": [
+    {
+      "purpose": "Get all equipment",
+      "category": "discovery",
+      "query": "SELECT ?equipment WHERE { { ?equipment a mes_ontology_populated:Filler } UNION { ?equipment a mes_ontology_populated:Packer } UNION { ?equipment a mes_ontology_populated:Palletizer } FILTER(ISIRI(?equipment)) }",
+      "notes": "Equipment is abstract - must query concrete subtypes with UNION"
+    },
+    {
+      "purpose": "Get OEE scores with timestamps",
+      "category": "metrics",
+      "query": "SELECT ?equipment ?oee ?timestamp WHERE { ?equipment mes_ontology_populated:logsEvent ?event . ?event mes_ontology_populated:hasOEEScore ?oee . ?event mes_ontology_populated:hasTimestamp ?timestamp . FILTER(ISIRI(?equipment)) FILTER(ISIRI(?event)) }",
+      "notes": "Core pattern: equipment -> event -> properties"
+    },
+    {
+      "purpose": "Production summary by product",
+      "category": "aggregation",
+      "query": "SELECT ?product (SUM(?good) as ?total_good) (SUM(?scrap) as ?total_scrap) WHERE { ?order mes_ontology_populated:producesProduct ?product . ?equipment mes_ontology_populated:executesOrder ?order . ?equipment mes_ontology_populated:logsEvent ?event . ?event mes_ontology_populated:hasGoodUnits ?good . ?event mes_ontology_populated:hasScrapUnits ?scrap . FILTER(ISIRI(?product)) FILTER(ISIRI(?order)) FILTER(ISIRI(?equipment)) FILTER(ISIRI(?event)) } GROUP BY ?product",
+      "notes": "Complex join pattern with proper FILTER usage"
+    },
+    {
+      "purpose": "Get downtime events with reasons",
+      "category": "downtime",
+      "query": "SELECT ?equipment ?reason WHERE { ?equipment mes_ontology_populated:logsEvent ?event . ?event a mes_ontology_populated:DowntimeLog . ?event mes_ontology_populated:hasDowntimeReasonCode ?reason . FILTER(ISIRI(?equipment)) FILTER(ISIRI(?event)) }",
+      "notes": "Avoid COUNT with GROUP BY - fetch raw data for Python aggregation if needed"
+    },
+    {
+      "purpose": "Average OEE by equipment",
+      "category": "aggregation",
+      "query": "SELECT ?equipment (AVG(?oee) AS ?avg_oee) WHERE { ?equipment mes_ontology_populated:logsEvent ?event . ?event mes_ontology_populated:hasOEEScore ?oee . FILTER(ISIRI(?equipment)) } GROUP BY ?equipment ORDER BY ?avg_oee",
+      "notes": "Simple aggregation without COUNT works well"
+    },
+    {
+      "purpose": "Equipment by line",
+      "category": "discovery",
+      "query": "SELECT ?equipment ?line WHERE { ?equipment mes_ontology_populated:belongsToLine ?line . { ?equipment a mes_ontology_populated:Filler } UNION { ?equipment a mes_ontology_populated:Packer } UNION { ?equipment a mes_ontology_populated:Palletizer } FILTER(ISIRI(?equipment)) FILTER(ISIRI(?line)) }",
+      "notes": "Line membership pattern"
+    },
+    {
+      "purpose": "Discover lines",
+      "category": "discovery",
+      "query": "SELECT DISTINCT ?line WHERE { ?equipment mes_ontology_populated:belongsToLine ?line }",
+      "notes": "Always discover entities before analyzing them"
+    },
+    {
+      "purpose": "Product catalog",
+      "category": "discovery",
+      "query": "SELECT ?product ?name ?price ?cost WHERE { ?product a mes_ontology_populated:Product . ?product mes_ontology_populated:hasProductName ?name . ?product mes_ontology_populated:hasSalePrice ?price . ?product mes_ontology_populated:hasStandardCost ?cost . }",
+      "notes": "Direct property access pattern"
+    }
+  ],
+  "anti_patterns": [
+    {
+      "description": "String matching on properties",
+      "bad_query": "FILTER CONTAINS(STR(?property), 'product')",
+      "why_fails": "Properties should be accessed directly, not through string matching",
+      "fix": "Use direct predicates like mes_ontology_populated:producesProduct"
+    },
+    {
+      "description": "Reverse relationships",
+      "bad_query": "?order mes_ontology_populated:executesOrder ?event",
+      "why_fails": "Relationship direction matters - check ontology structure",
+      "fix": "?equipment mes_ontology_populated:executesOrder ?order"
+    },
+    {
+      "description": "Missing ISIRI filters",
+      "bad_query": "SELECT ?equipment WHERE { ?equipment a mes_ontology_populated:Equipment }",
+      "why_fails": "May return literals or blank nodes",
+      "fix": "Add FILTER(ISIRI(?equipment)) for all entity variables"
+    }
+  ]
+}

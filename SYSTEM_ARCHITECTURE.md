@@ -57,12 +57,29 @@ The system implements five core analysis patterns that have proven effective acr
 
 The ADK Manufacturing Analytics System implements the above methodology through a sophisticated technical architecture that enables business users to analyze complex data through natural language queries. The system provides two parallel implementations to support different use cases while sharing the same core analytical engine.
 
-### Dual Implementation Strategy
+### Unified Agent Implementation
 
-1. **CLI Agent** (`agents/manufacturing_analyst.py`) - Terminal-based interface for development and testing
-2. **ADK Web Agent** (`manufacturing_agent/agent.py`) - Web UI interface for production use
+The system uses a single ADK agent (`manufacturing_agent/agent.py`) that serves both interfaces:
+1. **CLI Interface** (`main_unified.py`) - Terminal-based interface using ADK's InMemoryRunner
+2. **ADK Web UI** - Web interface launched via `adk web` command
 
-Both implementations share the same core tools and context system, ensuring consistent behavior across interfaces.
+Both interfaces use the exact same agent implementation, ensuring perfect consistency and simplified maintenance.
+
+## Recent Architecture Refactoring (July 2025)
+
+The system underwent a significant simplification to remove prescriptive constraints and empower the LLM:
+
+### Tools Removed:
+- **analysis_tools.py** - Prescriptive pattern analysis replaced by flexible Python execution
+- **discovery_patterns.py** - Pre-defined patterns replaced by natural discovery
+- **insight_formatter.py** - Rigid formatting replaced by contextual presentation
+- **visualization_tool.py** - Complex wrapper replaced by matplotlib in Python executor
+
+### Core Philosophy:
+- **Flexibility over prescription**: LLM determines analysis approach
+- **Minimal tool surface**: Only essential tools retained
+- **Natural discovery**: Patterns emerge through exploration
+- **Context-driven**: Comprehensive context guides the LLM
 
 ## Core Components
 
@@ -169,12 +186,13 @@ Key methods:
 
 ### 7. Agent Implementations
 
-#### CLI Agent (`agents/manufacturing_analyst.py`)
-- Uses Google's generativeai library directly
-- Manages conversation state with chat sessions
-- Provides function calling capabilities for tools including visualization
-- Interactive terminal interface with commands (help, cache, reset)
-- Enhanced with discovery-first methodology and exploration phase
+#### Unified Agent Architecture
+The single agent implementation (`manufacturing_agent/agent.py`) provides:
+- Dynamic context loading via InstructionProvider pattern
+- Phase-aware context management (initial, SPARQL, Python analysis)
+- Tool calling capabilities for all analysis tools
+- State management through ADK's built-in patterns
+- Discovery-first methodology with progressive exploration
 - Improved IRI handling and collaborative interaction patterns
 - **Token-Safe Queries**: Guidance for aggregation and sampling to prevent overflow
 - **Cache Integration**: Tools to retrieve full cached results when needed
@@ -217,13 +235,12 @@ Centralized configuration management supporting:
 ```mermaid
 graph TB
     subgraph "User Interfaces"
-        CLI[CLI Interface<br/>main.py]
+        CLI[CLI Interface<br/>main_unified.py]
         WEB[ADK Web UI<br/>Port 8001]
     end
     
     subgraph "Agent Layer - Discovery Driven"
-        CLIAGENT[CLI Agent<br/>manufacturing_analyst.py]
-        ADKAGENT[Discovery Agent<br/>manufacturing_agent/agent.py<br/>EXPLORE→DISCOVER→QUANTIFY→RECOMMEND]
+        AGENT[Unified Agent<br/>manufacturing_agent/agent.py<br/>EXPLORE→DISCOVER→QUANTIFY→RECOMMEND]
     end
     
     subgraph "Context System"
@@ -254,32 +271,26 @@ graph TB
     end
     
     %% User interactions
-    CLI -->|User Query| CLIAGENT
-    WEB -->|User Query| ADKAGENT
+    CLI -->|User Query| AGENT
+    WEB -->|User Query| AGENT
     
     %% Context loading
-    CLIAGENT -->|Load Context| LOADER
-    ADKAGENT -->|Load Context| LOADER
+    AGENT -->|Dynamic Context| LOADER
     LOADER -->|Read| ONTOLOGY
     LOADER -->|Read| SPARQLREF
     LOADER -->|Read| CATALOGUE
     LOADER -->|Read| EXAMPLES
     
     %% LLM interactions
-    CLIAGENT <-->|Generate Response| GEMINI
-    ADKAGENT <-->|Generate Response| GEMINI
+    AGENT <-->|Generate Response| GEMINI
     
     %% Tool usage - Discovery Flow
-    CLIAGENT -->|Function Call| SPARQLTOOL
-    CLIAGENT -->|Function Call| ANALYSIS
-    CLIAGENT -->|Function Call| ROI
-    CLIAGENT -->|Function Call| VIZ
-    CLIAGENT -->|Function Call| PYTHON
-    ADKAGENT -->|1. Explore| DISCOVERYPATTERNS
-    ADKAGENT -->|2. Discover| SPARQLTOOL
-    ADKAGENT -->|3. Analyze| ANALYSIS
-    ADKAGENT -->|4. Quantify| ROI
-    ADKAGENT -->|5. Visualize| VIZ
+    AGENT -->|1. Explore| DISCOVERYPATTERNS
+    AGENT -->|2. Discover| SPARQLTOOL
+    AGENT -->|3. Analyze| ANALYSIS
+    AGENT -->|4. Quantify| ROI
+    AGENT -->|5. Visualize| VIZ
+    AGENT -->|6. Execute| PYTHON
     ADKAGENT -->|6. Format| INSIGHTFORMAT
     ADKAGENT -->|7. Advanced Analysis| PYTHON
     SPARQLTOOL -->|Track| STATE
@@ -307,23 +318,18 @@ graph TB
     SPARQLTOOL -->|Results| VIZ
     RESULTCACHE -->|Cached Data| PYTHON
     PYTHON -->|DataFrame Analysis| ANALYSIS
-    ANALYSIS -->|Insights| CLIAGENT
-    ANALYSIS -->|Insights| ADKAGENT
-    ROI -->|Calculations| CLIAGENT
-    ROI -->|Calculations| ADKAGENT
-    VIZ -->|Charts| CLIAGENT
-    VIZ -->|Charts| ADKAGENT
-    PYTHON -->|Results| CLIAGENT
-    PYTHON -->|Results| ADKAGENT
+    ANALYSIS -->|Insights| AGENT
+    ROI -->|Calculations| AGENT
+    VIZ -->|Charts| AGENT
+    PYTHON -->|Results| AGENT
     
     %% Response flow
-    CLIAGENT -->|Formatted Response| CLI
-    ADKAGENT -->|Formatted Response| WEB
+    AGENT -->|Formatted Response| CLI
+    AGENT -->|Formatted Response| WEB
     
     style CLI fill:#e1f5fe
     style WEB fill:#e1f5fe
-    style CLIAGENT fill:#fff3e0
-    style ADKAGENT fill:#fff3e0
+    style AGENT fill:#fff3e0
     style SPARQLTOOL fill:#f3e5f5
     style RESULTCACHE fill:#f3e5f5
     style ANALYSIS fill:#f3e5f5
@@ -497,15 +503,16 @@ The following real-world examples demonstrate the system's capabilities and serv
 ### Test Case 2: Micro-Stop Pattern Recognition
 **Business Question**: "Why do small problems cascade into big ones?"
 
-**Expected Queries**:
-- Temporal clustering of events
-- Shift-based pattern analysis
-- Consecutive stop detection
+**Analysis Approach**:
+- Query temporal event data
+- Use Python to detect clustering patterns
+- Calculate correlation between consecutive events
+- Identify shift-based variations
 
 **Expected Insights**:
-- 60% of jams occur within 10 minutes of previous
-- Night shift has 40% more issues
-- Predictive maintenance triggers identified
+- Jam clustering patterns identified through Python analysis
+- Shift performance variations calculated
+- Predictive triggers derived from correlation analysis
 
 ### Test Case 3: Quality-Cost Trade-off
 **Business Question**: "Where's the sweet spot between quality and cost?"
@@ -522,9 +529,9 @@ The following real-world examples demonstrate the system's capabilities and serv
 
 ## Key Design Decisions
 
-### 1. Dual Implementation Approach
-- **Rationale**: Supports both development (CLI) and production (Web) workflows
-- **Benefit**: Consistent core logic with flexible interfaces
+### 1. Unified Agent Implementation
+- **Rationale**: Single agent definition eliminates code duplication and maintenance overhead
+- **Benefit**: Perfect consistency between CLI and Web interfaces with ADK's Runner pattern
 
 ### 2. Comprehensive Context Loading
 - **Rationale**: LLMs need domain knowledge to generate valid SPARQL
@@ -579,7 +586,7 @@ adk web --port 8001
 # Then navigate to: http://localhost:8001/dev-ui/
 
 # 3. For CLI Interface (development)
-python main.py
+python -m adk_agents.main_unified
 ```
 
 ## Security Considerations
@@ -659,10 +666,19 @@ The system is designed to work with any domain that has:
 
 The ADK Manufacturing Analytics System represents a sophisticated integration of semantic web technologies with modern AI capabilities. By combining structured ontologies with conversational interfaces, it makes complex data analysis accessible to business users while maintaining the precision required for high-value optimization decisions.
 
-The discovery-driven system has exceeded all expectations, finding $9.36M in optimization opportunities compared to the manual prototype's $2.5M target - a 374% improvement. This was achieved through the revolutionary EXPLORE → DISCOVER → QUANTIFY → RECOMMEND methodology that allows emergent discovery rather than rigid analysis paths.
+The recent refactoring has significantly simplified the architecture by removing prescriptive tools in favor of a lean, flexible approach. The system now relies on just three core tools:
+- **SPARQL Tool**: For efficient data retrieval with intelligent caching
+- **Python Executor**: For flexible analysis, visualization, and calculations
+- **Cache System**: For performance optimization and token safety
 
-The system now features enhanced Python-based data analysis capabilities through the Python Executor tool, enabling sophisticated DataFrame operations on cached SPARQL results. With the removal of rigid evaluation frameworks, the system focuses on practical testing through real-world scenarios, making it more adaptable and maintainable for production use in any domain where hidden value exists in operational data.
+This simplified architecture empowers the LLM to:
+- Discover patterns naturally through exploration
+- Implement any analysis approach as needed
+- Create visualizations and calculate ROI contextually
+- Adapt to different domains without tool constraints
+
+The removal of prescriptive patterns and rigid templates makes the system more maintainable, flexible, and powerful. The LLM can now leverage its full capabilities to solve complex analytical problems in any domain with structured operational data.
 
 ---
 
-*This framework is domain-agnostic and production-ready for any industry with structured operational data.*
+*This lean, flexible framework is production-ready for any industry seeking to unlock value in their operational data.*

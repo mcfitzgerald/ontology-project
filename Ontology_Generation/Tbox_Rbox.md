@@ -49,7 +49,7 @@ The properties map the raw data fields and relationships between entities.
 
 This section maps to every column in mes_data_with_kpis.csv:
 
-| Property Name | Domain | Range | Maps to CSV Column |
+| Property Name | Domain | Range | Maps to Raw Data Column |
 | :---- | :---- | :---- | :---- |
 | hasTimestamp | Event | string | Timestamp |
 | hasOrderID | ProductionOrder | string | ProductionOrderID |
