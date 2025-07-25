@@ -173,12 +173,12 @@ class SPARQLExecutor:
     
     def learn_pattern(self, query: str, result: Dict[str, Any]):
         """Learn from successful query patterns."""
-        if "results" in result and result["results"].get("bindings"):
+        if "data" in result and result.get("data", {}).get("results"):
             pattern = {
                 "query": query,
                 "timestamp": datetime.now().isoformat(),
-                "result_count": len(result["results"]["bindings"]),
-                "variables": result["head"]["vars"] if "head" in result else []
+                "result_count": len(result["data"]["results"]),
+                "variables": result["data"].get("columns", [])
             }
             
             # Classify pattern

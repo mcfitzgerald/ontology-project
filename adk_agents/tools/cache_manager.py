@@ -1,5 +1,6 @@
 """Cache management for query patterns and results."""
 import json
+import os
 from pathlib import Path
 from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional
@@ -16,6 +17,10 @@ class CacheManager:
     def __init__(self):
         self.stats_file = CACHE_DIR / "cache_stats.json"
         self.patterns_file = CACHE_DIR / "query_patterns.json"
+        self.query_cache_file = CACHE_DIR / "query_cache.json"
+        self.successful_patterns_file = CACHE_DIR / "successful_patterns.json"
+        self.size_warning_threshold_mb = 100  # Warn at 100MB
+        self.size_critical_threshold_mb = 500  # Critical at 500MB
         self.load_stats()
     
     def load_stats(self):
@@ -102,7 +107,7 @@ class CacheManager:
         else:
             self.stats["failed_queries"] += 1
         
-        self.save_stats()
+        self.save_stats_with_size_check()
     
     def get_success_rate(self, query_type: Optional[str] = None) -> float:
         """Get success rate for queries."""
@@ -159,6 +164,92 @@ class CacheManager:
                 for query_type in ["capacity", "temporal", "quality", "financial", "aggregation"]
             }
         }
+    
+    def get_file_size_mb(self, file_path: Path) -> float:
+        """Get file size in megabytes."""
+        if file_path.exists():
+            size_bytes = os.path.getsize(file_path)
+            return size_bytes / (1024 * 1024)
+        return 0.0
+    
+    def check_cache_size(self) -> Dict[str, float]:
+        """Check sizes of all cache files and emit warnings if needed."""
+        sizes = {
+            "query_cache": self.get_file_size_mb(self.query_cache_file),
+            "successful_patterns": self.get_file_size_mb(self.successful_patterns_file),
+            "cache_stats": self.get_file_size_mb(self.stats_file),
+            "query_patterns": self.get_file_size_mb(self.patterns_file)
+        }
+        
+        total_size = sum(sizes.values())
+        
+        # Check query cache specifically since it tends to be the largest
+        if sizes["query_cache"] > self.size_warning_threshold_mb:
+            logger.warning(
+                f"Cache file 'query_cache.json' size ({sizes['query_cache']:.1f}MB) "
+                f"exceeds recommended limit ({self.size_warning_threshold_mb}MB)"
+            )
+        
+        if total_size > self.size_critical_threshold_mb:
+            logger.warning(
+                f"Total cache size ({total_size:.1f}MB) exceeds critical limit "
+                f"({self.size_critical_threshold_mb}MB). Consider clearing cache."
+            )
+        
+        return sizes
+    
+    def clear_cache(self, clear_patterns: bool = False):
+        """Clear cache files."""
+        try:
+            # Always clear the main query cache
+            if self.query_cache_file.exists():
+                self.query_cache_file.unlink()
+                logger.info(f"Cleared query cache file: {self.query_cache_file}")
+            
+            # Optionally clear patterns
+            if clear_patterns:
+                if self.successful_patterns_file.exists():
+                    self.successful_patterns_file.unlink()
+                    logger.info(f"Cleared successful patterns file: {self.successful_patterns_file}")
+                
+                # Reset in-memory patterns
+                self.patterns = {
+                    "capacity": [],
+                    "temporal": [],
+                    "quality": [],
+                    "financial": [],
+                    "aggregation": []
+                }
+                self.save_stats_with_size_check()
+            
+            # Reset stats
+            self.stats = defaultdict(int)
+            self.save_stats_with_size_check()
+            
+            logger.info("Cache cleared successfully")
+            
+        except Exception as e:
+            logger.error(f"Failed to clear cache: {e}")
+    
+    def save_stats_with_size_check(self):
+        """Save stats with automatic size checking."""
+        # Check size before saving
+        sizes = self.check_cache_size()
+        
+        # If critical threshold exceeded, log but still save
+        # (user can manually clear if needed)
+        if sum(sizes.values()) > self.size_critical_threshold_mb:
+            logger.warning("Cache size exceeds critical threshold. Consider using clear_cache().")
+        
+        # Call original save_stats logic
+        try:
+            with open(self.stats_file, 'w') as f:
+                json.dump(dict(self.stats), f, indent=2)
+            
+            with open(self.patterns_file, 'w') as f:
+                json.dump(self.patterns, f, indent=2)
+        except Exception as e:
+            logger.error(f"Failed to save stats: {e}")
 
 # Create singleton instance
 cache_manager = CacheManager()

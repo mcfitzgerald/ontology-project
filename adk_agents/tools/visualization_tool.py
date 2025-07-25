@@ -124,7 +124,7 @@ async def create_visualization(
                     "artifact_version": version,
                     "chart_type": chart_type,
                     "data_points": len(results),
-                    "message": f"Chart created and saved as {artifact_name}"
+                    "message": f"Chart created successfully! 📊 View '{artifact_name}' in the Artifacts panel (located in the sidebar of the ADK interface)"
                 }
                 
             except Exception as e:
@@ -139,7 +139,7 @@ async def create_visualization(
             "chart_type": chart_type,
             "image_base64": img_base64,
             "data_points": len(results),
-            "message": "Chart created successfully (base64 encoded)"
+            "message": "Chart created successfully! 📊 (Displayed as base64 - upgrade to ADK web interface to view in Artifacts panel)"
         }
         
     except Exception as e:

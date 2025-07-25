@@ -2,6 +2,7 @@
 import json
 import hashlib
 import logging
+import os
 from typing import Dict, Any, Optional, List, Tuple
 from datetime import datetime
 from pathlib import Path
@@ -18,6 +19,8 @@ class ResultCacheManager:
         self.cache_dir = CACHE_DIR / "results"
         self.cache_dir.mkdir(parents=True, exist_ok=True)
         self.index_file = self.cache_dir / "index.json"
+        self.size_warning_threshold_mb = 50  # Warn at 50MB per result file
+        self.total_size_warning_threshold_mb = 200  # Warn at 200MB total
         self.load_index()
     
     def load_index(self):
@@ -33,6 +36,9 @@ class ResultCacheManager:
     def save_index(self):
         """Save cache index."""
         try:
+            # Check size before saving
+            self.check_cache_size()
+            
             with open(self.index_file, 'w') as f:
                 json.dump(self.index, f, indent=2)
         except Exception as e:
@@ -167,6 +173,95 @@ class ResultCacheManager:
             }
             for cache_id, info in sorted_items
         ]
+    
+    def get_file_size_mb(self, file_path: Path) -> float:
+        """Get file size in megabytes."""
+        if file_path.exists():
+            size_bytes = os.path.getsize(file_path)
+            return size_bytes / (1024 * 1024)
+        return 0.0
+    
+    def check_cache_size(self) -> Dict[str, Any]:
+        """Check sizes of cache files and emit warnings if needed."""
+        result = {
+            "index_size_mb": self.get_file_size_mb(self.index_file),
+            "result_files": [],
+            "total_size_mb": 0.0,
+            "file_count": 0
+        }
+        
+        # Check all result files
+        for cache_id, info in self.index.items():
+            result_file = Path(info["file"])
+            if result_file.exists():
+                size_mb = self.get_file_size_mb(result_file)
+                result["result_files"].append({
+                    "cache_id": cache_id,
+                    "file": str(result_file.name),
+                    "size_mb": size_mb,
+                    "query": info.get("query", "")[:100] + "..."  # First 100 chars
+                })
+                result["total_size_mb"] += size_mb
+                result["file_count"] += 1
+                
+                # Warn about large individual files
+                if size_mb > self.size_warning_threshold_mb:
+                    logger.warning(
+                        f"Cache result file '{result_file.name}' ({size_mb:.1f}MB) "
+                        f"exceeds recommended limit ({self.size_warning_threshold_mb}MB)"
+                    )
+        
+        # Add index size to total
+        result["total_size_mb"] += result["index_size_mb"]
+        
+        # Warn about total size
+        if result["total_size_mb"] > self.total_size_warning_threshold_mb:
+            logger.warning(
+                f"Total result cache size ({result['total_size_mb']:.1f}MB) "
+                f"exceeds recommended limit ({self.total_size_warning_threshold_mb}MB)"
+            )
+        
+        return result
+    
+    def clear_cache(self, keep_recent_days: Optional[int] = None):
+        """Clear all or old cache entries."""
+        if keep_recent_days is None:
+            # Clear all
+            to_remove = list(self.index.keys())
+            logger.info("Clearing entire result cache...")
+        else:
+            # Clear old entries
+            from datetime import timedelta
+            cutoff = datetime.now() - timedelta(days=keep_recent_days)
+            
+            to_remove = []
+            for cache_id, info in self.index.items():
+                try:
+                    timestamp = datetime.fromisoformat(info["timestamp"])
+                    if timestamp < cutoff:
+                        to_remove.append(cache_id)
+                except:
+                    pass
+            
+            logger.info(f"Clearing cache entries older than {keep_recent_days} days...")
+        
+        # Remove files and index entries
+        removed_count = 0
+        removed_size_mb = 0.0
+        
+        for cache_id in to_remove:
+            result_file = Path(self.index[cache_id]["file"])
+            if result_file.exists():
+                removed_size_mb += self.get_file_size_mb(result_file)
+                result_file.unlink()
+                removed_count += 1
+            del self.index[cache_id]
+        
+        self.save_index()
+        logger.info(
+            f"Cleared {removed_count} cache entries "
+            f"({removed_size_mb:.1f}MB freed)"
+        )
     
     def clear_old_cache(self, days: int = 7):
         """Clear cache entries older than specified days."""

@@ -87,13 +87,14 @@ The SPARQLExecutor handles all database interactions with intelligent caching an
 
 Features:
 - **Query Caching**: SHA256-based cache to avoid redundant executions
-- **Pattern Learning**: Stores successful queries for future reference
+- **Pattern Learning**: Stores successful queries for future reference in `cache/successful_patterns.json`
 - **Error Handling**: Graceful timeout and error management
 - **Result Optimization**: Automatically caches ALL results and returns summaries for large datasets
 - **Token Estimation**: Uses heuristics (1 token ≈ 4 characters) to prevent LLM token overflow
 - **Smart Truncation**: Returns summaries with cache IDs for results >10k tokens
 - **Aggregation Failure Detection**: Automatically detects when COUNT/GROUP BY queries fail due to Owlready2 limitations
 - **Fallback Query Generation**: Provides alternative queries for Python-based aggregation when SPARQL aggregation fails
+- **Next Question Suggestions**: Provides contextual follow-up questions based on results
 
 Key methods:
 - `execute()`: Main query execution with caching and aggregation failure detection
@@ -196,6 +197,8 @@ Key methods:
 - **Discovery Methodology**: Implements EXPLORE → DISCOVER → QUANTIFY → RECOMMEND flow
 - **State Management**: Uses ADK's tool_context.state for tracking discoveries
 - **Simplified Evaluation**: Removed rigid evaluation framework for more flexible testing
+- **Tool Wrappers** (`tool_wrappers.py`): ADK-compatible wrappers that remove optional parameters
+- **Agent Directives** (`AGENT_DIRECTIVES.md`): Comprehensive behavioral guidelines for conversational engagement
 
 ### 8. Configuration System (`config/settings.py`)
 
@@ -466,6 +469,12 @@ Implements 5 proven discovery patterns:
 
 The system now uses a simplified testing approach focused on real-world scenarios rather than rigid evaluation trajectories. Test files are located in `adk_agents/tests/` with unit, integration, and simple evaluation tests.
 
+Additionally, a collaborative flow test (`test_collaborative_flow.py`) validates the conversational engagement improvements:
+- Tests ambiguous request handling
+- Validates that agent asks for clarification
+- Ensures agent doesn't dive deep without permission
+- Verifies brainstorming capabilities
+
 The following real-world examples demonstrate the system's capabilities and serve as test cases:
 
 ### Test Case 1: Hidden Capacity Analysis
@@ -587,6 +596,22 @@ python main.py
 3. **Result Truncation**: Large results summarized to prevent memory issues
 4. **Concurrent Tool Calls**: ADK supports parallel function execution
 
+## Agent Behavioral Guidelines
+
+The system implements sophisticated conversational engagement patterns documented in `AGENT_DIRECTIVES.md`:
+
+### Core Behavioral Principles
+1. **Conversational Engagement**: Natural dialogue with clarifying questions
+2. **Progressive Discovery**: Share insights as they emerge
+3. **Collaborative Exploration**: Offer choices rather than immediate deep dives
+4. **Clear Intent Required**: Execute queries only when user intent is clear
+
+### Key Improvements from Previous Versions
+- Removed aggressive "IMMEDIATE ACTION" directives
+- Added collaborative exploration guidelines
+- Made query execution conditional on user clarity
+- Enhanced brainstorming and option presentation
+
 ## Domain Adaptation Guide
 
 ### Extending Beyond Manufacturing
@@ -605,6 +630,7 @@ The system is designed to work with any domain that has:
 - [ ] Understand temporal patterns in the domain
 - [ ] Document domain-specific constraints
 - [ ] Create validation rules for results
+- [ ] Create domain-specific agent directives
 
 ### Example Domains
 - **Logistics**: Route optimization, delivery patterns, fleet utilization
