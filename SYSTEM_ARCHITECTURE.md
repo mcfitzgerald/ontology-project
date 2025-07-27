@@ -9,7 +9,7 @@ The Ontology-Augmented Manufacturing Analytics System is a sophisticated convers
 ### Major Architecture Simplification
 The system has undergone significant architectural simplification to leverage ADK's native capabilities more effectively:
 - **Unified Agent**: Single agent implementation serves both CLI and Web interfaces
-- **Minimal Tool Set**: Reduced to 3 core tools (SPARQL, Python Executor, Cache Manager)
+- **Minimal Tool Set**: Reduced to 3 core tools (SPARQL, Python Executor, Cache Retrieval)
 - **Dynamic Context Loading**: Progressive context loading based on analysis phase
 - **Native ADK Integration**: Full utilization of ADK's tool calling, state management, and callback patterns
 
@@ -74,7 +74,7 @@ The system uses a single ADK LlmAgent (`manufacturing_agent/agent.py`) that serv
 
 Key architectural features:
 - **Dynamic Instruction Provider**: Context loaded progressively based on analysis phase
-- **Minimal Tool Surface**: Only 3 tools (SPARQL, Python, Cache) for maximum flexibility
+- **Minimal Tool Surface**: Only 3 tools (SPARQL Query, Python Execution, Cache Retrieval) for maximum flexibility
 - **ADK Native Patterns**: Full use of tool_context, state management, and callbacks
 - **Gemini 2.0 Flash**: Default model for optimal performance and cost
 
@@ -93,6 +93,11 @@ The system underwent a significant simplification to remove prescriptive constra
 - **Minimal tool surface**: Only essential tools retained
 - **Natural discovery**: Patterns emerge through exploration
 - **Context-driven**: Comprehensive context guides the LLM
+
+### Current Tool Architecture:
+- **3 Core Tools**: SPARQL execution, Python analysis, Cache retrieval
+- **Supporting Utilities**: Cache manager for pattern learning, Result cache for data management
+- **Simple Cache Utils**: Additional helper functions for cache operations
 
 ## Core Components
 
@@ -138,17 +143,22 @@ Simplified SPARQL executor focused on reliable query execution and result cachin
 - `execute_sparql()`: Main entry point with caching and token management
 - `get_cached_query_result()`: Retrieve full results by cache ID
 
-### 3. Result Cache Manager (`tools/result_cache.py`)
+### 3. Cache Management (`tools/cache_manager.py` & `tools/result_cache.py`)
 
-Manages caching of query results with intelligent summarization:
+**Cache Manager** (`cache_manager.py`):
+- **Query Pattern Learning**: Tracks successful patterns by type (capacity, temporal, quality, financial)
+- **Statistics Tracking**: Success rates per query type
+- **Size Management**: Automatic warnings at 100MB, critical at 500MB
+- **Pattern Classification**: Automatic query type classification
 
-**Core Functionality**:
+**Result Cache Manager** (`result_cache.py`):
 - **Universal Caching**: All query results cached with UUID-based IDs
 - **Token Estimation**: Simple heuristic (1 token ≈ 4 characters)
 - **Smart Summaries**: Sample data + statistics for large results
 - **Size Management**: Warnings for large cache files (>50MB individual, >200MB total)
 
 **Cache Structure**:
+- Query cache in `cache/query_cache.json` (SHA256 keys)
 - Results stored in `cache/results/` as JSON files
 - Index file tracks all cached results with metadata
 - Automatic cleanup for old cache entries
@@ -208,10 +218,10 @@ root_agent = LlmAgent(
 - Reduces token usage for simple queries
 
 **Tool Wrappers** (`tool_wrappers.py`):
-- `execute_sparql_query`: SPARQL execution with next question suggestions
+- `execute_sparql_query`: SPARQL execution with automatic caching and token management
 - `retrieve_cached_result`: Full result retrieval by cache ID
-- `execute_python_code`: Python analysis with DataFrame pre-loading
-- All wrappers accept optional `tool_context` for state management
+- `execute_python_code`: Python analysis with DataFrame pre-loading from cache
+- All wrappers are FunctionTool-compatible with proper ADK annotations
 
 ### 6. Configuration System (`config/settings.py`)
 
@@ -253,9 +263,9 @@ graph TB
     end
     
     subgraph "Core Tools (3)"
-        SPARQLTOOL[SPARQL Tool<br/>execute_sparql_query]
-        PYTHON[Python Executor<br/>execute_python_code]
-        CACHETOOL[Cache Tool<br/>retrieve_cached_result]
+        SPARQLTOOL[SPARQL Tool<br/>execute_sparql_query<br/>Query caching + Token safety]
+        PYTHON[Python Executor<br/>execute_python_code<br/>DataFrame from cache]
+        CACHETOOL[Cache Tool<br/>retrieve_cached_result<br/>Full data retrieval]
     end
     
     subgraph "Cache System"
@@ -511,6 +521,7 @@ The following real-world examples demonstrate the system's capabilities and serv
 - **Rationale**: Fewer, more flexible tools reduce complexity and increase LLM autonomy
 - **Benefit**: Easier maintenance, better LLM understanding, unlimited analysis possibilities
 - **Implementation**: Just 3 tools replace 10+ specialized tools from previous versions
+- **Tool Design**: Each tool has a single, clear responsibility with FunctionTool-compatible interfaces
 
 ### 2. Progressive Context Loading
 - **Rationale**: Full context often unnecessary for simple queries
@@ -531,6 +542,11 @@ The following real-world examples demonstrate the system's capabilities and serv
 - **Rationale**: LLMs excel at reasoning when given freedom
 - **Benefit**: More creative solutions, better adaptation to unique queries
 - **Trade-off**: Less predictable but more powerful analyses
+
+### 6. Cache-First Architecture
+- **Rationale**: Manage token limits and enable iterative analysis
+- **Benefit**: Handle unlimited dataset sizes, support complex multi-step analyses
+- **Implementation**: Two-tier cache (query results + full data) with intelligent summarization
 
 ## Configuration and Deployment
 
@@ -608,7 +624,7 @@ adk test
 
 ## Agent Behavioral Guidelines
 
-The system implements sophisticated conversational engagement patterns documented in `AGENT_DIRECTIVES.md`:
+The system implements sophisticated conversational engagement patterns embedded in the system prompt:
 
 ### Core Behavioral Principles
 1. **Conversational Engagement**: Natural dialogue with clarifying questions
@@ -621,6 +637,7 @@ The system implements sophisticated conversational engagement patterns documente
 - Added collaborative exploration guidelines
 - Made query execution conditional on user clarity
 - Enhanced brainstorming and option presentation
+- Integrated behavioral guidelines directly into system prompt for consistency
 
 ## Domain Adaptation Guide
 
