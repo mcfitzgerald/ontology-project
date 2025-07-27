@@ -211,3 +211,4 @@ __marimo__/
 *.log
 cache/
 adk_agents/cache/
+.service_pids
