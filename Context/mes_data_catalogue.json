@@ -1,12 +1,12 @@
 {
   "metadata": {
-    "generated_at": "2025-07-16T13:43:30.684554",
+    "generated_at": "2025-07-26T19:31:23.168809",
     "data_range": {
       "start": "2025-06-01T00:00:00",
       "end": "2025-06-14T23:55:00",
       "days_covered": 14
     },
-    "total_records": 34761,
+    "total_records": 36288,
     "update_frequency": "5 minutes",
     "columns": [
       "Timestamp",
@@ -103,8 +103,8 @@
         "standard_cost": 0.15,
         "sale_price": 0.5,
         "margin_percent": 70.0,
-        "total_produced": 3778724,
-        "actual_scrap_rate": 1.14
+        "total_produced": 1523680,
+        "actual_scrap_rate": 5.57
       },
       {
         "id": "SKU-1002",
@@ -113,8 +113,8 @@
         "standard_cost": 0.45,
         "sale_price": 1.5,
         "margin_percent": 70.0,
-        "total_produced": 2020778,
-        "actual_scrap_rate": 4.73
+        "total_produced": 1160129,
+        "actual_scrap_rate": 15.85
       },
       {
         "id": "SKU-2001",
@@ -123,8 +123,8 @@
         "standard_cost": 0.2,
         "sale_price": 0.65,
         "margin_percent": 69.2,
-        "total_produced": 4082959,
-        "actual_scrap_rate": 1.07
+        "total_produced": 1965405,
+        "actual_scrap_rate": 4.01
       },
       {
         "id": "SKU-2002",
@@ -133,8 +133,8 @@
         "standard_cost": 0.55,
         "sale_price": 1.75,
         "margin_percent": 68.6,
-        "total_produced": 1879774,
-        "actual_scrap_rate": 1.08
+        "total_produced": 1247649,
+        "actual_scrap_rate": 6.69
       },
       {
         "id": "SKU-3001",
@@ -143,103 +143,158 @@
         "standard_cost": 0.25,
         "sale_price": 0.75,
         "margin_percent": 66.7,
-        "total_produced": 4040182,
-        "actual_scrap_rate": 1.11
+        "total_produced": 1924901,
+        "actual_scrap_rate": 4.56
       }
     ]
   },
   "production_lines": {
     "LINE1": {
-      "orders_executed": 28,
+      "orders_executed": 39,
       "products_made": [
-        "SKU-2001",
         "SKU-3001",
+        NaN,
         "SKU-1002",
+        "SKU-2001",
         "SKU-1001",
         "SKU-2002"
       ],
-      "total_runtime_hours": 963.5
+      "total_runtime_hours": 680.75
     },
     "LINE2": {
-      "orders_executed": 28,
+      "orders_executed": 41,
       "products_made": [
-        "SKU-3001",
-        "SKU-1002",
         "SKU-2002",
-        "SKU-2001",
-        "SKU-1001"
-      ],
-      "total_runtime_hours": 888.75
-    },
-    "LINE3": {
-      "orders_executed": 28,
-      "products_made": [
-        "SKU-2001",
+        NaN,
         "SKU-3001",
         "SKU-1002",
         "SKU-1001",
+        "SKU-2001"
+      ],
+      "total_runtime_hours": 627.8333333333334
+    },
+    "LINE3": {
+      "orders_executed": 39,
+      "products_made": [
+        "SKU-3001",
+        NaN,
+        "SKU-1002",
+        "SKU-1001",
+        "SKU-2001",
         "SKU-2002"
       ],
-      "total_runtime_hours": 960.9166666666666
+      "total_runtime_hours": 764.75
     }
   },
   "metrics": {
     "OEE": {
       "min": 0.0,
-      "max": 99.2,
-      "mean": 94.1,
-      "median": 98.0,
-      "typical_range": "96.1-99.1",
+      "max": 94.7,
+      "mean": 46.1,
+      "median": 58.7,
+      "typical_range": "0.0-74.4",
       "world_class": "85-95"
     },
     "Availability": {
       "min": 0.0,
       "max": 100.0,
-      "mean": 97.1,
+      "mean": 68.6,
       "median": 100.0,
-      "typical_range": "100.0-100.0",
+      "typical_range": "0.0-100.0",
       "world_class": "85-95"
     },
     "Performance": {
       "min": 0.0,
       "max": 100.0,
-      "mean": 95.7,
-      "median": 100.0,
-      "typical_range": "98.4-100.0",
+      "mean": 49.7,
+      "median": 62.9,
+      "typical_range": "0.0-79.2",
       "world_class": "85-95"
     },
     "Quality": {
       "min": 0.0,
-      "max": 99.2,
-      "mean": 95.4,
-      "median": 99.1,
-      "typical_range": "98.1-99.1",
+      "max": 99.0,
+      "mean": 63.9,
+      "median": 92.2,
+      "typical_range": "0.0-98.1",
       "world_class": "98-99.5"
     }
   },
   "downtime_reasons": {
-    "total_downtime_hours": 83.6,
-    "planned": [],
+    "total_downtime_hours": 950.7,
+    "planned": [
+      {
+        "code": "PLN-CO",
+        "occurrences": 3204,
+        "total_minutes": 16020,
+        "total_hours": 267.0
+      },
+      {
+        "code": "PLN-CLN",
+        "occurrences": 2179,
+        "total_minutes": 10895,
+        "total_hours": 181.6
+      },
+      {
+        "code": "PLN-PM",
+        "occurrences": 84,
+        "total_minutes": 420,
+        "total_hours": 7.0
+      }
+    ],
     "unplanned": [
       {
         "code": "UNP-JAM",
-        "occurrences": 936,
-        "total_minutes": 4680,
-        "total_hours": 78.0
+        "occurrences": 2753,
+        "total_minutes": 13765,
+        "total_hours": 229.4
+      },
+      {
+        "code": "UNP-ELEC",
+        "occurrences": 1130,
+        "total_minutes": 5650,
+        "total_hours": 94.2
+      },
+      {
+        "code": "UNP-SENS",
+        "occurrences": 759,
+        "total_minutes": 3795,
+        "total_hours": 63.2
+      },
+      {
+        "code": "UNP-QC",
+        "occurrences": 635,
+        "total_minutes": 3175,
+        "total_hours": 52.9
+      },
+      {
+        "code": "UNP-MAT",
+        "occurrences": 307,
+        "total_minutes": 1535,
+        "total_hours": 25.6
+      },
+      {
+        "code": "UNP-OPR",
+        "occurrences": 300,
+        "total_minutes": 1500,
+        "total_hours": 25.0
       },
       {
         "code": "UNP-MECH",
-        "occurrences": 67,
-        "total_minutes": 335,
-        "total_hours": 5.6
+        "occurrences": 57,
+        "total_minutes": 285,
+        "total_hours": 4.8
       }
     ]
   },
   "data_quality": {
     "null_values": {
-      "DowntimeReason": 33758
+      "ProductionOrderID": 3204,
+      "ProductID": 3204,
+      "ProductName": 3204,
+      "DowntimeReason": 24880
     },
-    "update_consistency": "Variable",
+    "update_consistency": "5-minute intervals",
     "equipment_coverage": "9 unique equipment tracked"
   },
   "column_descriptions": {

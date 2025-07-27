@@ -83,6 +83,9 @@ def create_ontology_structure(onto, config):
         class Cleaning(PlannedDowntime):
             pass
 
+        class PreventiveMaintenance(PlannedDowntime):
+            pass
+
         class UnplannedDowntime(DowntimeReason):
             pass
 
@@ -93,6 +96,18 @@ def create_ontology_structure(onto, config):
             pass
 
         class MaterialStarvation(UnplannedDowntime):
+            pass
+
+        class ElectricalFailure(UnplannedDowntime):
+            pass
+
+        class QualityCheck(UnplannedDowntime):
+            pass
+
+        class OperatorError(UnplannedDowntime):
+            pass
+
+        class SensorFailure(UnplannedDowntime):
             pass
 
         # RBox - Object Properties
@@ -276,7 +291,7 @@ def populate_from_csv(onto, csv_file, config):
             "StandardCost_per_unit",
             "SalePrice_per_unit",
         ]
-    ].drop_duplicates()
+    ].dropna().drop_duplicates()
     products = {}
 
     for _, row in product_df.iterrows():
@@ -291,7 +306,7 @@ def populate_from_csv(onto, csv_file, config):
     print(f"  Created {len(products)} products")
 
     # Production Orders
-    order_df = df[["ProductionOrderID", "ProductID"]].drop_duplicates()
+    order_df = df[["ProductionOrderID", "ProductID"]].dropna().drop_duplicates()
     orders = {}
 
     for _, row in order_df.iterrows():
@@ -299,7 +314,8 @@ def populate_from_csv(onto, csv_file, config):
             onto, onto.ProductionOrder, row["ProductionOrderID"]
         )
         order.hasOrderID = [row["ProductionOrderID"]]
-        order.producesProduct = [products[row["ProductID"]]]
+        if row["ProductID"] in products:
+            order.producesProduct = [products[row["ProductID"]]]
         orders[row["ProductionOrderID"]] = order
 
     print(f"  Created {len(orders)} production orders")
@@ -314,12 +330,22 @@ def populate_from_csv(onto, csv_file, config):
             cls = onto.Changeover
         elif reason_class == "Cleaning":
             cls = onto.Cleaning
+        elif reason_class == "PreventiveMaintenance":
+            cls = onto.PreventiveMaintenance
         elif reason_class == "MechanicalFailure":
             cls = onto.MechanicalFailure
         elif reason_class == "MaterialJam":
             cls = onto.MaterialJam
         elif reason_class == "MaterialStarvation":
             cls = onto.MaterialStarvation
+        elif reason_class == "ElectricalFailure":
+            cls = onto.ElectricalFailure
+        elif reason_class == "QualityCheck":
+            cls = onto.QualityCheck
+        elif reason_class == "OperatorError":
+            cls = onto.OperatorError
+        elif reason_class == "SensorFailure":
+            cls = onto.SensorFailure
         else:
             cls = onto.DowntimeReason
 
@@ -370,10 +396,11 @@ def populate_from_csv(onto, csv_file, config):
             equipment = equipment_map[row["EquipmentID"]]
             equipment.logsEvent.append(event)
 
-            # Link equipment to order
-            order = orders[row["ProductionOrderID"]]
-            if order not in equipment.executesOrder:
-                equipment.executesOrder.append(order)
+            # Link equipment to order (only if order exists - not during changeover)
+            if pd.notna(row["ProductionOrderID"]):
+                order = orders.get(row["ProductionOrderID"])
+                if order and order not in equipment.executesOrder:
+                    equipment.executesOrder.append(order)
 
             events_created += 1
 

@@ -1,0 +1,77 @@
+%%{init: {'theme':'neutral'}}%%
+
+graph LR
+    subgraph "User Layer"
+        USER[User]
+        CLI[CLI<br/>Interface]
+        WEB[Web UI<br/>Port 8001]
+    end
+    
+    subgraph "Google ADK Framework"
+        AGENT[LlmAgent<br/>'collaborative_analyst']
+        CONTEXT[Dynamic Context<br/>Provider]
+        STATE[Tool Context<br/>State]
+    end
+    
+    subgraph "Analysis Tools"
+        SPARQL[SPARQL<br/>Executor]
+        PYTHON[Python<br/>Executor]
+        CACHE[Result<br/>Cache]
+    end
+    
+    subgraph "Knowledge & Data"
+        ONTO[Ontology<br/>TTL Files]
+        API[SPARQL API<br/>Port 8000]
+        DB[(MES<br/>Database)]
+    end
+    
+    subgraph "AI Service"
+        LLM[Gemini 2.0<br/>Flash]
+    end
+    
+    %% User interactions
+    USER --> CLI
+    USER --> WEB
+    CLI --> AGENT
+    WEB --> AGENT
+    
+    %% Agent flow
+    AGENT <--> LLM
+    AGENT --> CONTEXT
+    CONTEXT --> STATE
+    STATE --> CONTEXT
+    CONTEXT --> ONTO
+    
+    %% Tool usage
+    AGENT --> SPARQL
+    AGENT --> PYTHON
+    AGENT --> CACHE
+    
+    %% Data flow
+    SPARQL --> API
+    API --> DB
+    DB --> API
+    API --> SPARQL
+    SPARQL --> CACHE
+    PYTHON --> CACHE
+    CACHE --> PYTHON
+    
+    %% Results flow
+    SPARQL --> AGENT
+    PYTHON --> AGENT
+    CACHE --> AGENT
+    AGENT --> CLI
+    AGENT --> WEB
+    
+    %% Styling
+    classDef userStyle fill:#dbeafe,stroke:#1e40af,stroke-width:2px
+    classDef adkStyle fill:#fef3c7,stroke:#d97706,stroke-width:2px
+    classDef toolStyle fill:#ede9fe,stroke:#7c3aed,stroke-width:2px
+    classDef dataStyle fill:#fce7f3,stroke:#db2777,stroke-width:2px
+    classDef aiStyle fill:#d1fae5,stroke:#059669,stroke-width:2px
+    
+    class USER,CLI,WEB userStyle
+    class AGENT,CONTEXT,STATE adkStyle
+    class SPARQL,PYTHON,CACHE toolStyle
+    class ONTO,API,DB dataStyle
+    class LLM aiStyle

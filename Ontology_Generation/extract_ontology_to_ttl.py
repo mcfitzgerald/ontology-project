@@ -23,34 +23,71 @@ def load_config():
 def get_business_context(entity_name, config):
     """Get business context for specific entities from configuration."""
     contexts = {
+        # Core class contexts
+        "Process": "Manufacturing workflow that transforms raw materials into finished products through defined operations.",
+        "ProductionOrder": "Customer-driven manufacturing request specifying product type, quantity, and schedule. Typical duration: 4-12 hours.",
+        "Resource": "Assets required for production including equipment, production lines, and product specifications.",
+        "Event": "Time-stamped production occurrence captured every 5 minutes. Foundation for all KPI calculations.",
+        "Reason": "Categorized explanation for production events, especially equipment stoppages. Critical for root cause analysis.",
+        
         # Equipment contexts
         "Equipment": "Physical machines that transform raw materials into finished products. Performance tracked in 5-minute intervals.",
         "Filler": "First stage in bottling line. Fills containers with product. Critical for volume accuracy and product quality. Common issues: incorrect fill levels, foaming, contamination.",
         "Packer": "Groups individual containers into cases/multipacks. Common issues: material jams, label misalignment, case damage.",
         "Palletizer": "Stacks cases onto pallets for shipping. End of production line. Common issues: unstable stacks, stretch wrap failures.",
         "ProductionLine": "Complete set of equipment working together. Throughput limited by slowest equipment (bottleneck).",
+        
         # Product contexts
         "Product": "Items manufactured for sale. Each has target rates, costs, and quality specifications.",
         "SKU-1001": "12oz Sparkling Water - High volume, low margin product. Simple to produce with minimal issues.",
-        "SKU-1002": "32oz Premium Juice - High margin product with elevated quality requirements. Shows 3-4% scrap rate vs 1% target.",
+        "SKU-1002": "32oz Premium Juice - High margin product with elevated quality requirements. Shows 6-8% scrap rate due to quality issues.",
         "SKU-2001": "12oz Soda - Standard carbonated beverage. Stable production across all lines.",
-        "SKU-2002": "16oz Energy Drink - Complex formulation. Runs 75-85% speed on LINE1 due to foaming issues.",
+        "SKU-2002": "16oz Energy Drink - Complex formulation. Runs 65-80% speed on LINE1 and LINE3 due to foaming issues.",
         "SKU-3001": "8oz Kids Drink - Small format, high speed production. Popular in school channels.",
-        # Event contexts
-        "ProductionEvent": "5-minute snapshot of production metrics. Core data for OEE calculation.",
-        "DowntimeEvent": "Equipment stoppage with reason code. Critical for availability calculation and improvement initiatives.",
+        
+        # Event contexts - FIXED NAMES
+        "ProductionLog": "5-minute snapshot of production metrics when equipment is running. Core data for OEE calculation.",
+        "DowntimeLog": "Equipment stoppage event with reason code. Critical for availability calculation and improvement initiatives.",
+        
+        # Downtime reason contexts
+        "DowntimeReason": "Coded explanation for equipment stoppage. Primary driver of availability losses in OEE.",
+        "PlannedDowntime": "Scheduled production interruptions. Predictable but still impacts availability score.",
+        "UnplannedDowntime": "Unexpected production stoppages. Major focus area for continuous improvement.",
+        
+        # Planned downtime types
+        "Changeover": "Product switch requiring equipment reconfiguration. Typical duration: 30-60 minutes. Code: PLN-CO.",
+        "Cleaning": "Mandatory sanitation cycle every 8 hours for food safety. Duration: 30 minutes. Code: PLN-CLN.",
+        "PreventiveMaintenance": "Scheduled equipment service to prevent breakdowns. Weekly/monthly cycles. Code: PLN-PM.",
+        
+        # Unplanned downtime types
+        "MechanicalFailure": "Equipment breakdown requiring repair. Major impact on availability. Can exceed 5 hours. Code: UNP-MECH.",
+        "MaterialJam": "Product blockage in equipment. Most frequent unplanned stop (35% probability on LINE2-PCK). Code: UNP-JAM.",
+        "MaterialStarvation": "Upstream supply shortage. Peak times: 10-12am and 3-5pm. Code: UNP-MAT.",
+        "ElectricalFailure": "Power or control system malfunction. Can cascade to entire line. Code: UNP-ELEC.",
+        "QualityCheck": "Production halt for quality inspection. Protects brand reputation. Code: UNP-QC.",
+        "OperatorError": "Human-caused stoppage. 12% probability on night shift (10pm-6am). Code: UNP-OPR.",
+        "SensorFailure": "Misaligned or faulty sensors. Quick fix but 15% probability on LINE1-FIL. Code: UNP-SENS.",
+        
         # KPI contexts
-        "hasOEEScore": "Overall Equipment Effectiveness (0-100%). Industry standard: >85% is world-class, 65-85% is typical, <65% needs improvement.",
-        "hasAvailabilityScore": "% of scheduled time equipment was available. Lost to breakdowns, changeovers, and other stops.",
-        "hasPerformanceScore": "% of ideal cycle time achieved. Lost to slow cycles, minor stops, and reduced speed.",
-        "hasQualityScore": "% of total units that are sellable. Lost to defects, rework, and startup losses.",
+        "hasOEEScore": "Overall Equipment Effectiveness (0-100%). Current average: 46%. World-class: >85%, Typical: 60-75%.",
+        "hasAvailabilityScore": "% of scheduled time equipment was available. Current average: 69%. Lost to all downtime types.",
+        "hasPerformanceScore": "% of ideal cycle time achieved. Current average: 50%. Lost to slow cycles and minor stops.",
+        "hasQualityScore": "% of total units that are sellable. Current average: 64%. Lost to defects and startup scrap.",
+        
         # Anomaly patterns from config
-        "LINE3-FIL": "Older filler prone to failures. Major breakdown on June 8 caused 5.5 hour downtime. Scheduled for replacement Q3 2025.",
-        "LINE2-PCK": "Packer with chronic micro-stops. 25% chance of 1-5 minute stops each period. Needs preventive maintenance.",
+        "LINE3-FIL": "Older filler prone to failures. Major breakdown on June 8 (2:00-7:30 AM) caused 5.5 hour downtime.",
+        "LINE2-PCK": "Packer with chronic micro-stops. 35% chance of 2-8 minute jams each period. Top maintenance priority.",
+        "LINE1-FIL": "Sensor calibration issues causing 15% micro-stops. Night shift operator issues add 12% stops.",
+        
         # Relationship contexts
         "isUpstreamOf": "Material flow direction. Upstream equipment problems cascade downstream. Critical for root cause analysis.",
+        "isDownstreamOf": "Inverse material flow. Downstream blockages can starve upstream equipment.",
         "belongsToLine": "Links equipment to its production line. Lines operate independently but share resources.",
-        "executesOrder": "Links production events to customer orders. Enables order tracking and profitability analysis.",
+        "hasEquipment": "Inverse of belongsToLine. Each line has 3 equipment: Filler → Packer → Palletizer.",
+        "executesOrder": "Links equipment to current production order. Equipment can execute multiple orders per day.",
+        "producesProduct": "Links orders to products. Each order produces one product type.",
+        "logsEvent": "Links equipment to its 5-minute event logs. Each equipment generates ~4,000 events over 2 weeks.",
+        "hasDowntimeReason": "Links downtime events to specific reason codes. Essential for Pareto analysis.",
     }
 
     # Check for specific equipment IDs
@@ -395,12 +432,24 @@ mes:exampleValue a owl:AnnotationProperty ;
 
                 # Add typical values for KPIs
                 if "Score" in prop.name:
-                    f.write(
-                        f' ;\n    mes:typicalValue "85-95% for world-class operations"'
-                    )
                     if prop.name == "hasOEEScore":
                         f.write(
+                            f' ;\n    mes:typicalValue "World-class: >85%, Good: 60-75%, Current avg: 46%"'
+                        )
+                        f.write(
                             f' ;\n    mes:calculationMethod "Availability × Performance × Quality"'
+                        )
+                    elif prop.name == "hasAvailabilityScore":
+                        f.write(
+                            f' ;\n    mes:typicalValue "World-class: >90%, Current avg: 69%"'
+                        )
+                    elif prop.name == "hasPerformanceScore":
+                        f.write(
+                            f' ;\n    mes:typicalValue "World-class: >95%, Current avg: 50%"'
+                        )
+                    elif prop.name == "hasQualityScore":
+                        f.write(
+                            f' ;\n    mes:typicalValue "World-class: >99%, Current avg: 64%"'
                         )
 
                 f.write(" .\n\n")

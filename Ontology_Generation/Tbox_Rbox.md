@@ -23,10 +23,15 @@ The class hierarchy represents the core manufacturing concepts:
     * PlannedDowntime  
       * Changeover (e.g., PLN-CO)  
       * Cleaning (e.g., PLN-CLN)  
+      * PreventiveMaintenance (e.g., PLN-PM)  
     * UnplannedDowntime  
       * MechanicalFailure (e.g., UNP-MECH)  
       * MaterialJam (e.g., UNP-JAM)  
-      * MaterialStarvation (e.g., UNP-MAT)
+      * MaterialStarvation (e.g., UNP-MAT)  
+      * ElectricalFailure (e.g., UNP-ELEC)  
+      * QualityCheck (e.g., UNP-QC)  
+      * OperatorError (e.g., UNP-OPR)  
+      * SensorFailure (e.g., UNP-SENS)
 
 ### **RBox (The Properties)**
 
@@ -62,7 +67,7 @@ This section maps to every column in mes_data_with_kpis.csv:
 | hasDowntimeReasonCode | DowntimeLog | string | DowntimeReason |
 | hasGoodUnits | ProductionLog | integer | GoodUnitsProduced |
 | hasScrapUnits | ProductionLog | integer | ScrapUnitsProduced |
-| hasTargetRate | Product | float | TargetRate_units_per_min |
+| hasTargetRate | Product | float | TargetRate_units_per_5min |
 | hasStandardCost | Product | float | StandardCost_per_unit |
 | hasSalePrice | Product | float | SalePrice_per_unit |
 | hasAvailabilityScore | Event | float | Availability_Score |
