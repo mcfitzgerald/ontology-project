@@ -126,6 +126,7 @@ def sanitize_query(query: str) -> str:
 def get_error_hint(error_message: str) -> Optional[str]:
     """
     Provide helpful hints based on common Owlready2 error messages.
+    Links errors to successful patterns from query_patterns.json.
     
     Args:
         error_message: The error message from Owlready2
@@ -135,20 +136,42 @@ def get_error_hint(error_message: str) -> Optional[str]:
     """
     error_lower = error_message.lower()
     
-    if "unknown prefix" in error_lower:
-        return "Check prefix definitions. Owlready2 auto-defines common prefixes (rdf, rdfs, owl, xsd) and ontology prefixes."
+    # COUNT/GROUP BY specific error
+    if ("count" in error_lower and "group by" in error_lower) or ("error at select" in error_lower and "count" in error_lower):
+        return ("COUNT with GROUP BY has known issues in Owlready2 - it returns IRIs instead of counts. "
+                "Fetch raw data and aggregate in Python instead. "
+                "See pattern: 'Get downtime events with reasons' in query_patterns.json")
     
-    if "syntax error" in error_lower:
-        return "Check SPARQL syntax. Common issues: missing dots, unbalanced brackets, incorrect property paths."
+    if "unknown prefix" in error_lower:
+        return ("Check prefix definitions. Use 'mes_ontology_populated:' prefix for all ontology entities. "
+                "Owlready2 ignores PREFIX declarations - the prefix comes from the OWL filename.")
+    
+    if "syntax error" in error_lower or "error at select" in error_lower:
+        return ("Check SPARQL syntax. Common issues: missing dots between triple patterns, "
+                "unbalanced brackets, incorrect property paths. "
+                "Try building the query incrementally starting with a simple pattern.")
     
     if "unknown property" in error_lower:
-        return "Ensure the property exists in the ontology. Use full IRI if prefix is not defined."
+        return ("Ensure the property exists in the ontology. Use direct predicates like "
+                "mes_ontology_populated:logsEvent, not string matching on properties. "
+                "See successful patterns in query_patterns.json")
     
     if "type error" in error_lower or "cannot convert" in error_lower:
-        return "Check data types in query. Ensure literals match expected types (string, int, float, datetime)."
+        return ("Check data types in query. Ensure literals match expected types (string, int, float, datetime). "
+                "Add FILTER(ISIRI(?var)) for all entity variables.")
     
     if "not supported" in error_lower:
-        return "This SPARQL feature may not be supported by Owlready2. Check documentation for supported features."
+        return ("This SPARQL feature may not be supported by Owlready2. "
+                "Avoid: BIND(), regex(), str(), complex datetime operations. "
+                "See owlready2_sparql_lean_reference.md for supported features.")
+    
+    if "timeout" in error_lower:
+        return ("Query exceeded timeout. Try: adding LIMIT clause, simplifying the query, "
+                "or increasing timeout parameter. Complex JOINs may need to be split into multiple queries.")
+    
+    if "filter" in error_lower:
+        return ("Filter error detected. Remember: always use FILTER(ISIRI(?var)) for entity variables. "
+                "For line filtering, use full IRI like: FILTER(?line = mes_ontology_populated:LINE2)")
     
     return None
 

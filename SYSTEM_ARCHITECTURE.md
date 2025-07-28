@@ -567,7 +567,6 @@ CACHE_ENABLED=true
 CACHE_TTL=3600
 
 # Analysis Configuration
-ANALYSIS_WINDOW_DAYS=30
 ONTOLOGY_NAMESPACE=mes_ontology_populated
 ```
 

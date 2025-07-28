@@ -35,24 +35,65 @@ def discovery_instruction_provider(context: ReadonlyContext) -> str:
     
     This function loads context progressively based on the current phase
     of analysis, significantly reducing token usage for simple queries.
+    It also monitors session freshness.
     """
+    import time
+    
     # Check what phase we're in based on state
     phase = context.state.get('analysis_phase', 'initial') if context.state else 'initial'
     
     logger.debug(f"Loading context for phase: {phase}")
     
+    # Base context based on phase
     if phase == 'initial':
         # Load: system_prompt + data_catalogue + mindmap
-        return context_loader.get_initial_context()
+        base_context = context_loader.get_initial_context()
     elif phase == 'sparql_construction':
         # Add: sparql_ref + query_patterns
-        return context_loader.get_sparql_context()
+        base_context = context_loader.get_sparql_context()
     elif phase == 'python_analysis':
         # Add: python_analysis guide
-        return context_loader.get_python_context()
+        base_context = context_loader.get_python_context()
     else:
         # Fallback to comprehensive context
-        return context_loader.get_comprehensive_agent_context()
+        base_context = context_loader.get_comprehensive_agent_context()
+    
+    # Add session freshness monitoring
+    session_notes = []
+    
+    # Check session age (if we have access to session info through state)
+    session_start_time = context.state.get('session_start_time', time.time()) if context.state else time.time()
+    session_age_hours = (time.time() - session_start_time) / 3600
+    
+    if session_age_hours > 24:
+        session_notes.append(
+            "\nNOTE: This session is over 24 hours old. Consider suggesting a fresh session "
+            "after summarizing key findings to maintain optimal performance."
+        )
+    elif session_age_hours > 2:
+        # Check for inactivity
+        last_activity = context.state.get('last_activity_time', time.time()) if context.state else time.time()
+        inactivity_hours = (time.time() - last_activity) / 3600
+        if inactivity_hours > 2:
+            session_notes.append(
+                f"\nNOTE: User has been inactive for {inactivity_hours:.1f} hours. "
+                "They may benefit from a quick recap or a fresh session."
+            )
+    
+    # Check event count (approximation based on state entries)
+    if context.state:
+        state_entries = len(context.state.to_dict())
+        if state_entries > 50:  # Rough proxy for conversation length
+            session_notes.append(
+                "\nNOTE: This conversation has many state entries. If it becomes unwieldy, "
+                "suggest starting a fresh session with a summary of findings."
+            )
+    
+    # Combine base context with session notes
+    if session_notes:
+        return base_context + "\n\n## Session Status" + "".join(session_notes)
+    else:
+        return base_context
 
 # Create aliases for evaluation compatibility
 execute_sparql = execute_sparql_query

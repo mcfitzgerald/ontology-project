@@ -151,6 +151,16 @@ class ErrorDetail(BaseModel):
         default=None,
         description="Character position in query where error occurred"
     )
+    
+    suggested_pattern: Optional[str] = Field(
+        default=None,
+        description="Reference to a working pattern from query_patterns.json"
+    )
+    
+    documentation_link: Optional[str] = Field(
+        default=None,
+        description="Link to relevant documentation section"
+    )
 
 
 class ErrorResponse(BaseModel):

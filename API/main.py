@@ -188,9 +188,28 @@ async def execute_sparql_query(request: SPARQLQueryRequest):
             error_msg = str(e)
             hint = get_error_hint(error_msg)
             
-            raise HTTPException(
+            # Determine suggested pattern based on error type
+            suggested_pattern = None
+            if "count" in error_msg.lower() and "group by" in error_msg.lower():
+                suggested_pattern = "Get downtime events with reasons"
+            elif "equipment" in error_msg.lower():
+                suggested_pattern = "Get all equipment"
+            
+            # Build error detail
+            error_detail = ErrorDetail(
+                type="sparql_error",
+                message=error_msg,
+                hint=hint,
+                suggested_pattern=suggested_pattern,
+                documentation_link="/Context/owlready2_sparql_lean_reference.md" if hint else None
+            )
+            
+            return JSONResponse(
                 status_code=400,
-                detail=f"SPARQL query error: {error_msg}" + (f". Hint: {hint}" if hint else "")
+                content=ErrorResponse(
+                    error=error_detail,
+                    request_id=str(uuid.uuid4())
+                ).model_dump()
             )
         
         # Get ontology info

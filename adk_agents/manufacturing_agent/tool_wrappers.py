@@ -16,12 +16,17 @@ def execute_sparql_query(query: str, tool_context: Optional[ToolContext] = None)
     Returns:
         Query results with data, execution time, metadata, and next questions
     """
+    import time
     logger.info(f"Executing SPARQL query: {query[:200]}...")
     
-    # Update analysis phase if tool context is available
+    # Update analysis phase and activity time if tool context is available
     if tool_context and hasattr(tool_context, 'state') and tool_context.state is not None:
         tool_context.state['analysis_phase'] = 'sparql_construction'
-        logger.debug("Updated analysis phase to 'sparql_construction'")
+        tool_context.state['last_activity_time'] = time.time()
+        # Initialize session start time if not present
+        if 'session_start_time' not in tool_context.state:
+            tool_context.state['session_start_time'] = time.time()
+        logger.debug("Updated analysis phase to 'sparql_construction' and activity time")
     
     from adk_agents.tools.sparql_tool import execute_sparql
     result = execute_sparql(query)
@@ -78,7 +83,13 @@ def retrieve_cached_result(cache_id: str, tool_context: Optional[ToolContext] = 
     Returns:
         Full query result or error if not found
     """
+    import time
     logger.info(f"Retrieving cached result: {cache_id}")
+    
+    # Update activity time if tool context is available
+    if tool_context and hasattr(tool_context, 'state') and tool_context.state is not None:
+        tool_context.state['last_activity_time'] = time.time()
+    
     from adk_agents.tools.sparql_tool import get_cached_query_result
     return get_cached_query_result(cache_id)
 
@@ -97,10 +108,12 @@ def execute_python_code(code: str, cache_id: str, tool_context: Optional[ToolCon
     Returns:
         Execution results including output, visualizations, and any errors
     """
-    # Update analysis phase if tool context is available
+    import time
+    # Update analysis phase and activity time if tool context is available
     if tool_context and hasattr(tool_context, 'state') and tool_context.state is not None:
         tool_context.state['analysis_phase'] = 'python_analysis'
-        logger.debug("Updated analysis phase to 'python_analysis'")
+        tool_context.state['last_activity_time'] = time.time()
+        logger.debug("Updated analysis phase to 'python_analysis' and activity time")
     
     from adk_agents.tools.python_executor import execute_python_code as execute_impl
     return execute_impl(code, cache_id, tool_context)

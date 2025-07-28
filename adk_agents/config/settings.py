@@ -36,7 +36,6 @@ SPARQL_MAX_RESULTS = int(os.getenv("SPARQL_MAX_RESULTS", "1000"))
 
 # Analysis Configuration
 OEE_BENCHMARK = float(os.getenv("OEE_BENCHMARK", "85.0"))
-ANALYSIS_WINDOW_DAYS = int(os.getenv("ANALYSIS_WINDOW_DAYS", "30"))
 ONTOLOGY_NAMESPACE = os.getenv("ONTOLOGY_NAMESPACE", "http://www.semanticweb.org/michael/ontologies/2024/mes-ontology#")
 
 # Resource Paths
@@ -90,11 +89,3 @@ def get_sparql_config() -> Dict[str, Any]:
         "namespace": ONTOLOGY_NAMESPACE
     }
 
-def get_analysis_config() -> Dict[str, Any]:
-    """Get analysis configuration."""
-    return {
-        "oee_benchmark": OEE_BENCHMARK,
-        "analysis_window_days": ANALYSIS_WINDOW_DAYS,
-        "cache_enabled": CACHE_ENABLED,
-        "cache_ttl": CACHE_TTL
-    }

@@ -27,6 +27,7 @@ mes_ontology_populated:hasOEEScore  # Correct for mes_ontology_populated.owl
 - Complex datetime operations - Not supported
 - ISIRI() - Supported and recommended
 - Basic comparisons (<, >, =, !=) - Fully supported
+- **COUNT() with GROUP BY - Known issue**: Returns IRIs instead of numeric counts
 
 ## IRI Filtering Patterns (CRITICAL!)
 ```sparql
@@ -73,6 +74,22 @@ GROUP BY ?equipment
 ### Common Query Debugging Patterns
 
 **COUNT returns IRI instead of number**: When using COUNT with GROUP BY, Owlready2 may return IRIs. Use the fallback query approach - fetch raw data and aggregate with Python.
+
+**Recommended Pattern for COUNT/GROUP BY**:
+```sparql
+# Instead of this (returns IRIs):
+SELECT ?reason (COUNT(?reason) AS ?count) WHERE {
+  ?equipment mes_ontology_populated:logsEvent ?event .
+  ?event mes_ontology_populated:hasDowntimeReasonCode ?reason .
+} GROUP BY ?reason
+
+# Do this (fetch raw data):
+SELECT ?reason WHERE {
+  ?equipment mes_ontology_populated:logsEvent ?event .
+  ?event mes_ontology_populated:hasDowntimeReasonCode ?reason .
+}
+# Then aggregate in Python using pandas value_counts() or similar
+```
 
 **Variable not found**: Ensure all variables in SELECT are bound in the WHERE clause.
 
@@ -123,7 +140,7 @@ GROUP BY ?equipment
 - ISIRI()
 - String functions: STRENDS(), CONTAINS() (limited)
 - Aggregations: SUM(), AVG(), MIN(), MAX()
-- COUNT() (but may fail with GROUP BY)
+- COUNT() (but returns IRIs with GROUP BY - see workaround above)
 
 **Not Supported:**
 - regex()
