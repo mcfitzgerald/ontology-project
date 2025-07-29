@@ -61,26 +61,32 @@ def get_business_context(entity_name, config):
         
         # Unplanned downtime types
         "MechanicalFailure": "Equipment breakdown requiring repair. Major impact on availability. Can exceed 5 hours. Code: UNP-MECH.",
-        "MaterialJam": "Product blockage in equipment. Most frequent unplanned stop (35% probability on LINE2-PCK). Code: UNP-JAM.",
-        "MaterialStarvation": "Upstream supply shortage. Peak times: 10-12am and 3-5pm. Code: UNP-MAT.",
+        "MaterialJam": "Product blockage in equipment. Most frequent unplanned stop (35% probability on LINE2-PCK). Duration: 0.5-2 minutes. Code: UNP-JAM.",
+        "MaterialStarvation": "Upstream supply shortage. Peak times: 10-12am and 3-5pm. Also caused by cascade failures from upstream equipment after 10-minute delay. Code: UNP-MAT.",
         "ElectricalFailure": "Power or control system malfunction. Can cascade to entire line. Code: UNP-ELEC.",
         "QualityCheck": "Production halt for quality inspection. Protects brand reputation. Code: UNP-QC.",
         "OperatorError": "Human-caused stoppage. 12% probability on night shift (10pm-6am). Code: UNP-OPR.",
         "SensorFailure": "Misaligned or faulty sensors. Quick fix but 15% probability on LINE1-FIL. Code: UNP-SENS.",
         
         # KPI contexts
-        "hasOEEScore": "Overall Equipment Effectiveness (0-100%). Current average: 46%. World-class: >85%, Typical: 60-75%.",
-        "hasAvailabilityScore": "% of scheduled time equipment was available. Current average: 69%. Lost to all downtime types.",
-        "hasPerformanceScore": "% of ideal cycle time achieved. Current average: 50%. Lost to slow cycles and minor stops.",
-        "hasQualityScore": "% of total units that are sellable. Current average: 64%. Lost to defects and startup scrap.",
+        "hasOEEScore": "Overall Equipment Effectiveness (0-100%). Current average: 46%. World-class: >85%, Typical: 60-75%. Impacted by micro-stops, quality variations, and cascade failures.",
+        "hasAvailabilityScore": "% of scheduled time equipment was available. Current average: 69%. Lost to all downtime types including frequent micro-stops.",
+        "hasPerformanceScore": "% of ideal cycle time achieved. Current average: 50%. Lost to slow cycles, minor stops, and performance degradation.",
+        "hasQualityScore": "% of total units that are sellable. Current average: 64%. Lost to normal variations (5% probability), startup scrap (first 30 min), and end-of-run degradation (last 2 hours).",
         
         # Anomaly patterns from config
-        "LINE3-FIL": "Older filler prone to failures. Major breakdown on June 8 (2:00-7:30 AM) caused 5.5 hour downtime.",
-        "LINE2-PCK": "Packer with chronic micro-stops. 35% chance of 2-8 minute jams each period. Top maintenance priority.",
-        "LINE1-FIL": "Sensor calibration issues causing 15% micro-stops. Night shift operator issues add 12% stops.",
+        "LINE1-FIL": "Filler with sensor calibration issues (15% micro-stops). Night shift operator issues add 12% stops. Prone to 0.5-1.5 minute jams (10% probability).",
+        "LINE2-FIL": "Standard filler with typical 10% micro-stop rate. Duration: 0.5-1.5 minutes per stop.",
+        "LINE3-FIL": "Older filler prone to failures. Major breakdown on June 8 (2:00-7:30 AM) caused 5.5 hour downtime. Also has 10% micro-stop rate.",
+        "LINE1-PCK": "Packer with 12% micro-stop probability. Typical duration: 0.5-2 minutes per jam.",
+        "LINE2-PCK": "Packer with chronic micro-stops. 35% chance of 0.5-2 minute jams each period. Top maintenance priority.",
+        "LINE3-PCK": "Standard packer with 12% micro-stop rate. Duration: 0.5-2 minutes.",
+        "LINE1-PAL": "Palletizer with 8% micro-stop rate. Typical duration: 1-2 minutes for stack adjustments.",
+        "LINE2-PAL": "Standard palletizer. 8% micro-stop probability, 1-2 minute duration.",
+        "LINE3-PAL": "Palletizer at end of problematic LINE3. 8% micro-stops plus cascade effects from upstream.",
         
         # Relationship contexts
-        "isUpstreamOf": "Material flow direction. Upstream equipment problems cascade downstream. Critical for root cause analysis.",
+        "isUpstreamOf": "Material flow direction. Upstream equipment problems cascade downstream after 10-minute delay with 80% probability. Critical for root cause analysis.",
         "isDownstreamOf": "Inverse material flow. Downstream blockages can starve upstream equipment.",
         "belongsToLine": "Links equipment to its production line. Lines operate independently but share resources.",
         "hasEquipment": "Inverse of belongsToLine. Each line has 3 equipment: Filler → Packer → Palletizer.",
@@ -88,10 +94,57 @@ def get_business_context(entity_name, config):
         "producesProduct": "Links orders to products. Each order produces one product type.",
         "logsEvent": "Links equipment to its 5-minute event logs. Each equipment generates ~4,000 events over 2 weeks.",
         "hasDowntimeReason": "Links downtime events to specific reason codes. Essential for Pareto analysis.",
+        
+        # Quality patterns
+        "QualityVariation": "Normal production experiences 5% probability of minor quality issues per 5-minute interval.",
+        "ChangeoverQuality": "First 30 minutes after product changeover shows 2x normal scrap rate due to equipment adjustment.",
+        "EndOfRunQuality": "Last 2 hours before changeover experiences 1.5x scrap rate due to material depletion and operator fatigue.",
+        
+        # Cascade failure patterns
+        "CascadeFailure": "Downstream equipment starves 10 minutes after upstream stoppage. 80% probability of propagation. Major cause of line-wide OEE loss.",
+        "UpstreamDependency": "Filler stoppages cascade to Packer then Palletizer. Each stage adds 10-minute buffer before starvation.",
     }
 
     # Check for specific equipment IDs
     base_context = contexts.get(entity_name, "")
+    
+    # Add anomaly information if applicable
+    if (
+        entity_name == "LINE3-FIL"
+        and config["anomaly_injection"]["major_mechanical_failure"]["enabled"]
+    ):
+        failure = config["anomaly_injection"]["major_mechanical_failure"]
+        base_context += (
+            f" Major failure: {failure['start_datetime']} to {failure['end_datetime']}."
+        )
+
+    if (
+        entity_name == "LINE2-PCK"
+        and config["anomaly_injection"]["frequent_micro_stops"]["enabled"]
+    ):
+        stops = config["anomaly_injection"]["frequent_micro_stops"]
+        base_context += f" Micro-stops: {int(stops['probability_per_5min']*100)}% probability per period, 0.5-2 minute duration."
+
+    # Add dynamic context for new equipment patterns
+    if entity_name.startswith("LINE") and "-" in entity_name:
+        line_num = entity_name.split("-")[0][-1]
+        eq_type = entity_name.split("-")[1]
+        
+        # Check filler micro-stops
+        if eq_type == "FIL" and config.get("anomaly_injection", {}).get("filler_micro_stops", {}).get("enabled", False):
+            for pattern in config["anomaly_injection"]["filler_micro_stops"]["equipment_patterns"]:
+                if pattern["equipment_id"] == entity_name:
+                    if base_context:
+                        base_context += f" Filler micro-stops: {int(pattern['probability_per_5min']*100)}% probability, {pattern['duration_range_minutes']['min']}-{pattern['duration_range_minutes']['max']} minute duration."
+        
+        # Check palletizer micro-stops
+        elif eq_type == "PAL" and config.get("anomaly_injection", {}).get("palletizer_micro_stops", {}).get("enabled", False):
+            for pattern in config["anomaly_injection"]["palletizer_micro_stops"]["equipment_patterns"]:
+                if pattern["equipment_id"] == entity_name:
+                    if base_context:
+                        base_context += f" Palletizer micro-stops: {int(pattern['probability_per_5min']*100)}% probability, {pattern['duration_range_minutes']['min']}-{pattern['duration_range_minutes']['max']} minute duration."
+    
+    return base_context
 
 
 def get_column_mapping():
@@ -167,25 +220,6 @@ def get_column_mapping():
             "context": "Overall Equipment Effectiveness (0-100)",
         },
     }
-
-    # Add anomaly information if applicable
-    if (
-        entity_name == "LINE3-FIL"
-        and config["anomaly_injection"]["major_mechanical_failure"]["enabled"]
-    ):
-        failure = config["anomaly_injection"]["major_mechanical_failure"]
-        base_context += (
-            f" Major failure: {failure['start_datetime']} to {failure['end_datetime']}."
-        )
-
-    if (
-        entity_name == "LINE2-PCK"
-        and config["anomaly_injection"]["frequent_micro_stops"]["enabled"]
-    ):
-        stops = config["anomaly_injection"]["frequent_micro_stops"]
-        base_context += f" Micro-stops: {int(stops['probability_per_5min']*100)}% probability per period."
-
-    return base_context
 
 
 def extract_ontology_to_ttl(owl_file_path, output_ttl_path):

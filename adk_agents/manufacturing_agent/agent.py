@@ -82,7 +82,7 @@ def discovery_instruction_provider(context: ReadonlyContext) -> str:
     
     # Check event count (approximation based on state entries)
     if context.state:
-        state_entries = len(context.state.to_dict())
+        state_entries = len(context.state)
         if state_entries > 50:  # Rough proxy for conversation length
             session_notes.append(
                 "\nNOTE: This conversation has many state entries. If it becomes unwieldy, "

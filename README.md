@@ -4,10 +4,6 @@
 
 This project represents a complete end-to-end pipeline that transforms raw manufacturing data into actionable business insights through the power of semantic ontologies and conversational AI. At its core, it demonstrates how traditional operational data can be elevated beyond simple reporting into a discovery engine that uncovers hidden optimization opportunities worth millions in potential savings.
 
-## 🎯 Key Achievement
-
-The system discovered **$9.36M in optimization opportunities** by following a discovery-driven methodology - finding that LINE2-PCK's jam events were causing massive production losses that weren't visible in traditional reports.
-
 ## 📋 Table of Contents
 
 - [Overview](#overview)
@@ -143,10 +139,13 @@ pip install -r requirements.txt
 cp .env.example .env
 # Edit .env and add your GOOGLE_API_KEY
 
-# 4. Start the services
+# 4. Generate or refresh all data (recommended)
+python orchestrate_data_pipeline.py
+
+# 5. Start the services
 ./start_services.sh
 
-# 5. Open the Web UI
+# 6. Open the Web UI
 # Navigate to http://localhost:8001/dev-ui/
 ```
 
@@ -192,15 +191,31 @@ That's it! Start asking questions like:
    EOF
    ```
 
-5. **Generate Sample Data (Optional)**
+5. **Generate or Refresh All Data**
    ```bash
-   # If you want to regenerate the manufacturing data
-   python Data_Generation/mes_data_generation.py
+   # Orchestrate the complete data pipeline
+   python orchestrate_data_pipeline.py
+   
+   # This single command will:
+   # - Validate configuration
+   # - Generate manufacturing data
+   # - Populate the ontology
+   # - Extract ontology mindmap
+   # - Generate data catalogue
+   # - Validate all outputs
+   
+   # Optional flags:
+   python orchestrate_data_pipeline.py --dry-run    # Preview without executing
+   python orchestrate_data_pipeline.py --force      # Overwrite existing files
+   python orchestrate_data_pipeline.py --skip-backup # Skip backup step
    ```
-
-6. **Populate Ontology (Optional)**
+   
+   For manual control over individual steps:
    ```bash
-   # If you want to repopulate the ontology
+   # Generate only manufacturing data
+   python Data_Generation/mes_data_generation.py
+   
+   # Populate only the ontology
    python Ontology_Generation/mes_ontology_population.py
    ```
 
@@ -278,7 +293,23 @@ The conversational AI brain:
 - `python_executor.py` - DataFrame analysis and visualization
 - `cache_manager.py` - Pattern learning and optimization
 
-### 5. Service Management Scripts
+### 5. Data Pipeline Orchestration
+
+**Orchestration Script** (`orchestrate_data_pipeline.py`)
+- Automates the complete data generation workflow
+- Validates configuration before execution
+- Provides dry-run mode for testing
+- Supports parallel execution of independent steps
+- Creates backups of existing data
+- Comprehensive error handling and logging
+
+Key features:
+- Configuration validation with business rule checks
+- Progress tracking with detailed status updates
+- Output validation to ensure data consistency
+- Selective step execution for development
+
+### 6. Service Management Scripts
 
 - `start_services.sh` - Launches SPARQL API and ADK Web UI
 - `stop_services.sh` - Gracefully stops all services
@@ -527,51 +558,12 @@ ADK_DEBUG=true
 1. Check the logs:
    - `sparql_api.log` - SPARQL API issues
    - `adk_web.log` - ADK Web UI issues
-   - `trace.log` - Detailed agent traces
 
 2. Common fixes:
    - Restart services: `./stop_services.sh && ./start_services.sh`
    - Clear cache: `rm -rf adk_agents/cache/results/*`
    - Reset conversation in UI or CLI
 
-## Contributing
-
-We welcome contributions! Please follow these guidelines:
-
-1. **Fork the repository**
-2. **Create a feature branch**: `git checkout -b feature/amazing-feature`
-3. **Make your changes**
-4. **Test thoroughly**: Ensure all services start and basic queries work
-5. **Commit with clear messages**: `git commit -m 'Add amazing feature'`
-6. **Push to your fork**: `git push origin feature/amazing-feature`
-7. **Open a Pull Request**
-
-### Code Style
-
-- Python: Follow PEP 8
-- Use type hints where appropriate
-- Document complex functions
-- Keep tools simple and focused
-
-### Testing
-
-Run the test suite:
-```bash
-# Unit tests
-pytest tests/
-
-# Integration test
-python test_collaborative_flow.py
-
-# Full system test
-./start_services.sh
-python -m adk_agents.main_unified
-# Try: "What equipment exists?"
-```
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
 
 ## Acknowledgments
 

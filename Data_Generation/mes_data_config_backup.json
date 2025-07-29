@@ -163,23 +163,23 @@
       "equipment_id": "LINE2-PCK",
       "probability_per_5min": 0.35,
       "downtime_reason": "UNP-JAM",
-      "duration_range_minutes": {"min": 0.5, "max": 2},
+      "duration_range_minutes": {"min": 2, "max": 8},
       "description": "Frequent micro-stops on Line 2 Packer"
     },
     "minor_stops_line1": {
       "enabled": true,
       "equipment_id": "LINE1-FIL",
-      "probability_per_5min": 0.20,
+      "probability_per_5min": 0.15,
       "downtime_reason": "UNP-SENS",
-      "duration_range_minutes": {"min": 0.5, "max": 1.5},
+      "duration_range_minutes": {"min": 1, "max": 4},
       "description": "Sensor issues causing minor stops on Line 1 Filler"
     },
     "recurring_jams_line1": {
       "enabled": true,
       "equipment_id": "LINE1-PCK",
-      "probability_per_5min": 0.15,
+      "probability_per_5min": 0.20,
       "downtime_reason": "UNP-JAM",
-      "duration_range_minutes": {"min": 1, "max": 3},
+      "duration_range_minutes": {"min": 5, "max": 15},
       "description": "Recurring jams on Line 1 Packer"
     },
     "electrical_issues": {
@@ -275,65 +275,10 @@
           "equipment_id": "LINE3-FIL",
           "probability_per_5min": 0.06,
           "downtime_reason": "UNP-SENS",
-          "duration_range_minutes": {"min": 0.5, "max": 2}
+          "duration_range_minutes": {"min": 2, "max": 10}
         }
       ],
       "description": "Random sensor calibration issues"
-    },
-    "filler_micro_stops": {
-      "enabled": true,
-      "equipment_patterns": [
-        {
-          "equipment_id": "LINE2-FIL",
-          "probability_per_5min": 0.10,
-          "downtime_reason": "UNP-JAM",
-          "duration_range_minutes": {"min": 0.5, "max": 1.5}
-        },
-        {
-          "equipment_id": "LINE3-FIL",
-          "probability_per_5min": 0.08,
-          "downtime_reason": "UNP-JAM",
-          "duration_range_minutes": {"min": 0.5, "max": 1}
-        }
-      ],
-      "description": "Fill valve and foam control micro-stops"
-    },
-    "palletizer_micro_stops": {
-      "enabled": true,
-      "equipment_patterns": [
-        {
-          "equipment_id": "LINE1-PAL",
-          "probability_per_5min": 0.05,
-          "downtime_reason": "UNP-JAM",
-          "duration_range_minutes": {"min": 1, "max": 2}
-        },
-        {
-          "equipment_id": "LINE3-PAL",
-          "probability_per_5min": 0.06,
-          "downtime_reason": "UNP-JAM",
-          "duration_range_minutes": {"min": 0.5, "max": 1.5}
-        }
-      ],
-      "description": "Pallet stability and stretch wrap micro-stops"
-    },
-    "quality_variation_normal": {
-      "enabled": true,
-      "scrap_rate_multiplier": 1.2,
-      "probability_per_5min": 0.15,
-      "description": "Random quality variations during normal production"
-    },
-    "quality_end_of_run": {
-      "enabled": true,
-      "hours_before_changeover": 1,
-      "scrap_rate_multiplier": 1.5,
-      "description": "Quality degradation at end of long production runs"
-    },
-    "cascade_failures": {
-      "enabled": true,
-      "trigger_equipment": ["LINE1-FIL", "LINE2-FIL", "LINE3-FIL"],
-      "cascade_delay_minutes": 10,
-      "downstream_stop_probability": 0.8,
-      "description": "Downstream equipment starves when upstream stops"
     }
   },
   

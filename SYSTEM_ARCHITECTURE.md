@@ -4,7 +4,7 @@
 
 The Ontology-Augmented Manufacturing Analytics System is a sophisticated conversational AI platform built on Google's Agent Development Kit (ADK) that bridges MES data with modern LLMs using an ontology as a semantic layer to unlock hidden value in operational data. While initially demonstrated in manufacturing analytics where it discovered $2.5M+ in optimization opportunities, the system's architecture is designed to be domain-agnostic and applicable to any industry with structured operational data.
 
-## Last Updated: July 2025
+## Last Updated: January 2025
 
 ### Major Architecture Simplification
 The system has undergone significant architectural simplification to leverage ADK's native capabilities more effectively:
@@ -78,7 +78,7 @@ Key architectural features:
 - **ADK Native Patterns**: Full use of tool_context, state management, and callbacks
 - **Gemini 2.0 Flash**: Default model for optimal performance and cost
 
-## Recent Architecture Refactoring (July 2025)
+## Recent Architecture Refactoring (January 2025)
 
 The system underwent a significant simplification to remove prescriptive constraints and empower the LLM:
 
@@ -110,7 +110,7 @@ The ContextLoader is the knowledge foundation of the system, providing dynamic c
 - **SPARQL Construction**: Adds SPARQL reference + query patterns
 - **Python Analysis**: Adds Python analysis guide
 
-**Context Files**:
+**Context Files Located in `/Context/` Directory**:
 - `system_prompt.md`: Agent behavior and methodology
 - `mes_ontology_mindmap.ttl`: Ontology structure
 - `owlready2_sparql_lean_reference.md`: SPARQL syntax rules
@@ -158,9 +158,10 @@ Simplified SPARQL executor focused on reliable query execution and result cachin
 - **Size Management**: Warnings for large cache files (>50MB individual, >200MB total)
 
 **Cache Structure**:
-- Query cache in `cache/query_cache.json` (SHA256 keys)
-- Results stored in `cache/results/` as JSON files
-- Index file tracks all cached results with metadata
+- Query cache in `adk_agents/cache/query_cache.json` (SHA256 keys)
+- Results stored in `adk_agents/cache/results/` as JSON files
+- Index file `adk_agents/cache/results/index.json` tracks all cached results with metadata
+- Successful patterns tracked in `adk_agents/cache/successful_patterns.json`
 - Automatic cleanup for old cache entries
 
 **Key Methods**:
@@ -461,9 +462,9 @@ The system leverages ADK's native capabilities with a lean, flexible approach:
 
 ## Test Cases: Proven Manufacturing Examples
 
-The system now uses a simplified testing approach focused on real-world scenarios rather than rigid evaluation trajectories. Test files are located in `adk_agents/tests/` with unit, integration, and simple evaluation tests.
+The system uses a simplified testing approach focused on real-world scenarios rather than rigid evaluation trajectories. While test files should be located in `adk_agents/tests/`, this directory was not found in the current codebase structure.
 
-Additionally, a collaborative flow test (`test_collaborative_flow.py`) validates the conversational engagement improvements:
+The following real-world examples demonstrate the system's capabilities and serve as test cases:
 - Tests ambiguous request handling
 - Validates that agent asks for clarification
 - Ensures agent doesn't dive deep without permission

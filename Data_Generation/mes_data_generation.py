@@ -143,7 +143,7 @@ def apply_anomalies(equip_id, current_time, order_info, config, changeover_start
         micro_stops = anomaly_config['frequent_micro_stops']
         if equip_id == micro_stops['equipment_id']:
             if random.random() < micro_stops['probability_per_5min']:
-                duration = random.randint(
+                duration = random.uniform(
                     micro_stops['duration_range_minutes']['min'],
                     micro_stops['duration_range_minutes']['max']
                 )
@@ -157,7 +157,7 @@ def apply_anomalies(equip_id, current_time, order_info, config, changeover_start
             anomaly = anomaly_config[anomaly_key]
             if equip_id == anomaly['equipment_id']:
                 if random.random() < anomaly['probability_per_5min']:
-                    duration = random.randint(
+                    duration = random.uniform(
                         anomaly['duration_range_minutes']['min'],
                         anomaly['duration_range_minutes']['max']
                     )
@@ -172,7 +172,7 @@ def apply_anomalies(equip_id, current_time, order_info, config, changeover_start
             hour_range = opr['hour_range']
             if hour >= hour_range[0] or hour < hour_range[1]:
                 if random.random() < opr['probability_per_5min']:
-                    duration = random.randint(
+                    duration = random.uniform(
                         opr['duration_range_minutes']['min'],
                         opr['duration_range_minutes']['max']
                     )
@@ -187,7 +187,7 @@ def apply_anomalies(equip_id, current_time, order_info, config, changeover_start
                 hour_range = pattern['hour_range']
                 if hour_range[0] <= hour < hour_range[1]:
                     if random.random() < pattern['probability_per_5min']:
-                        duration = random.randint(
+                        duration = random.uniform(
                             pattern['duration_range_minutes']['min'],
                             pattern['duration_range_minutes']['max']
                         )
@@ -199,7 +199,31 @@ def apply_anomalies(equip_id, current_time, order_info, config, changeover_start
         for pattern in anomaly_config['random_sensor_issues'].get('equipment_patterns', []):
             if equip_id == pattern['equipment_id']:
                 if random.random() < pattern['probability_per_5min']:
-                    duration = random.randint(
+                    duration = random.uniform(
+                        pattern['duration_range_minutes']['min'],
+                        pattern['duration_range_minutes']['max']
+                    )
+                    downtime_end = current_time + timedelta(minutes=duration)
+                    return "Stopped", pattern['downtime_reason'], 0, 0, downtime_end
+    
+    # Check filler micro stops
+    if anomaly_config.get('filler_micro_stops', {}).get('enabled', False):
+        for pattern in anomaly_config['filler_micro_stops'].get('equipment_patterns', []):
+            if equip_id == pattern['equipment_id']:
+                if random.random() < pattern['probability_per_5min']:
+                    duration = random.uniform(
+                        pattern['duration_range_minutes']['min'],
+                        pattern['duration_range_minutes']['max']
+                    )
+                    downtime_end = current_time + timedelta(minutes=duration)
+                    return "Stopped", pattern['downtime_reason'], 0, 0, downtime_end
+    
+    # Check palletizer micro stops
+    if anomaly_config.get('palletizer_micro_stops', {}).get('enabled', False):
+        for pattern in anomaly_config['palletizer_micro_stops'].get('equipment_patterns', []):
+            if equip_id == pattern['equipment_id']:
+                if random.random() < pattern['probability_per_5min']:
+                    duration = random.uniform(
                         pattern['duration_range_minutes']['min'],
                         pattern['duration_range_minutes']['max']
                     )
@@ -286,6 +310,22 @@ def apply_anomalies(equip_id, current_time, order_info, config, changeover_start
                 scrap_rate *= anomaly_config['changeover_scrap_spike']['scrap_multiplier']
                 break
     
+    # Check quality variation during normal production
+    if anomaly_config.get('quality_variation_normal', {}).get('enabled', False):
+        if random.random() < anomaly_config['quality_variation_normal']['probability_per_5min']:
+            scrap_rate *= anomaly_config['quality_variation_normal']['scrap_rate_multiplier']
+    
+    # Check quality degradation at end of run
+    if anomaly_config.get('quality_end_of_run', {}).get('enabled', False):
+        # Find next changeover time for this line
+        hours_before = anomaly_config['quality_end_of_run']['hours_before_changeover']
+        for co_time in changeover_start_times:
+            if co_time > current_time:  # This is the next changeover
+                time_until_changeover = (co_time - current_time).total_seconds() / 3600
+                if time_until_changeover <= hours_before:
+                    scrap_rate *= anomaly_config['quality_end_of_run']['scrap_rate_multiplier']
+                break
+    
     scrap_units = int(good_units * scrap_rate / (1 - scrap_rate))
     
     return "Running", None, good_units, scrap_units, None
@@ -351,6 +391,7 @@ def generate_mes_data(start_date, end_date, config):
     downtime_tracker = {}  # Tracks ongoing downtimes
     performance_drop_tracker = {}  # Tracks performance drops
     last_cleaning_times = {}  # Tracks last cleaning time per equipment
+    cascade_tracker = {}  # Tracks cascade failures from upstream equipment
     
     print("Starting data generation loop...")
     total_intervals = int((end_date - start_date).total_seconds() / 60 / 5)
@@ -417,6 +458,40 @@ def generate_mes_data(start_date, end_date, config):
                 
                 if downtime_end:
                     downtime_tracker[equip_id] = {"end": downtime_end, "reason": reason}
+            
+            # Check cascade failures (downstream equipment starves when upstream stops)
+            if config.get('anomaly_injection', {}).get('cascade_failures', {}).get('enabled', False):
+                cascade_config = config['anomaly_injection']['cascade_failures']
+                
+                # Check if this is a trigger equipment (upstream) that just stopped
+                if equip_id in cascade_config['trigger_equipment'] and status == "Stopped":
+                    # Mark cascade start time for downstream equipment on same line
+                    line_id = equip["LineID"]
+                    cascade_key = f"LINE{line_id}"
+                    if cascade_key not in cascade_tracker:
+                        cascade_tracker[cascade_key] = current_time
+                
+                # Check if this is a trigger equipment that just restarted
+                elif equip_id in cascade_config['trigger_equipment'] and status == "Running":
+                    # Clear cascade for this line
+                    line_id = equip["LineID"]
+                    cascade_key = f"LINE{line_id}"
+                    if cascade_key in cascade_tracker:
+                        del cascade_tracker[cascade_key]
+                
+                # Check if this is downstream equipment that should be starved
+                elif equip_id not in cascade_config['trigger_equipment'] and status == "Running":
+                    line_id = equip["LineID"]
+                    cascade_key = f"LINE{line_id}"
+                    if cascade_key in cascade_tracker:
+                        # Check if enough time has passed for cascade
+                        time_since_upstream_stop = (current_time - cascade_tracker[cascade_key]).total_seconds() / 60
+                        if time_since_upstream_stop >= cascade_config['cascade_delay_minutes']:
+                            # Apply cascade failure with probability
+                            if random.random() < cascade_config['downstream_stop_probability']:
+                                status = "Stopped"
+                                reason = "UNP-MAT"  # Material starvation
+                                good_units, scrap_units = 0, 0
             
             # Calculate instantaneous KPIs
             kpis = calculate_kpis(status, good_units, scrap_units, order_info["TargetRate_units_per_5min"])
