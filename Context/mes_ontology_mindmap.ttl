@@ -1,7 +1,16 @@
 # MES Ontology Mind Map for LLM SPARQL Query Generation
 # Generated: 2025-07-26T20:05:52.807850
 # Purpose: Provide ontology structure with business context for accurate SPARQL query construction
-
+#
+# About Turtle Format: This file uses Turtle (Terse RDF Triple Language), a human-readable
+# format for expressing semantic relationships. Each line represents a fact as a triple 
+# (subject-predicate-object), creating a knowledge graph that machines can traverse and 
+# query. The format's power lies in its simplicity: prefixes reduce verbosity, punctuation 
+# shortcuts (semicolons, commas) eliminate repetition, and the 'a' keyword clearly marks 
+# type relationships. This makes complex ontologies accessible - you can read it like 
+# structured English while maintaining formal semantic precision that enables SPARQL queries
+# and automated reasoning. The format transforms raw data into interconnected knowledge.
+#
 # This file contains:
 # 1. Complete class hierarchy with business meanings
 # 2. All properties with domains, ranges, and operational context  
