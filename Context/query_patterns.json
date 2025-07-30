@@ -20,10 +20,16 @@
       "notes": "Complex join pattern with proper FILTER usage"
     },
     {
-      "purpose": "Get downtime events with reasons",
+      "purpose": "Get downtime events with reasons (CORRECT PATH)",
       "category": "downtime",
-      "query": "SELECT ?equipment ?reason WHERE { ?equipment mes_ontology_populated:logsEvent ?event . ?event a mes_ontology_populated:DowntimeLog . ?event mes_ontology_populated:hasDowntimeReasonCode ?reason . FILTER(ISIRI(?equipment)) FILTER(ISIRI(?event)) }",
-      "notes": "Avoid COUNT with GROUP BY - fetch raw data for Python aggregation if needed"
+      "query": "SELECT ?equipment ?downtimeReasonCode WHERE { ?equipment mes_ontology_populated:logsEvent ?event . ?event a mes_ontology_populated:DowntimeLog . ?event mes_ontology_populated:hasDowntimeReason ?reason . ?reason mes_ontology_populated:hasDowntimeReasonCode ?downtimeReasonCode . FILTER(ISIRI(?equipment)) FILTER(ISIRI(?event)) }",
+      "notes": "Correct path: DowntimeLog → hasDowntimeReason → hasDowntimeReasonCode. For duration, use pre-calculated data in data catalogue or calculate in Python"
+    },
+    {
+      "purpose": "Count downtime events by reason (for Python aggregation)",
+      "category": "downtime",
+      "query": "SELECT ?downtimeReasonCode WHERE { ?equipment mes_ontology_populated:logsEvent ?event . ?event a mes_ontology_populated:DowntimeLog . ?event mes_ontology_populated:hasDowntimeReason ?reason . ?reason mes_ontology_populated:hasDowntimeReasonCode ?downtimeReasonCode . }",
+      "notes": "Fetch all events, then use Python value_counts() for aggregation. Duration NOT available in events - use data catalogue totals"
     },
     {
       "purpose": "Average OEE by equipment",
@@ -68,6 +74,18 @@
       "bad_query": "SELECT ?equipment WHERE { ?equipment a mes_ontology_populated:Equipment }",
       "why_fails": "May return literals or blank nodes",
       "fix": "Add FILTER(ISIRI(?equipment)) for all entity variables"
+    },
+    {
+      "description": "Using datetime functions for duration",
+      "bad_query": "SUM(HOUR(?event) * 60 + MINUTE(?event))",
+      "why_fails": "HOUR() and MINUTE() functions not supported; DowntimeLog has no duration property",
+      "fix": "Query events and use Python for duration calc, or use pre-calculated totals from data catalogue"
+    },
+    {
+      "description": "Wrong downtime reason path",
+      "bad_query": "?event mes_ontology_populated:hasDowntimeReasonCode ?code",
+      "why_fails": "Missing intermediate hasDowntimeReason relationship",
+      "fix": "?event mes_ontology_populated:hasDowntimeReason ?reason . ?reason mes_ontology_populated:hasDowntimeReasonCode ?code"
     }
   ]
 }

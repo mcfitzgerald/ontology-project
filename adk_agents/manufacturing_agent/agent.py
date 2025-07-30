@@ -31,32 +31,17 @@ from adk_agents.manufacturing_agent.tool_wrappers import (
 
 # Define dynamic instruction provider
 def discovery_instruction_provider(context: ReadonlyContext) -> str:
-    """Dynamically provide instructions based on analysis phase.
+    """Always provide comprehensive instructions.
     
-    This function loads context progressively based on the current phase
-    of analysis, significantly reducing token usage for simple queries.
-    It also monitors session freshness.
+    This function loads all context upfront to ensure the agent has
+    complete information for SPARQL queries and analysis.
     """
     import time
     
-    # Check what phase we're in based on state
-    phase = context.state.get('analysis_phase', 'initial') if context.state else 'initial'
+    logger.debug("Loading comprehensive context")
     
-    logger.debug(f"Loading context for phase: {phase}")
-    
-    # Base context based on phase
-    if phase == 'initial':
-        # Load: system_prompt + data_catalogue + mindmap
-        base_context = context_loader.get_initial_context()
-    elif phase == 'sparql_construction':
-        # Add: sparql_ref + query_patterns
-        base_context = context_loader.get_sparql_context()
-    elif phase == 'python_analysis':
-        # Add: python_analysis guide
-        base_context = context_loader.get_python_context()
-    else:
-        # Fallback to comprehensive context
-        base_context = context_loader.get_comprehensive_agent_context()
+    # Always load comprehensive context
+    base_context = context_loader.get_comprehensive_agent_context()
     
     # Add session freshness monitoring
     session_notes = []
