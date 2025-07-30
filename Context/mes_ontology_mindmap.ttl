@@ -1,5 +1,5 @@
 # MES Ontology Mind Map for LLM SPARQL Query Generation
-# Generated: 2025-07-29T15:47:30.348466
+# Generated: 2025-07-29T16:47:49.503752
 # Purpose: Provide ontology structure with business context for accurate SPARQL query construction
 
 # This file contains:
@@ -403,53 +403,78 @@ mes:hasTimestamp a owl:DatatypeProperty ;
 
 mes:LINE1-FIL a mes:Filler ;
     rdfs:label "LINE1-FIL" ;
-    mes:belongsToLine mes:LINE1 ;
-    mes:isUpstreamOf mes:LINE1-PCK ;
-    mes:executesOrder mes:ORD-1000 ;
-    mes:executesOrder mes:ORD-1001 ;
-    mes:executesOrder mes:ORD-1002 ;
     mes:logsEvent mes:EVENT-LINE1-FIL-2025-06-01T00-00-00 ;
     mes:logsEvent mes:EVENT-LINE1-FIL-2025-06-01T00-05-00 ;
     mes:logsEvent mes:EVENT-LINE1-FIL-2025-06-01T00-10-00 ;
+    mes:executesOrder mes:ORD-1000 ;
+    mes:executesOrder mes:ORD-1001 ;
+    mes:executesOrder mes:ORD-1002 ;
+    mes:isUpstreamOf mes:LINE1-PCK ;
+    mes:belongsToLine mes:LINE1 ;
     mes:businessContext "Filler with sensor calibration issues (15% micro-stops). Night shift operator issues add 12% stops. Prone to 0.5-1.5 minute jams (10% probability)." .
 
 mes:LINE1-PCK a mes:Packer ;
     rdfs:label "LINE1-PCK" ;
-    mes:belongsToLine mes:LINE1 ;
-    mes:isUpstreamOf mes:LINE1-PAL ;
-    mes:executesOrder mes:ORD-1000 ;
-    mes:executesOrder mes:ORD-1001 ;
-    mes:executesOrder mes:ORD-1002 ;
-    mes:isDownstreamOf mes:LINE1-FIL ;
     mes:logsEvent mes:EVENT-LINE1-PCK-2025-06-01T00-00-00 ;
     mes:logsEvent mes:EVENT-LINE1-PCK-2025-06-01T00-05-00 ;
     mes:logsEvent mes:EVENT-LINE1-PCK-2025-06-01T00-10-00 ;
+    mes:executesOrder mes:ORD-1000 ;
+    mes:executesOrder mes:ORD-1001 ;
+    mes:executesOrder mes:ORD-1002 ;
+    mes:isUpstreamOf mes:LINE1-PAL ;
+    mes:isDownstreamOf mes:LINE1-FIL ;
+    mes:belongsToLine mes:LINE1 ;
     mes:businessContext "Packer with 12% micro-stop probability. Typical duration: 0.5-2 minutes per jam." .
 
 mes:LINE2-PCK a mes:Packer ;
     rdfs:label "LINE2-PCK" ;
-    mes:belongsToLine mes:LINE2 ;
-    mes:isUpstreamOf mes:LINE2-PAL ;
-    mes:executesOrder mes:ORD-1039 ;
-    mes:executesOrder mes:ORD-1040 ;
-    mes:executesOrder mes:ORD-1041 ;
-    mes:isDownstreamOf mes:LINE2-FIL ;
     mes:logsEvent mes:EVENT-LINE2-PCK-2025-06-01T00-00-00 ;
     mes:logsEvent mes:EVENT-LINE2-PCK-2025-06-01T00-05-00 ;
     mes:logsEvent mes:EVENT-LINE2-PCK-2025-06-01T00-10-00 ;
+    mes:executesOrder mes:ORD-1037 ;
+    mes:executesOrder mes:ORD-1038 ;
+    mes:executesOrder mes:ORD-1039 ;
+    mes:isUpstreamOf mes:LINE2-PAL ;
+    mes:isDownstreamOf mes:LINE2-FIL ;
+    mes:belongsToLine mes:LINE2 ;
     mes:businessContext "Packer with chronic micro-stops. 35% chance of 0.5-2 minute jams each period. Top maintenance priority. Micro-stops: 35% probability per period, 0.5-2 minute duration." .
 
 mes:LINE3-FIL a mes:Filler ;
     rdfs:label "LINE3-FIL" ;
-    mes:belongsToLine mes:LINE3 ;
-    mes:isUpstreamOf mes:LINE3-PCK ;
-    mes:executesOrder mes:ORD-1080 ;
-    mes:executesOrder mes:ORD-1081 ;
-    mes:executesOrder mes:ORD-1082 ;
     mes:logsEvent mes:EVENT-LINE3-FIL-2025-06-01T00-00-00 ;
     mes:logsEvent mes:EVENT-LINE3-FIL-2025-06-01T00-05-00 ;
     mes:logsEvent mes:EVENT-LINE3-FIL-2025-06-01T00-10-00 ;
+    mes:executesOrder mes:ORD-1074 ;
+    mes:executesOrder mes:ORD-1075 ;
+    mes:executesOrder mes:ORD-1076 ;
+    mes:isUpstreamOf mes:LINE3-PCK ;
+    mes:belongsToLine mes:LINE3 ;
     mes:businessContext "Older filler prone to failures. Major breakdown on June 8 (2:00-7:30 AM) caused 5.5 hour downtime. Also has 10% micro-stop rate. Major failure: 2025-06-08 02:00:00 to 2025-06-08 07:30:00. Filler micro-stops: 8% probability, 0.5-1 minute duration." .
+
+mes:ORD-1000 a mes:ProductionOrder ;
+    rdfs:label "ORD-1000" ;
+    mes:hasOrderID "ORD-1000" ;
+    mes:producesProduct mes:SKU-2001 .
+
+mes:ORD-1001 a mes:ProductionOrder ;
+    rdfs:label "ORD-1001" ;
+    mes:hasOrderID "ORD-1001" ;
+    mes:producesProduct mes:SKU-1002 .
+
+mes:ORD-1037 a mes:ProductionOrder ;
+    rdfs:label "ORD-1037" ;
+    mes:hasOrderID "ORD-1037" ;
+    mes:producesProduct mes:SKU-1002 .
+
+mes:ORD-1038 a mes:ProductionOrder ;
+    rdfs:label "ORD-1038" ;
+    mes:hasOrderID "ORD-1038" ;
+    mes:producesProduct mes:SKU-1001 .
+
+mes:ORD-1080 a mes:ProductionOrder ;
+    rdfs:label "ORD-1080" ;
+    mes:hasOrderID "ORD-1080" ;
+    mes:producesProduct mes:SKU-1002 .
 
 mes:SKU-1001 a mes:Product ;
     rdfs:label "12oz Sparkling Water" ;

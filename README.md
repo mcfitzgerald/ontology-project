@@ -81,6 +81,8 @@ The system handles the rest - discovering entities, building queries, managing t
 
 The system implements a streamlined architecture leveraging Google ADK's native capabilities:
 
+![System Architecture](new_sketch.png)
+
 ```mermaid
 graph TB
     subgraph "User Interfaces"

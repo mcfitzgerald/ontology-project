@@ -533,6 +533,34 @@ mes:exampleValue a owl:AnnotationProperty ;
 
                 f.write(" .\n\n")
 
+        # Production Order examples (needed for executesOrder -> producesProduct queries)
+        print("Extracting production order examples...")
+        order_examples = ["ORD-1000", "ORD-1001", "ORD-1037", "ORD-1038", "ORD-1080"]
+        for order_id in order_examples:
+            individuals = onto.search(iri=f"*{order_id}")
+            if individuals:
+                ind = individuals[0]
+                f.write(f"mes:{ind.name} a mes:ProductionOrder")
+                f.write(f' ;\n    rdfs:label "{ind.name}"')
+                
+                # Add properties, especially producesProduct
+                for prop in ind.get_properties():
+                    if prop.namespace == onto:
+                        values = prop[ind]
+                        if values:
+                            if prop.name == "producesProduct":
+                                if isinstance(values, list) and values:
+                                    f.write(f" ;\n    mes:producesProduct mes:{values[0].name}")
+                                elif hasattr(values, "name"):
+                                    f.write(f" ;\n    mes:producesProduct mes:{values.name}")
+                            elif prop.name == "hasOrderID":
+                                if isinstance(values, list) and values:
+                                    f.write(f" ;\n    mes:hasOrderID \"{values[0]}\"")
+                                else:
+                                    f.write(f" ;\n    mes:hasOrderID \"{values}\"")
+                
+                f.write(" .\n\n")
+
         # Product examples
         product_examples = ["SKU-1001", "SKU-1002", "SKU-2001", "SKU-2002", "SKU-3001"]
         for sku in product_examples:

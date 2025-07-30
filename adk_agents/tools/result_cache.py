@@ -192,6 +192,11 @@ class ResultCacheManager:
         
         # Check all result files
         for cache_id, info in self.index.items():
+            # Handle missing 'file' key for backward compatibility
+            if "file" not in info:
+                logger.warning(f"Cache entry {cache_id} missing 'file' key, skipping")
+                continue
+                
             result_file = Path(info["file"])
             if result_file.exists():
                 size_mb = self.get_file_size_mb(result_file)
@@ -250,6 +255,13 @@ class ResultCacheManager:
         removed_size_mb = 0.0
         
         for cache_id in to_remove:
+            # Handle missing 'file' key
+            if "file" not in self.index[cache_id]:
+                logger.warning(f"Cache entry {cache_id} missing 'file' key, removing from index")
+                del self.index[cache_id]
+                removed_count += 1
+                continue
+                
             result_file = Path(self.index[cache_id]["file"])
             if result_file.exists():
                 removed_size_mb += self.get_file_size_mb(result_file)
