@@ -1,36 +1,36 @@
 ### **Objective**
 
-This document outlines the structure for the manufacturing MES ontology, aligned with the raw data that includes inline KPI calculations. The design focuses on representing the core entities, relationships, and data fields from the mes_data_with_kpis.csv file.
+Manufacturing MES ontology aligned with raw data including inline KPI calculations
 
 ### **TBox (The Classes)**
 
 The class hierarchy represents the core manufacturing concepts:
 
-* **Process**  
-  * ProductionOrder  
-* **Resource**  
-  * Equipment (A general machine)  
-    * Filler  
-    * Packer  
-    * Palletizer  
-  * ProductionLine (The container for a set of equipment)  
-  * Product (The final SKU being produced)  
-* **Event** (A point-in-time happening on the factory floor)  
-  * ProductionLog (An event that records production and KPIs)  
-  * DowntimeLog (An event that records a machine stoppage)  
-* **Reason** (The cause of an event)  
-  * DowntimeReason  
-    * PlannedDowntime  
-      * Changeover (e.g., PLN-CO)  
-      * Cleaning (e.g., PLN-CLN)  
-      * PreventiveMaintenance (e.g., PLN-PM)  
-    * UnplannedDowntime  
-      * MechanicalFailure (e.g., UNP-MECH)  
-      * MaterialJam (e.g., UNP-JAM)  
-      * MaterialStarvation (e.g., UNP-MAT)  
-      * ElectricalFailure (e.g., UNP-ELEC)  
-      * QualityCheck (e.g., UNP-QC)  
-      * OperatorError (e.g., UNP-OPR)  
+* Process
+  * ProductionOrder
+* Resource
+  * Equipment
+    * Filler
+    * Packer
+    * Palletizer
+  * ProductionLine
+  * Product
+* Event
+  * ProductionLog
+  * DowntimeLog
+* Reason
+  * DowntimeReason
+    * PlannedDowntime
+      * Changeover (e.g., PLN-CO)
+      * Cleaning (e.g., PLN-CLN)
+      * PreventiveMaintenance (e.g., PLN-PM)
+    * UnplannedDowntime
+      * MechanicalFailure (e.g., UNP-MECH)
+      * MaterialJam (e.g., UNP-JAM)
+      * MaterialStarvation (e.g., UNP-MAT)
+      * ElectricalFailure (e.g., UNP-ELEC)
+      * QualityCheck (e.g., UNP-QC)
+      * OperatorError (e.g., UNP-OPR)
       * SensorFailure (e.g., UNP-SENS)
 
 ### **RBox (The Properties)**
@@ -41,14 +41,14 @@ The properties map the raw data fields and relationships between entities.
 
 | Property Name | Domain | Range | Description & Purpose |
 | :---- | :---- | :---- | :---- |
-| isUpstreamOf | Equipment | Equipment | Defines process flow. e.g., A Filler isUpstreamOf a Packer. |
-| isDownstreamOf | Equipment | Equipment | Inverse of isUpstreamOf. |
-| belongsToLine | Equipment | ProductionLine | Connects a specific machine to its parent line. |
-| hasEquipment | ProductionLine | Equipment | The inverse of belongsToLine. |
-| executesOrder | Equipment | ProductionOrder | Links a machine to the current order. |
-| producesProduct | ProductionOrder | Product | Specifies which product an order produces. |
-| logsEvent | Equipment | Event | Connects a machine to log entries. |
-| hasDowntimeReason | DowntimeLog | DowntimeReason | Explains why a downtime occurred. |
+| isUpstreamOf | Equipment | Equipment | Defines process flow direction Inverse of isDownstreamOf. |
+| isDownstreamOf | Equipment | Equipment | Inverse of isUpstreamOf |
+| belongsToLine | Equipment | ProductionLine | Connects equipment to its parent line Inverse of hasEquipment. |
+| hasEquipment | ProductionLine | Equipment | Inverse of belongsToLine |
+| executesOrder | Equipment | ProductionOrder | Links equipment to current order |
+| producesProduct | ProductionOrder | Product | Specifies which product an order produces |
+| logsEvent | Equipment | Event | Connects equipment to log entries |
+| hasDowntimeReason | DowntimeLog | DowntimeReason | Explains why downtime occurred |
 
 #### **Data Properties (linking individuals to literal values)**
 

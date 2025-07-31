@@ -49,6 +49,7 @@ class DataPipelineOrchestrator:
                  force: bool = False, skip_backup: bool = False):
         self.project_root = Path(__file__).parent
         self.config_path = config_path or self.project_root / "Data_Generation" / "mes_data_config.json"
+        self.ontology_config_path = self.project_root / "Ontology_Generation" / "ontology_spec.yaml"
         self.dry_run = dry_run
         self.force = force
         self.skip_backup = skip_backup
@@ -246,6 +247,48 @@ class DataPipelineOrchestrator:
         logger.info(f"  - Output Files: 4 (CSV, OWL, TTL, JSON)")
         logger.info("="*60 + "\n")
 
+    def validate_ontology_configuration(self) -> bool:
+        """Validate the ontology YAML configuration"""
+        logger.info(f"Validating ontology configuration: {self.ontology_config_path}")
+        
+        # Check if ontology config exists
+        if not self.ontology_config_path.exists():
+            self.validation_errors.append(f"Ontology configuration not found: {self.ontology_config_path}")
+            return False
+        
+        # Try to load and validate the ontology configuration
+        try:
+            import yaml
+            with open(self.ontology_config_path, 'r') as f:
+                ontology_config = yaml.safe_load(f)
+            
+            # Check required sections
+            required_sections = ['ontology', 'classes', 'object_properties', 'data_properties']
+            missing_sections = [s for s in required_sections if s not in ontology_config]
+            
+            if missing_sections:
+                self.validation_errors.append(f"Ontology config missing sections: {missing_sections}")
+                return False
+            
+            # Validate ontology metadata
+            ont_meta = ontology_config.get('ontology', {})
+            required_meta = ['name', 'version', 'iri']
+            missing_meta = [m for m in required_meta if m not in ont_meta]
+            
+            if missing_meta:
+                self.validation_errors.append(f"Ontology config missing metadata: {missing_meta}")
+                return False
+            
+            logger.info("✓ Ontology configuration validated")
+            return True
+            
+        except yaml.YAMLError as e:
+            self.validation_errors.append(f"Invalid YAML in ontology config: {e}")
+            return False
+        except Exception as e:
+            self.validation_errors.append(f"Error validating ontology config: {e}")
+            return False
+
     def check_dependencies(self) -> bool:
         """Check if all required Python packages are installed"""
         logger.info("Checking Python dependencies...")
@@ -253,7 +296,8 @@ class DataPipelineOrchestrator:
         required_packages = {
             'pandas': 'pandas',
             'numpy': 'numpy',
-            'owlready2': 'owlready2'
+            'owlready2': 'owlready2',
+            'yaml': 'pyyaml'
         }
         
         missing_packages = []
@@ -494,6 +538,8 @@ class DataPipelineOrchestrator:
             # Step 1: Validate configuration
             if 'validate' in steps_to_run:
                 if not self.validate_configuration():
+                    return False
+                if not self.validate_ontology_configuration():
                     return False
                 self.print_configuration_summary()
             
