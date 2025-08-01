@@ -1,0 +1,320 @@
+{
+  "metadata": {
+    "generated_at": "2025-07-31T20:42:46.574695",
+    "data_range": {
+      "start": "2025-06-01T00:00:00",
+      "end": "2025-06-14T23:55:00",
+      "days_covered": 14
+    },
+    "total_records": 36288,
+    "update_frequency": "5 minutes",
+    "columns": [
+      "Timestamp",
+      "ProductionOrderID",
+      "LineID",
+      "EquipmentID",
+      "EquipmentType",
+      "ProductID",
+      "ProductName",
+      "MachineStatus",
+      "DowntimeReason",
+      "GoodUnitsProduced",
+      "ScrapUnitsProduced",
+      "TargetRate_units_per_5min",
+      "StandardCost_per_unit",
+      "SalePrice_per_unit",
+      "Availability_Score",
+      "Performance_Score",
+      "Quality_Score",
+      "OEE_Score"
+    ]
+  },
+  "equipment": {
+    "count": 9,
+    "by_type": {
+      "Filler": [
+        {
+          "id": "LINE1-FIL",
+          "line": "LINE1"
+        },
+        {
+          "id": "LINE2-FIL",
+          "line": "LINE2"
+        },
+        {
+          "id": "LINE3-FIL",
+          "line": "LINE3"
+        }
+      ],
+      "Packer": [
+        {
+          "id": "LINE1-PCK",
+          "line": "LINE1"
+        },
+        {
+          "id": "LINE2-PCK",
+          "line": "LINE2"
+        },
+        {
+          "id": "LINE3-PCK",
+          "line": "LINE3"
+        }
+      ],
+      "Palletizer": [
+        {
+          "id": "LINE1-PAL",
+          "line": "LINE1"
+        },
+        {
+          "id": "LINE2-PAL",
+          "line": "LINE2"
+        },
+        {
+          "id": "LINE3-PAL",
+          "line": "LINE3"
+        }
+      ]
+    },
+    "by_line": {
+      "LINE1": [
+        "LINE1-FIL",
+        "LINE1-PAL",
+        "LINE1-PCK"
+      ],
+      "LINE2": [
+        "LINE2-FIL",
+        "LINE2-PAL",
+        "LINE2-PCK"
+      ],
+      "LINE3": [
+        "LINE3-FIL",
+        "LINE3-PAL",
+        "LINE3-PCK"
+      ]
+    }
+  },
+  "products": {
+    "count": 5,
+    "catalog": [
+      {
+        "id": "SKU-1001",
+        "name": "12oz Sparkling Water",
+        "target_rate_per_5min": 500,
+        "standard_cost": 0.15,
+        "sale_price": 0.5,
+        "margin_percent": 70.0,
+        "total_produced": 1770150,
+        "actual_scrap_rate": 5.54
+      },
+      {
+        "id": "SKU-1002",
+        "name": "32oz Premium Juice",
+        "target_rate_per_5min": 350,
+        "standard_cost": 0.45,
+        "sale_price": 1.5,
+        "margin_percent": 70.0,
+        "total_produced": 1641468,
+        "actual_scrap_rate": 17.07
+      },
+      {
+        "id": "SKU-2001",
+        "name": "12oz Soda",
+        "target_rate_per_5min": 475,
+        "standard_cost": 0.2,
+        "sale_price": 0.65,
+        "margin_percent": 69.2,
+        "total_produced": 1211385,
+        "actual_scrap_rate": 3.89
+      },
+      {
+        "id": "SKU-2002",
+        "name": "16oz Energy Drink",
+        "target_rate_per_5min": 450,
+        "standard_cost": 0.55,
+        "sale_price": 1.75,
+        "margin_percent": 68.6,
+        "total_produced": 1598910,
+        "actual_scrap_rate": 6.85
+      },
+      {
+        "id": "SKU-3001",
+        "name": "8oz Kids Drink",
+        "target_rate_per_5min": 550,
+        "standard_cost": 0.25,
+        "sale_price": 0.75,
+        "margin_percent": 66.7,
+        "total_produced": 1154590,
+        "actual_scrap_rate": 5.53
+      }
+    ]
+  },
+  "production_lines": {
+    "LINE1": {
+      "orders_executed": 37,
+      "products_made": [
+        "SKU-1002",
+        NaN,
+        "SKU-3001",
+        "SKU-1001",
+        "SKU-2002",
+        "SKU-2001"
+      ],
+      "total_runtime_hours": 705.4166666666666
+    },
+    "LINE2": {
+      "orders_executed": 38,
+      "products_made": [
+        "SKU-2001",
+        NaN,
+        "SKU-1002",
+        "SKU-2002",
+        "SKU-1001",
+        "SKU-3001"
+      ],
+      "total_runtime_hours": 604.6666666666666
+    },
+    "LINE3": {
+      "orders_executed": 40,
+      "products_made": [
+        "SKU-1001",
+        NaN,
+        "SKU-1002",
+        "SKU-2002",
+        "SKU-3001",
+        "SKU-2001"
+      ],
+      "total_runtime_hours": 717.1666666666666
+    }
+  },
+  "metrics": {
+    "OEE": {
+      "min": 0.0,
+      "max": 94.2,
+      "mean": 45.0,
+      "median": 57.3,
+      "typical_range": "0.0-74.0",
+      "world_class": "85-95"
+    },
+    "Availability": {
+      "min": 0.0,
+      "max": 100.0,
+      "mean": 67.0,
+      "median": 100.0,
+      "typical_range": "0.0-100.0",
+      "world_class": "85-95"
+    },
+    "Performance": {
+      "min": 0.0,
+      "max": 100.0,
+      "mean": 49.5,
+      "median": 62.4,
+      "typical_range": "0.0-80.6",
+      "world_class": "85-95"
+    },
+    "Quality": {
+      "min": 0.0,
+      "max": 99.0,
+      "mean": 61.5,
+      "median": 90.4,
+      "typical_range": "0.0-97.7",
+      "world_class": "98-99.5"
+    }
+  },
+  "downtime_reasons": {
+    "total_downtime_hours": 996.8,
+    "planned": [
+      {
+        "code": "PLN-CO",
+        "occurrences": 3081,
+        "total_minutes": 15405,
+        "total_hours": 256.8
+      },
+      {
+        "code": "PLN-CLN",
+        "occurrences": 2192,
+        "total_minutes": 10960,
+        "total_hours": 182.7
+      },
+      {
+        "code": "PLN-PM",
+        "occurrences": 84,
+        "total_minutes": 420,
+        "total_hours": 7.0
+      }
+    ],
+    "unplanned": [
+      {
+        "code": "UNP-JAM",
+        "occurrences": 2630,
+        "total_minutes": 13150,
+        "total_hours": 219.2
+      },
+      {
+        "code": "UNP-ELEC",
+        "occurrences": 1153,
+        "total_minutes": 5765,
+        "total_hours": 96.1
+      },
+      {
+        "code": "UNP-MAT",
+        "occurrences": 1023,
+        "total_minutes": 5115,
+        "total_hours": 85.2
+      },
+      {
+        "code": "UNP-SENS",
+        "occurrences": 835,
+        "total_minutes": 4175,
+        "total_hours": 69.6
+      },
+      {
+        "code": "UNP-QC",
+        "occurrences": 618,
+        "total_minutes": 3090,
+        "total_hours": 51.5
+      },
+      {
+        "code": "UNP-OPR",
+        "occurrences": 284,
+        "total_minutes": 1420,
+        "total_hours": 23.7
+      },
+      {
+        "code": "UNP-MECH",
+        "occurrences": 61,
+        "total_minutes": 305,
+        "total_hours": 5.1
+      }
+    ]
+  },
+  "data_quality": {
+    "null_values": {
+      "ProductionOrderID": 3081,
+      "ProductID": 3081,
+      "ProductName": 3081,
+      "DowntimeReason": 24327
+    },
+    "update_consistency": "5-minute intervals",
+    "equipment_coverage": "9 unique equipment tracked"
+  },
+  "column_descriptions": {
+    "Timestamp": "5-minute interval timestamp",
+    "ProductionOrderID": "Unique production order identifier",
+    "LineID": "Production line number (1-3)",
+    "EquipmentID": "Unique equipment identifier (e.g., LINE1-FIL)",
+    "EquipmentType": "Type of equipment (Filler/Packer/Palletizer)",
+    "ProductID": "Product SKU identifier",
+    "ProductName": "Human-readable product name",
+    "MachineStatus": "Equipment state (Running/Stopped)",
+    "DowntimeReason": "Reason code for stops (PLN-*/UNP-*)",
+    "GoodUnitsProduced": "Sellable units in 5-min interval",
+    "ScrapUnitsProduced": "Defective units in 5-min interval",
+    "TargetRate_units_per_5min": "Expected production rate",
+    "StandardCost_per_unit": "Manufacturing cost per unit",
+    "SalePrice_per_unit": "Selling price per unit",
+    "Availability_Score": "Equipment availability % (0-100)",
+    "Performance_Score": "Production speed efficiency % (0-100)",
+    "Quality_Score": "Product quality % (0-100)",
+    "OEE_Score": "Overall Equipment Effectiveness % (0-100)"
+  }
+}

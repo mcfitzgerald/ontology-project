@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "generated_at": "2025-07-30T20:11:47.012290",
+    "generated_at": "2025-07-31T20:49:22.128949",
     "data_range": {
       "start": "2025-06-01T00:00:00",
       "end": "2025-06-14T23:55:00",
@@ -103,8 +103,8 @@
         "standard_cost": 0.15,
         "sale_price": 0.5,
         "margin_percent": 70.0,
-        "total_produced": 2259118,
-        "actual_scrap_rate": 5.62
+        "total_produced": 1701984,
+        "actual_scrap_rate": 6.21
       },
       {
         "id": "SKU-1002",
@@ -113,8 +113,8 @@
         "standard_cost": 0.45,
         "sale_price": 1.5,
         "margin_percent": 70.0,
-        "total_produced": 955665,
-        "actual_scrap_rate": 17.17
+        "total_produced": 1418075,
+        "actual_scrap_rate": 16.93
       },
       {
         "id": "SKU-2001",
@@ -123,8 +123,8 @@
         "standard_cost": 0.2,
         "sale_price": 0.65,
         "margin_percent": 69.2,
-        "total_produced": 2286531,
-        "actual_scrap_rate": 4.09
+        "total_produced": 1390512,
+        "actual_scrap_rate": 4.35
       },
       {
         "id": "SKU-2002",
@@ -133,8 +133,8 @@
         "standard_cost": 0.55,
         "sale_price": 1.75,
         "margin_percent": 68.6,
-        "total_produced": 951853,
-        "actual_scrap_rate": 6.48
+        "total_produced": 1265620,
+        "actual_scrap_rate": 7.42
       },
       {
         "id": "SKU-3001",
@@ -143,56 +143,56 @@
         "standard_cost": 0.25,
         "sale_price": 0.75,
         "margin_percent": 66.7,
-        "total_produced": 1414770,
-        "actual_scrap_rate": 5.19
+        "total_produced": 1716925,
+        "actual_scrap_rate": 5.14
       }
     ]
   },
   "production_lines": {
     "LINE1": {
-      "orders_executed": 39,
+      "orders_executed": 40,
       "products_made": [
-        "SKU-2002",
+        "SKU-3001",
         NaN,
-        "SKU-1002",
         "SKU-2001",
-        "SKU-1001",
-        "SKU-3001"
+        "SKU-1002",
+        "SKU-2002",
+        "SKU-1001"
       ],
-      "total_runtime_hours": 684.1666666666666
+      "total_runtime_hours": 682.4166666666666
     },
     "LINE2": {
-      "orders_executed": 41,
+      "orders_executed": 39,
       "products_made": [
         "SKU-2001",
         NaN,
-        "SKU-1001",
         "SKU-1002",
-        "SKU-2002",
-        "SKU-3001"
-      ],
-      "total_runtime_hours": 610.0
-    },
-    "LINE3": {
-      "orders_executed": 35,
-      "products_made": [
-        "SKU-2001",
-        NaN,
-        "SKU-1001",
         "SKU-3001",
-        "SKU-1002",
+        "SKU-1001",
         "SKU-2002"
       ],
-      "total_runtime_hours": 732.75
+      "total_runtime_hours": 610.4166666666666
+    },
+    "LINE3": {
+      "orders_executed": 39,
+      "products_made": [
+        "SKU-1001",
+        NaN,
+        "SKU-1002",
+        "SKU-3001",
+        "SKU-2002",
+        "SKU-2001"
+      ],
+      "total_runtime_hours": 733.1666666666666
     }
   },
   "metrics": {
     "OEE": {
       "min": 0.0,
-      "max": 94.7,
-      "mean": 46.0,
-      "median": 60.9,
-      "typical_range": "0.0-74.8",
+      "max": 94.9,
+      "mean": 44.8,
+      "median": 57.8,
+      "typical_range": "0.0-73.1",
       "world_class": "85-95"
     },
     "Availability": {
@@ -206,34 +206,34 @@
     "Performance": {
       "min": 0.0,
       "max": 100.0,
-      "mean": 49.6,
-      "median": 64.7,
-      "typical_range": "0.0-79.7",
+      "mean": 49.1,
+      "median": 62.3,
+      "typical_range": "0.0-79.4",
       "world_class": "85-95"
     },
     "Quality": {
       "min": 0.0,
       "max": 99.0,
-      "mean": 62.6,
-      "median": 92.1,
-      "typical_range": "0.0-98.0",
+      "mean": 61.7,
+      "median": 90.4,
+      "typical_range": "0.0-97.7",
       "world_class": "98-99.5"
     }
   },
   "downtime_reasons": {
-    "total_downtime_hours": 997.1,
+    "total_downtime_hours": 998.0,
     "planned": [
       {
         "code": "PLN-CO",
-        "occurrences": 3000,
-        "total_minutes": 15000,
-        "total_hours": 250.0
+        "occurrences": 3183,
+        "total_minutes": 15915,
+        "total_hours": 265.2
       },
       {
         "code": "PLN-CLN",
-        "occurrences": 2136,
-        "total_minutes": 10680,
-        "total_hours": 178.0
+        "occurrences": 2156,
+        "total_minutes": 10780,
+        "total_hours": 179.7
       },
       {
         "code": "PLN-PM",
@@ -245,54 +245,54 @@
     "unplanned": [
       {
         "code": "UNP-JAM",
-        "occurrences": 2706,
-        "total_minutes": 13530,
-        "total_hours": 225.5
+        "occurrences": 2715,
+        "total_minutes": 13575,
+        "total_hours": 226.2
       },
       {
         "code": "UNP-ELEC",
-        "occurrences": 1170,
-        "total_minutes": 5850,
-        "total_hours": 97.5
+        "occurrences": 1119,
+        "total_minutes": 5595,
+        "total_hours": 93.2
       },
       {
         "code": "UNP-MAT",
-        "occurrences": 1106,
-        "total_minutes": 5530,
-        "total_hours": 92.2
+        "occurrences": 1000,
+        "total_minutes": 5000,
+        "total_hours": 83.3
       },
       {
         "code": "UNP-SENS",
-        "occurrences": 855,
-        "total_minutes": 4275,
-        "total_hours": 71.2
+        "occurrences": 858,
+        "total_minutes": 4290,
+        "total_hours": 71.5
       },
       {
         "code": "UNP-QC",
-        "occurrences": 555,
-        "total_minutes": 2775,
-        "total_hours": 46.2
+        "occurrences": 528,
+        "total_minutes": 2640,
+        "total_hours": 44.0
       },
       {
         "code": "UNP-OPR",
-        "occurrences": 296,
-        "total_minutes": 1480,
-        "total_hours": 24.7
+        "occurrences": 266,
+        "total_minutes": 1330,
+        "total_hours": 22.2
       },
       {
         "code": "UNP-MECH",
-        "occurrences": 57,
-        "total_minutes": 285,
-        "total_hours": 4.8
+        "occurrences": 67,
+        "total_minutes": 335,
+        "total_hours": 5.6
       }
     ]
   },
   "data_quality": {
     "null_values": {
-      "ProductionOrderID": 3000,
-      "ProductID": 3000,
-      "ProductName": 3000,
-      "DowntimeReason": 24323
+      "ProductionOrderID": 3183,
+      "ProductID": 3183,
+      "ProductName": 3183,
+      "DowntimeReason": 24312
     },
     "update_consistency": "5-minute intervals",
     "equipment_coverage": "9 unique equipment tracked"

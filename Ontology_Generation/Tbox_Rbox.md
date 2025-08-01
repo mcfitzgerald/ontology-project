@@ -41,14 +41,14 @@ The properties map the raw data fields and relationships between entities.
 
 | Property Name | Domain | Range | Description & Purpose |
 | :---- | :---- | :---- | :---- |
-| isUpstreamOf | Equipment | Equipment | Defines process flow direction Inverse of isDownstreamOf. |
-| isDownstreamOf | Equipment | Equipment | Inverse of isUpstreamOf |
-| belongsToLine | Equipment | ProductionLine | Connects equipment to its parent line Inverse of hasEquipment. |
-| hasEquipment | ProductionLine | Equipment | Inverse of belongsToLine |
-| executesOrder | Equipment | ProductionOrder | Links equipment to current order |
-| producesProduct | ProductionOrder | Product | Specifies which product an order produces |
-| logsEvent | Equipment | Event | Connects equipment to log entries |
-| hasDowntimeReason | DowntimeLog | DowntimeReason | Explains why downtime occurred |
+| isUpstreamOf | Equipment | Equipment | Defines material flow direction from upstream to downstream equipment Inverse of isDownstreamOf. |
+| isDownstreamOf | Equipment | Equipment | Inverse of isUpstreamOf - defines equipment receiving material flow |
+| belongsToLine | Equipment | ProductionLine | Connects equipment to its parent production line Inverse of hasEquipment. |
+| hasEquipment | ProductionLine | Equipment | Lists equipment belonging to a production line |
+| executesOrder | Equipment | ProductionOrder | Links equipment to the production order it is currently executing |
+| producesProduct | ProductionOrder | Product | Specifies which product type a production order produces |
+| logsEvent | Equipment | Event | Connects equipment to its time-stamped event log entries |
+| hasDowntimeReason | DowntimeLog | DowntimeReason | Links downtime events to their specific reason codes |
 
 #### **Data Properties (linking individuals to literal values)**
 

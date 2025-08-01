@@ -95,36 +95,50 @@ class OntologyConfigParser:
         """Get all data property definitions"""
         return self.config.get('data_properties', {})
     
-    def get_downtime_mappings(self) -> Dict[str, str]:
-        """Get downtime reason code to class mappings"""
-        return self.config.get('downtime_mappings', {})
+    def get_mappings(self, mapping_name: str) -> Dict[str, str]:
+        """Get mappings by name from configuration"""
+        return self.config.get(mapping_name, {})
     
     def get_entity_context(self, entity_name: str) -> Optional[str]:
         """Get business context for a specific entity"""
         contexts = self.config.get('entity_contexts', {})
         return contexts.get(entity_name)
     
-    def get_equipment_type_mapping(self) -> Dict[str, str]:
-        """Build equipment type to class name mapping"""
+    def get_mapping_by_attribute(self, attribute_name: str) -> Dict[str, str]:
+        """Build mapping from any attribute to class name
+        
+        Args:
+            attribute_name: The attribute to use as the mapping key
+            
+        Returns:
+            Dictionary mapping attribute values to class names
+        """
         mapping = {}
         classes = self.get_class_hierarchy()
         
         for class_name, class_info in classes:
-            if 'equipment_type' in class_info:
-                mapping[class_info['equipment_type']] = class_name
+            if attribute_name in class_info:
+                mapping[class_info[attribute_name]] = class_name
         
         return mapping
     
-    def get_class_by_code(self, code: str) -> Optional[str]:
-        """Find class name by its code (e.g., PLN-CO -> Changeover)"""
+    def get_class_by_attribute(self, attribute_name: str, attribute_value: str) -> Optional[str]:
+        """Find class name by any attribute value
+        
+        Args:
+            attribute_name: The attribute to search by
+            attribute_value: The value to search for
+            
+        Returns:
+            Class name if found, None otherwise
+        """
         classes = self.get_class_hierarchy()
         
         for class_name, class_info in classes:
-            if class_info.get('code') == code:
+            if class_info.get(attribute_name) == attribute_value:
                 return class_name
         
-        # Fallback to downtime mappings
-        return self.get_downtime_mappings().get(code)
+        return None
     
     def get_property_column_mapping(self) -> Dict[str, str]:
         """Get mapping of property names to CSV columns"""
@@ -165,16 +179,28 @@ class OntologyConfigParser:
         
         return True
     
-    def get_kpi_properties(self) -> List[str]:
-        """Get list of KPI-related properties"""
-        kpi_props = []
+    def get_properties_by_pattern(self, pattern: str) -> List[str]:
+        """Get list of properties matching a pattern
         
-        for prop_name, prop_info in self.get_data_properties().items():
-            if 'Score' in prop_name or prop_name in ['hasOEEScore', 'hasAvailabilityScore', 
-                                                      'hasPerformanceScore', 'hasQualityScore']:
-                kpi_props.append(prop_name)
+        Args:
+            pattern: String pattern to match in property names
+            
+        Returns:
+            List of property names containing the pattern
+        """
+        matching_props = []
         
-        return kpi_props
+        # Check data properties
+        for prop_name in self.get_data_properties():
+            if pattern in prop_name:
+                matching_props.append(prop_name)
+        
+        # Check object properties
+        for prop_name in self.get_object_properties():
+            if pattern in prop_name:
+                matching_props.append(prop_name)
+        
+        return matching_props
     
     def get_type_mapping(self, range_type: str) -> str:
         """Map YAML range types to owlready2 types"""

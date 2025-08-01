@@ -1,0 +1,432 @@
+# Ontology Structure Reference
+# Generated: 2025-07-31T20:42:47.889771
+# Purpose: Ontology structure for query construction
+
+# Note: When using SPARQL with Owlready2, the prefix is derived from the OWL filename.
+
+# Standard prefixes:
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# Base namespace:
+@prefix : <http://example.com/mes_ontology#> .
+
+# Annotation properties
+:businessContext a owl:AnnotationProperty ;
+    rdfs:label "Business Context" ;
+    rdfs:comment "Explains the business meaning and operational significance" .
+
+:typicalValue a owl:AnnotationProperty ;
+    rdfs:label "Typical Value" ;
+    rdfs:comment "Common or expected values in production" .
+
+:calculationMethod a owl:AnnotationProperty ;
+    rdfs:label "Calculation Method" ;
+    rdfs:comment "How this metric is calculated" .
+
+:mapsToColumn a owl:AnnotationProperty ;
+    rdfs:label "Maps to Column" ;
+    rdfs:comment "The CSV column name this property maps to" .
+
+:dataContext a owl:AnnotationProperty ;
+    rdfs:label "Data Context" ;
+    rdfs:comment "Describes the type and meaning of the data" .
+
+:exampleValue a owl:AnnotationProperty ;
+    rdfs:label "Example Value" ;
+    rdfs:comment "Example value from the dataset" .
+
+#############################################################################
+# CLASSES - Core business entities
+#############################################################################
+
+:Changeover a owl:Class ;
+    rdfs:subClassOf :PlannedDowntime ;
+    rdfs:label "Changeover" ;
+    rdfs:comment "Product switch requiring equipment reconfiguration" ;
+    :businessContext "Product switch requiring equipment reconfiguration" .
+
+:Cleaning a owl:Class ;
+    rdfs:subClassOf :PlannedDowntime ;
+    rdfs:label "Cleaning" ;
+    rdfs:comment "Mandatory sanitation cycle for hygiene and safety" ;
+    :businessContext "Mandatory sanitation cycle for hygiene and safety" .
+
+:DowntimeLog a owl:Class ;
+    rdfs:subClassOf :Event ;
+    rdfs:label "DowntimeLog" ;
+    rdfs:comment "Equipment stoppage event with associated reason code" ;
+    :businessContext "Equipment stoppage event with associated reason code" .
+
+:DowntimeReason a owl:Class ;
+    rdfs:subClassOf :Reason ;
+    rdfs:label "DowntimeReason" ;
+    rdfs:comment "Coded explanation for equipment stoppage" ;
+    :businessContext "Coded explanation for equipment stoppage" .
+
+:ElectricalFailure a owl:Class ;
+    rdfs:subClassOf :UnplannedDowntime ;
+    rdfs:label "ElectricalFailure" ;
+    rdfs:comment "Power or control system malfunction" ;
+    :businessContext "Power or control system malfunction" .
+
+:Equipment a owl:Class ;
+    rdfs:subClassOf :Resource ;
+    rdfs:label "Equipment" ;
+    rdfs:comment "Physical machines that transform raw materials into finished products" ;
+    :businessContext "Physical machines that transform raw materials into finished products" .
+
+:Event a owl:Class ;
+    rdfs:label "Event" ;
+    rdfs:comment "Time-stamped production occurrence captured at regular intervals" ;
+    :businessContext "Time-stamped production occurrence captured at regular intervals" .
+
+:Filler a owl:Class ;
+    rdfs:subClassOf :Equipment ;
+    rdfs:label "Filler" ;
+    rdfs:comment "First stage in bottling line that fills containers with product" ;
+    :businessContext "First stage in bottling line that fills containers with product" .
+
+:MaterialJam a owl:Class ;
+    rdfs:subClassOf :UnplannedDowntime ;
+    rdfs:label "MaterialJam" ;
+    rdfs:comment "Product blockage in equipment causing temporary stoppage" ;
+    :businessContext "Product blockage in equipment causing temporary stoppage" .
+
+:MaterialStarvation a owl:Class ;
+    rdfs:subClassOf :UnplannedDowntime ;
+    rdfs:label "MaterialStarvation" ;
+    rdfs:comment "Upstream supply shortage preventing equipment operation" ;
+    :businessContext "Upstream supply shortage preventing equipment operation" .
+
+:MechanicalFailure a owl:Class ;
+    rdfs:subClassOf :UnplannedDowntime ;
+    rdfs:label "MechanicalFailure" ;
+    rdfs:comment "Equipment breakdown requiring repair" ;
+    :businessContext "Equipment breakdown requiring repair" .
+
+:OperatorError a owl:Class ;
+    rdfs:subClassOf :UnplannedDowntime ;
+    rdfs:label "OperatorError" ;
+    rdfs:comment "Production stoppage caused by human error or intervention" ;
+    :businessContext "Production stoppage caused by human error or intervention" .
+
+:Packer a owl:Class ;
+    rdfs:subClassOf :Equipment ;
+    rdfs:label "Packer" ;
+    rdfs:comment "Groups individual containers into cases or multipacks" ;
+    :businessContext "Groups individual containers into cases or multipacks" .
+
+:Palletizer a owl:Class ;
+    rdfs:subClassOf :Equipment ;
+    rdfs:label "Palletizer" ;
+    rdfs:comment "Stacks cases onto pallets for shipping" ;
+    :businessContext "Stacks cases onto pallets for shipping" .
+
+:PlannedDowntime a owl:Class ;
+    rdfs:subClassOf :DowntimeReason ;
+    rdfs:label "PlannedDowntime" ;
+    rdfs:comment "Scheduled production interruptions" ;
+    :businessContext "Scheduled production interruptions" .
+
+:PreventiveMaintenance a owl:Class ;
+    rdfs:subClassOf :PlannedDowntime ;
+    rdfs:label "PreventiveMaintenance" ;
+    rdfs:comment "Scheduled equipment service to prevent breakdowns" ;
+    :businessContext "Scheduled equipment service to prevent breakdowns" .
+
+:Process a owl:Class ;
+    rdfs:label "Process" ;
+    rdfs:comment "Manufacturing workflow that transforms raw materials into finished products through defined operations" ;
+    :businessContext "Manufacturing workflow that transforms raw materials into finished products through defined operations" .
+
+:Product a owl:Class ;
+    rdfs:subClassOf :Resource ;
+    rdfs:label "Product" ;
+    rdfs:comment "Items manufactured for sale with defined specifications" ;
+    :businessContext "Items manufactured for sale with defined specifications" .
+
+:ProductionLine a owl:Class ;
+    rdfs:subClassOf :Resource ;
+    rdfs:label "ProductionLine" ;
+    rdfs:comment "Complete set of equipment working together in sequence" ;
+    :businessContext "Complete set of equipment working together in sequence" .
+
+:ProductionLog a owl:Class ;
+    rdfs:subClassOf :Event ;
+    rdfs:label "ProductionLog" ;
+    rdfs:comment "Snapshot of production metrics when equipment is running" ;
+    :businessContext "Snapshot of production metrics when equipment is running" .
+
+:ProductionOrder a owl:Class ;
+    rdfs:subClassOf :Process ;
+    rdfs:label "ProductionOrder" ;
+    rdfs:comment "Customer-driven manufacturing request specifying product type, quantity, and schedule" ;
+    :businessContext "Customer-driven manufacturing request specifying product type, quantity, and schedule" .
+
+:QualityCheck a owl:Class ;
+    rdfs:subClassOf :UnplannedDowntime ;
+    rdfs:label "QualityCheck" ;
+    rdfs:comment "Production halt for quality inspection" ;
+    :businessContext "Production halt for quality inspection" .
+
+:Reason a owl:Class ;
+    rdfs:label "Reason" ;
+    rdfs:comment "Categorized explanation for production events" ;
+    :businessContext "Categorized explanation for production events" .
+
+:Resource a owl:Class ;
+    rdfs:label "Resource" ;
+    rdfs:comment "Assets required for production including equipment, production lines, and product specifications" ;
+    :businessContext "Assets required for production including equipment, production lines, and product specifications" .
+
+:SensorFailure a owl:Class ;
+    rdfs:subClassOf :UnplannedDowntime ;
+    rdfs:label "SensorFailure" ;
+    rdfs:comment "Misaligned or faulty sensors requiring adjustment" ;
+    :businessContext "Misaligned or faulty sensors requiring adjustment" .
+
+:UnplannedDowntime a owl:Class ;
+    rdfs:subClassOf :DowntimeReason ;
+    rdfs:label "UnplannedDowntime" ;
+    rdfs:comment "Unexpected production stoppages" ;
+    :businessContext "Unexpected production stoppages" .
+
+
+#############################################################################
+# OBJECT PROPERTIES - Relationships between entities
+#############################################################################
+
+:belongsToLine a owl:ObjectProperty ;
+    rdfs:domain :Equipment ;
+    rdfs:range :ProductionLine ;
+    rdfs:label "belongsToLine" ;
+    rdfs:comment "Connects equipment to its parent production line" ;
+    :businessContext "Connects equipment to its parent production line" .
+
+:executesOrder a owl:ObjectProperty ;
+    rdfs:domain :Equipment ;
+    rdfs:range :ProductionOrder ;
+    rdfs:label "executesOrder" ;
+    rdfs:comment "Links equipment to the production order it is currently executing" ;
+    :businessContext "Links equipment to the production order it is currently executing" .
+
+:hasDowntimeReason a owl:ObjectProperty ;
+    rdfs:domain :DowntimeLog ;
+    rdfs:range :DowntimeReason ;
+    rdfs:label "hasDowntimeReason" ;
+    rdfs:comment "Links downtime events to their specific reason codes" ;
+    :businessContext "Links downtime events to their specific reason codes" .
+
+:hasEquipment a owl:ObjectProperty ;
+    rdfs:domain :ProductionLine ;
+    rdfs:range :Equipment ;
+    rdfs:label "hasEquipment" ;
+    rdfs:comment "Lists equipment belonging to a production line" ;
+    :businessContext "Lists equipment belonging to a production line" .
+
+:isDownstreamOf a owl:ObjectProperty ;
+    rdfs:domain :Equipment ;
+    rdfs:range :Equipment ;
+    rdfs:label "isDownstreamOf" ;
+    rdfs:comment "Inverse of isUpstreamOf - defines equipment receiving material flow" ;
+    :businessContext "Inverse of isUpstreamOf - defines equipment receiving material flow" .
+
+:isUpstreamOf a owl:ObjectProperty ;
+    rdfs:domain :Equipment ;
+    rdfs:range :Equipment ;
+    rdfs:label "isUpstreamOf" ;
+    rdfs:comment "Defines material flow direction from upstream to downstream equipment" ;
+    :businessContext "Defines material flow direction from upstream to downstream equipment" .
+
+:logsEvent a owl:ObjectProperty ;
+    rdfs:domain :Equipment ;
+    rdfs:range :Event ;
+    rdfs:label "logsEvent" ;
+    rdfs:comment "Connects equipment to its time-stamped event log entries" ;
+    :businessContext "Connects equipment to its time-stamped event log entries" .
+
+:producesProduct a owl:ObjectProperty ;
+    rdfs:domain :ProductionOrder ;
+    rdfs:range :Product ;
+    rdfs:label "producesProduct" ;
+    rdfs:comment "Specifies which product type a production order produces" ;
+    :businessContext "Specifies which product type a production order produces" .
+
+
+#############################################################################
+# DATA PROPERTIES - Metrics and attributes
+#############################################################################
+
+:hasAvailabilityScore a owl:DatatypeProperty ;
+    rdfs:domain :Event ;
+    rdfs:range xsd:float ;
+    rdfs:label "hasAvailabilityScore" ;
+    rdfs:comment "Percentage of scheduled time equipment was available for production" ;
+    :mapsToColumn "Availability_Score" ;
+    :dataContext "Equipment availability percentage (0-100)" ;
+    :businessContext "Percentage of scheduled time equipment was available for production" ;
+    :typicalValue "World-class: >90%" .
+
+:hasDowntimeReasonCode a owl:DatatypeProperty ;
+    rdfs:domain :DowntimeLog ;
+    rdfs:range xsd:string ;
+    rdfs:label "hasDowntimeReasonCode" ;
+    rdfs:comment "Downtime reason code" ;
+    :mapsToColumn "DowntimeReason" ;
+    :dataContext "Reason code for equipment stoppage" ;
+    :businessContext "Downtime reason code" .
+
+:hasEquipmentID a owl:DatatypeProperty ;
+    rdfs:domain :Equipment ;
+    rdfs:range xsd:string ;
+    rdfs:label "hasEquipmentID" ;
+    rdfs:comment "Equipment identifier" ;
+    :mapsToColumn "EquipmentID" ;
+    :dataContext "Unique equipment identifier (e.g., LINE1-FIL)" ;
+    :exampleValue "LINE1-FIL" ;
+    :businessContext "Equipment identifier" .
+
+:hasEquipmentType a owl:DatatypeProperty ;
+    rdfs:domain :Equipment ;
+    rdfs:range xsd:string ;
+    rdfs:label "hasEquipmentType" ;
+    rdfs:comment "Type of equipment" ;
+    :mapsToColumn "EquipmentType" ;
+    :dataContext "Type of equipment (Filler, Packer, Palletizer)" ;
+    :businessContext "Type of equipment" .
+
+:hasGoodUnits a owl:DatatypeProperty ;
+    rdfs:domain :ProductionLog ;
+    rdfs:range xsd:integer ;
+    rdfs:label "hasGoodUnits" ;
+    rdfs:comment "Good units produced" ;
+    :mapsToColumn "GoodUnitsProduced" ;
+    :dataContext "Count of sellable units produced in 5-min interval" ;
+    :businessContext "Good units produced" .
+
+:hasLineID a owl:DatatypeProperty ;
+    rdfs:domain :ProductionLine ;
+    rdfs:range xsd:integer ;
+    rdfs:label "hasLineID" ;
+    rdfs:comment "Line identifier" ;
+    :mapsToColumn "LineID" ;
+    :dataContext "Production line identifier (1-3)" ;
+    :businessContext "Line identifier" .
+
+:hasMachineStatus a owl:DatatypeProperty ;
+    rdfs:domain :Event ;
+    rdfs:range xsd:string ;
+    rdfs:label "hasMachineStatus" ;
+    rdfs:comment "Equipment state" ;
+    :mapsToColumn "MachineStatus" ;
+    :dataContext "Current equipment state (Running/Stopped)" ;
+    :businessContext "Equipment state" .
+
+:hasOEEScore a owl:DatatypeProperty ;
+    rdfs:domain :Event ;
+    rdfs:range xsd:float ;
+    rdfs:label "hasOEEScore" ;
+    rdfs:comment "Overall Equipment Effectiveness - composite measure of availability, performance, and quality" ;
+    :mapsToColumn "OEE_Score" ;
+    :dataContext "Overall Equipment Effectiveness (0-100)" ;
+    :businessContext "Overall Equipment Effectiveness - composite measure of availability, performance, and quality" ;
+    :typicalValue "World-class: >85%, Good: 60-75%" ;
+    :calculationMethod "Availability × Performance × Quality" .
+
+:hasOrderID a owl:DatatypeProperty ;
+    rdfs:domain :ProductionOrder ;
+    rdfs:range xsd:string ;
+    rdfs:label "hasOrderID" ;
+    rdfs:comment "Order identifier" ;
+    :mapsToColumn "ProductionOrderID" ;
+    :dataContext "Unique identifier for production order" ;
+    :businessContext "Order identifier" .
+
+:hasPerformanceScore a owl:DatatypeProperty ;
+    rdfs:domain :Event ;
+    rdfs:range xsd:float ;
+    rdfs:label "hasPerformanceScore" ;
+    rdfs:comment "Percentage of ideal cycle time achieved during production" ;
+    :mapsToColumn "Performance_Score" ;
+    :dataContext "Production speed efficiency (0-100)" ;
+    :businessContext "Percentage of ideal cycle time achieved during production" ;
+    :typicalValue "World-class: >95%" .
+
+:hasProductID a owl:DatatypeProperty ;
+    rdfs:domain :Product ;
+    rdfs:range xsd:string ;
+    rdfs:label "hasProductID" ;
+    rdfs:comment "Product SKU" ;
+    :mapsToColumn "ProductID" ;
+    :dataContext "Product SKU identifier" ;
+    :exampleValue "SKU-1001" ;
+    :businessContext "Product SKU" .
+
+:hasProductName a owl:DatatypeProperty ;
+    rdfs:domain :Product ;
+    rdfs:range xsd:string ;
+    rdfs:label "hasProductName" ;
+    rdfs:comment "Product name" ;
+    :mapsToColumn "ProductName" ;
+    :dataContext "Human-readable product name" ;
+    :businessContext "Product name" .
+
+:hasQualityScore a owl:DatatypeProperty ;
+    rdfs:domain :Event ;
+    rdfs:range xsd:float ;
+    rdfs:label "hasQualityScore" ;
+    rdfs:comment "Percentage of total units produced that meet quality standards" ;
+    :mapsToColumn "Quality_Score" ;
+    :dataContext "Product quality percentage (0-100)" ;
+    :businessContext "Percentage of total units produced that meet quality standards" ;
+    :typicalValue "World-class: >99%" .
+
+:hasSalePrice a owl:DatatypeProperty ;
+    rdfs:domain :Product ;
+    rdfs:range xsd:float ;
+    rdfs:label "hasSalePrice" ;
+    rdfs:comment "Selling price" ;
+    :mapsToColumn "SalePrice_per_unit" ;
+    :dataContext "Selling price per unit" ;
+    :businessContext "Selling price" .
+
+:hasScrapUnits a owl:DatatypeProperty ;
+    rdfs:domain :ProductionLog ;
+    rdfs:range xsd:integer ;
+    rdfs:label "hasScrapUnits" ;
+    rdfs:comment "Scrap units produced" ;
+    :mapsToColumn "ScrapUnitsProduced" ;
+    :dataContext "Count of defective units in 5-min interval" ;
+    :businessContext "Scrap units produced" .
+
+:hasStandardCost a owl:DatatypeProperty ;
+    rdfs:domain :Product ;
+    rdfs:range xsd:float ;
+    rdfs:label "hasStandardCost" ;
+    rdfs:comment "Manufacturing cost" ;
+    :mapsToColumn "StandardCost_per_unit" ;
+    :dataContext "Manufacturing cost per unit" ;
+    :businessContext "Manufacturing cost" .
+
+:hasTargetRate a owl:DatatypeProperty ;
+    rdfs:domain :Product ;
+    rdfs:range xsd:float ;
+    rdfs:label "hasTargetRate" ;
+    rdfs:comment "Target production rate" ;
+    :mapsToColumn "TargetRate_units_per_5min" ;
+    :dataContext "Expected production rate per 5-minute interval" ;
+    :businessContext "Target production rate" .
+
+:hasTimestamp a owl:DatatypeProperty ;
+    rdfs:domain :Event ;
+    rdfs:range xsd:string ;
+    rdfs:label "hasTimestamp" ;
+    rdfs:comment "Event timestamp" ;
+    :mapsToColumn "Timestamp" ;
+    :dataContext "5-minute interval timestamp for production events" ;
+    :exampleValue "2025-06-01 00:00:00" ;
+    :businessContext "Event timestamp" .
+

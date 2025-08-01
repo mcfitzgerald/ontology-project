@@ -211,7 +211,7 @@ def generate_detailed_reference(parser):
         # Downtime Mappings
         f.write("## Downtime Code Mappings\n\n")
         
-        mappings = parser.get_downtime_mappings()
+        mappings = parser.get_mappings('downtime_mappings')
         for code, class_name in mappings.items():
             f.write(f"- **{code}**: {class_name}\n")
     

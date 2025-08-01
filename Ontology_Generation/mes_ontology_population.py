@@ -98,10 +98,10 @@ def populate_from_csv(onto, csv_file, config, ontology_parser):
     print(f"  Found {len(df)} records")
     
     # Get equipment type mapping from configuration
-    equipment_type_mapping = ontology_parser.get_equipment_type_mapping()
+    equipment_type_mapping = ontology_parser.get_mapping_by_attribute('equipment_type')
     
     # Get downtime mappings
-    downtime_mappings = ontology_parser.get_downtime_mappings()
+    downtime_mappings = ontology_parser.get_mappings('downtime_mappings')
     
     # Create master data individuals first
     print("Creating master data individuals...")
